@@ -16,9 +16,9 @@ This file applies to the whole repository. More specific `AGENTS.md` files insid
 ## Development
 
 - Create every new work branch from `main` unless the user explicitly asks for a stacked branch.
-- Every commit message must follow `moduleNameChange#123 - short description`.
-- `moduleNameChange#123` means the module or scope name, a concise change label, and the related ticket number.
-- Use `GLOBAL_CONGIG` as the module name for repository-wide configuration, guidance, and workflow changes.
+- Every commit message must follow `MODULE_NAME#123 - short description`.
+- Ticket numbers are scoped per module. For example, `GLOBAL_CONFIG#1`, `TICKET_SERVICE#1`, and `TICKET_PORTAL#1` can all exist independently.
+- Use `GLOBAL_CONFIG` as the module name for repository-wide configuration, guidance, and workflow changes.
 - If there is no real ticket number, ask the user for one before committing.
 - Update changelogs before every commit using the exact commit message.
 - The root `CHANGELOG.md` must include every change grouped by module.
@@ -31,7 +31,9 @@ This file applies to the whole repository. More specific `AGENTS.md` files insid
 
 ## Test
 
-- Run the smallest relevant test target first.
+- Do not run tests after every individual change.
+- Run tests before pushing a branch to remote, before creating a PR, or when the user explicitly asks.
+- When testing is needed, run the smallest relevant test target first.
 - For Java API changes, run `make test-api`.
 - For web changes, run `make test-web`.
 - For cross-module changes, run `make test`.
