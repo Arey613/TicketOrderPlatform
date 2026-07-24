@@ -8,7 +8,7 @@ This file applies to `apps/web/ticket-order-web`.
 
 ## Development
 
-- Commit messages for this module must follow `ticketOrderWebChange#123 - short description`.
+- Commit messages for this module must follow `TICKET_PORTAL#123 - short description`.
 - Update this module's `CHANGELOG.md` before every commit that changes this module.
 - Also update the root `CHANGELOG.md` under the `ticket-order-web` module section.
 - Use React 19, Vite 8, and npm.

@@ -5,9 +5,9 @@ Changes for `ticket-order-web`.
 Commit messages must follow:
 
 ```text
-ticketOrderWebChange#123 - short description
+TICKET_PORTAL#123 - short description
 ```
 
 ## Unreleased
 
-- GLOBAL_CONGIG#1 - add scoped agent guidance and skill folders
+- GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders

@@ -8,6 +8,8 @@ Spring Boot HTTP API for TicketOrderPlatform.
 - Spring Boot 4.1
 - Spring Web
 - Spring Security
+- Spring Data JPA
+- PostgreSQL
 - Maven
 
 ## Architecture
@@ -18,6 +20,8 @@ The module follows a hexagonal architecture package layout:
 - `application/port/in` - inbound use case contracts
 - `application/service` - use case implementations
 - `adapter/in/web` - HTTP controllers that call application ports
+- `adapter/out/persistence` - JPA persistence adapters that implement outbound ports
+- `adapter/out/security` - Spring Security adapters backed by application ports
 - `infrastructure/config` - Spring, CORS, and security configuration
 
 ## Endpoints
@@ -66,12 +70,38 @@ docker run --rm -p 8080:8080 ticket-order-api
 
 ## Configuration
 
-CORS defaults are configured in `src/main/resources/application.properties`.
+CORS defaults are configured in `src/main/resources/application.yml`.
 
-```properties
-ticket-order-platform.cors.allowed-origins=http://localhost:5173
-ticket-order-platform.cors.allowed-methods=GET,POST,PUT,PATCH,DELETE,OPTIONS
-ticket-order-platform.cors.allowed-headers=*
-ticket-order-platform.cors.allow-credentials=false
-ticket-order-platform.cors.max-age=3600
+```yaml
+ticket-order-platform:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"
+    allow-credentials: false
+    max-age: 3600
+```
+
+PostgreSQL datasource defaults align with the root Docker Compose stack:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ticket_order
+    username: ticket_order
+    password: ticket_order
+```
+
+The user persistence adapter maps the domain `User` to the `app_users` table:
+
+```text
+app_users
 ```
