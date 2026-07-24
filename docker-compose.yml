@@ -1,0 +1,20 @@
+services:
+  api:
+    image: ticket-order-api
+    build:
+      context: .
+      dockerfile: services/java/ticket-order-api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+
+  web:
+    image: ticket-order-web
+    build:
+      context: .
+      dockerfile: apps/web/ticket-order-web/Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
