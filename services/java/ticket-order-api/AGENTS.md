@@ -8,7 +8,7 @@ This file applies to `services/java/ticket-order-api`.
 
 ## Development
 
-- Commit messages for this module must follow `ticketOrderApiChange#123 - short description`.
+- Commit messages for this module must follow `TICKET_SERVICE#123 - short description`.
 - Update this module's `CHANGELOG.md` before every commit that changes this module.
 - Also update the root `CHANGELOG.md` under the `ticket-order-api` module section.
 - Use Java 25 and Spring Boot 4.1.
@@ -21,10 +21,13 @@ This file applies to `services/java/ticket-order-api`.
 - Controllers must call application ports, not own business behavior.
 - Application services may depend on domain objects and ports.
 - Domain code must not depend on Spring or web framework APIs.
-- Keep configuration properties externalized in `application.properties` unless a task requires another config source.
+- Use YAML for Spring configuration files. Prefer `application.yml` over `application.properties`.
+- Keep configuration values externalized in `application.yml` unless a task requires another config source.
 
 ## Test
 
+- Do not run Java tests after every individual Java change.
+- Run Java tests before pushing a branch to remote, before creating a PR, or when the user explicitly asks.
 - Run from the repository root:
 
 ```sh
