@@ -17,7 +17,9 @@ This file applies to the whole repository. More specific `AGENTS.md` files insid
 ## Development
 
 - Create every new work branch from `main` unless the user explicitly asks for a stacked branch.
+- When the user says to push a branch, push it and create or open a pull request unless the user explicitly says to push only.
 - Every commit message must follow `MODULE_NAME#123 - short description`.
+- Pull request titles must be identical to the branch's commit message when the branch has a single commit.
 - Ticket numbers are scoped per module. For example, `GLOBAL_CONFIG#1`, `TICKET_SERVICE#1`, and `TICKET_PORTAL#1` can all exist independently.
 - Use `GLOBAL_CONFIG` as the module name for repository-wide configuration, guidance, and workflow changes.
 - If there is no real ticket number, ask the user for one before committing.

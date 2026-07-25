@@ -8,6 +8,7 @@ MODULE_NAME#123 - short description
 
 ## Repository
 
+- GLOBAL_CONFIG#3 - add GitHub Actions CI validation
 - GLOBAL_CONFIG#2 - add OpenAPI contract workflow
 - TICKET_SERVICE#1 - add user persistence and postgres wiring
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders
