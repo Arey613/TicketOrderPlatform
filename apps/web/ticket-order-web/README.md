@@ -37,6 +37,22 @@ npm run build
 npm run dev
 ```
 
+## OpenAPI Generation
+
+The API contract lives in:
+
+```text
+../../../contracts/openapi/ticket-order-api/openapi.yml
+```
+
+Generate the TypeScript API client from the repository root:
+
+```sh
+make generate-web-contracts
+```
+
+Generated client files are written under `src/generated/api` and are not committed.
+
 ## Docker
 
 Build from the repository root:

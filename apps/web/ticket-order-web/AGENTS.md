@@ -17,6 +17,8 @@ This file applies to `apps/web/ticket-order-web`.
 - Keep app entrypoint logic in `src/main.jsx`.
 - Keep top-level app composition in `src/App.jsx` until the app grows enough to justify routing or feature folders.
 - Keep styling readable and local to the module. Avoid committing generated `dist` output.
+- Generate API clients from `contracts/openapi/ticket-order-api/openapi.yml`.
+- Do not edit generated OpenAPI client files by hand.
 
 ## Test
 
@@ -30,6 +32,12 @@ make install-web
 
 ```sh
 make test-web
+```
+
+- For API client generation changes, run from the repository root:
+
+```sh
+make generate-web-contracts
 ```
 
 - `npm run test` currently runs a production Vite build. Add a dedicated test runner only when there is real component or behavior coverage to write.
