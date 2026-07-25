@@ -59,31 +59,59 @@ class UserJpaEntity {
         this.updatedAt = updatedAt;
     }
 
-    UUID getId() {
+    public UUID getId() {
         return id;
     }
 
-    String getEmail() {
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
         return email;
     }
 
-    String getPasswordHash() {
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPasswordHash() {
         return passwordHash;
     }
 
-    UserRole getRole() {
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public UserRole getRole() {
         return role;
     }
 
-    boolean isEnabled() {
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
+    public boolean isEnabled() {
         return enabled;
     }
 
-    Instant getCreatedAt() {
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    Instant getUpdatedAt() {
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

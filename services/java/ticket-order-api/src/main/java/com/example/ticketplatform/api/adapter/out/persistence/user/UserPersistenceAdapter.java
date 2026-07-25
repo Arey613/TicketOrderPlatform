@@ -12,10 +12,11 @@ import org.springframework.stereotype.Repository;
 class UserPersistenceAdapter implements UserRepositoryPort {
 
     private final UserJpaRepository repository;
-    private final UserMapper mapper = new UserMapper();
+    private final UserMapper mapper;
 
-    UserPersistenceAdapter(UserJpaRepository repository) {
+    UserPersistenceAdapter(UserJpaRepository repository, UserMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @Override
