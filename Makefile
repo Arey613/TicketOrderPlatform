@@ -1,8 +1,9 @@
-.PHONY: help build package package-api package-web test test-api test-web verify run run-api run-web clean check-maven check-npm check-docker install-web docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
+.PHONY: help build package package-api package-web test test-api test-web verify run run-api run-web clean check-maven check-npm check-docker install-web validate-contracts generate generate-api-contracts generate-web-contracts docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
 
 MAVEN ?= $(shell test -x ./mvnw && printf './mvnw' || printf 'mvn')
 NPM ?= npm
 DOCKER ?= docker
+CONTRACT_MODULE := contracts/openapi/ticket-order-api
 API_MODULE := services/java/ticket-order-api
 WEB_MODULE := apps/web/ticket-order-web
 SPRING_PROFILES ?= local
@@ -20,6 +21,8 @@ help:
 	@printf '  make run-api      Start the Java API locally\n'
 	@printf '  make run-web      Start the React/Vite web app locally\n'
 	@printf '  make install-web  Install web dependencies\n'
+	@printf '  make validate-contracts Validate OpenAPI contracts\n'
+	@printf '  make generate     Generate API code from OpenAPI contracts\n'
 	@printf '  make docker-build Build API and web Docker images\n'
 	@printf '  make compose-up   Build and start the Docker Compose stack\n'
 	@printf '  make compose-down Stop the Docker Compose stack\n'
@@ -62,6 +65,18 @@ install-web: check-npm
 clean: check-maven
 	$(MAVEN) clean
 	rm -rf $(WEB_MODULE)/dist
+	rm -rf $(WEB_MODULE)/src/generated
+
+validate-contracts: check-npm
+	$(NPM) --prefix $(WEB_MODULE) run validate:api
+
+generate: generate-api-contracts generate-web-contracts
+
+generate-api-contracts: check-maven
+	$(MAVEN) -pl $(API_MODULE) generate-sources
+
+generate-web-contracts: check-npm
+	$(NPM) --prefix $(WEB_MODULE) run generate:api
 
 docker-build: docker-build-api docker-build-web
 

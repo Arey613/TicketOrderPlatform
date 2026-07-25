@@ -31,6 +31,10 @@ dist/
 node_modules/
 coverage/
 
+# Generated sources
+**/src/generated/
+**/target/generated-sources/
+
 # IDEs
 .idea/
 .vscode/

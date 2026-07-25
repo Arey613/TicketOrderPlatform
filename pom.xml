@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>contracts/openapi/ticket-order-api</module>
         <module>services/java/ticket-order-api</module>
     </modules>
 </project>
