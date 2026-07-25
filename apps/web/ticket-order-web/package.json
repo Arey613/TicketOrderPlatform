@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "generate:api": "openapi-generator-cli generate -i ../../../contracts/openapi/ticket-order-api/openapi.yml -g typescript-fetch -o src/generated/api --additional-properties=typescriptThreePlus=true",
+    "validate:api": "openapi-generator-cli validate -i ../../../contracts/openapi/ticket-order-api/openapi.yml",
     "preview": "vite preview",
     "test": "vite build"
   },
@@ -15,5 +17,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.25.2"
+  }
 }
