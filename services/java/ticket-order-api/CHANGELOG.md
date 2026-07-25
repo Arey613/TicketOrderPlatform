@@ -10,5 +10,6 @@ TICKET_SERVICE#123 - short description
 
 ## Unreleased
 
+- TICKET_SERVICE#2 - add OpenAPI MapStruct mapping
 - TICKET_SERVICE#1 - add user persistence and postgres wiring
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders

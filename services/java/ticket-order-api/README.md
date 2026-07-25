@@ -54,6 +54,22 @@ mvn package
 mvn spring-boot:run
 ```
 
+## OpenAPI Generation
+
+The API contract lives in:
+
+```text
+../../../contracts/openapi/ticket-order-api/openapi.yml
+```
+
+Generate Spring API interfaces and models from the repository root:
+
+```sh
+make generate-api-contracts
+```
+
+Generated sources are written under `target/generated-sources/openapi` and are not committed.
+
 ## Docker
 
 Build from the repository root:

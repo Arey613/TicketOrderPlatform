@@ -23,6 +23,8 @@ This file applies to `services/java/ticket-order-api`.
 - Domain code must not depend on Spring or web framework APIs.
 - Use YAML for Spring configuration files. Prefer `application.yml` over `application.properties`.
 - Keep configuration values externalized in `application.yml` unless a task requires another config source.
+- Generate Spring API interfaces and models from `contracts/openapi/ticket-order-api/openapi.yml`.
+- Do not edit generated OpenAPI sources by hand.
 
 ## Test
 
@@ -32,6 +34,12 @@ This file applies to `services/java/ticket-order-api`.
 
 ```sh
 make test-api
+```
+
+- For contract generation changes, run from the repository root:
+
+```sh
+make generate-api-contracts
 ```
 
 - Add focused unit tests for domain and application service behavior.

@@ -9,6 +9,7 @@ import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
 
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 class UserMapperTest {
 
@@ -25,7 +26,7 @@ class UserMapperTest {
                 createdAt,
                 updatedAt);
 
-        UserMapper mapper = new UserMapper();
+        UserMapper mapper = Mappers.getMapper(UserMapper.class);
         UserJpaEntity entity = mapper.toEntity(domainUser);
         User mappedUser = mapper.toDomain(entity);
 
