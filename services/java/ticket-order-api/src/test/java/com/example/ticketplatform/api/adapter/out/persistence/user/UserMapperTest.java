@@ -27,13 +27,13 @@ class UserMapperTest {
                 updatedAt);
 
         UserMapper mapper = Mappers.getMapper(UserMapper.class);
-        UserJpaEntity entity = mapper.toEntity(domainUser);
+        UserEntity entity = mapper.toEntity(domainUser);
         User mappedUser = mapper.toDomain(entity);
 
         assertThat(entity.getId()).isEqualTo(domainUser.id());
         assertThat(entity.getEmail()).isEqualTo(domainUser.email());
         assertThat(entity.getPasswordHash()).isEqualTo(domainUser.passwordHash());
-        assertThat(entity.getRole()).isEqualTo(domainUser.role());
+        assertThat(entity.getRole()).isEqualTo(UserRoleEntity.CUSTOMER);
         assertThat(entity.isEnabled()).isEqualTo(domainUser.enabled());
         assertThat(entity.getCreatedAt()).isEqualTo(domainUser.createdAt());
         assertThat(entity.getUpdatedAt()).isEqualTo(domainUser.updatedAt());

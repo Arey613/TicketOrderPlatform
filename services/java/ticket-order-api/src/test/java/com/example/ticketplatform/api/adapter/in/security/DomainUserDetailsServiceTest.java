@@ -1,4 +1,4 @@
-package com.example.ticketplatform.api.adapter.out.security;
+package com.example.ticketplatform.api.adapter.in.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

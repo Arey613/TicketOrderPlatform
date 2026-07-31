@@ -17,6 +17,8 @@ This file applies to `services/java/ticket-order-api`.
   - `application/port/in` for inbound use case ports
   - `application/service` for use case implementations
   - `adapter/in/web` for HTTP controllers
+  - `adapter/in/security` for security framework entrypoints
+  - `adapter/out/*` for driven adapters such as persistence, messaging, or external clients
   - `infrastructure/config` for Spring, CORS, security, and runtime configuration
 - Controllers must call application ports, not own business behavior.
 - Application services may depend on domain objects and ports.

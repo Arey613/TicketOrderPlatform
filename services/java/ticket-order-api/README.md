@@ -20,8 +20,8 @@ The module follows a hexagonal architecture package layout:
 - `application/port/in` - inbound use case contracts
 - `application/service` - use case implementations
 - `adapter/in/web` - HTTP controllers that call application ports
+- `adapter/in/security` - Spring Security entrypoints backed by application ports
 - `adapter/out/persistence` - JPA persistence adapters that implement outbound ports
-- `adapter/out/security` - Spring Security adapters backed by application ports
 - `infrastructure/config` - Spring, CORS, and security configuration
 
 ## Endpoints
