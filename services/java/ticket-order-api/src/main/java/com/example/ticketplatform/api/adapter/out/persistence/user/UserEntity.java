@@ -3,8 +3,6 @@ package com.example.ticketplatform.api.adapter.out.persistence.user;
 import java.time.Instant;
 import java.util.UUID;
 
-import com.example.ticketplatform.api.domain.model.user.UserRole;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,7 +12,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "app_users")
-class UserJpaEntity {
+class UserEntity {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
@@ -28,7 +26,7 @@ class UserJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 32)
-    private UserRole role;
+    private UserRoleEntity role;
 
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
@@ -39,14 +37,14 @@ class UserJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected UserJpaEntity() {
+    protected UserEntity() {
     }
 
-    UserJpaEntity(
+    UserEntity(
             UUID id,
             String email,
             String passwordHash,
-            UserRole role,
+            UserRoleEntity role,
             boolean enabled,
             Instant createdAt,
             Instant updatedAt) {
@@ -83,11 +81,11 @@ class UserJpaEntity {
         this.passwordHash = passwordHash;
     }
 
-    public UserRole getRole() {
+    public UserRoleEntity getRole() {
         return role;
     }
 
-    public void setRole(UserRole role) {
+    public void setRole(UserRoleEntity role) {
         this.role = role;
     }
 

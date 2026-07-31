@@ -7,11 +7,11 @@ import jakarta.persistence.Table;
 
 import org.junit.jupiter.api.Test;
 
-class UserJpaEntityMappingTest {
+class UserEntityMappingTest {
 
     @Test
     void alignsUserEntityToAppUsersTable() throws NoSuchFieldException {
-        assertThat(UserJpaEntity.class.getAnnotation(Table.class).name()).isEqualTo("app_users");
+        assertThat(UserEntity.class.getAnnotation(Table.class).name()).isEqualTo("app_users");
         assertThat(columnName("id")).isEqualTo("id");
         assertThat(columnName("email")).isEqualTo("email");
         assertThat(columnName("passwordHash")).isEqualTo("password_hash");
@@ -22,6 +22,6 @@ class UserJpaEntityMappingTest {
     }
 
     private String columnName(String fieldName) throws NoSuchFieldException {
-        return UserJpaEntity.class.getDeclaredField(fieldName).getAnnotation(Column.class).name();
+        return UserEntity.class.getDeclaredField(fieldName).getAnnotation(Column.class).name();
     }
 }

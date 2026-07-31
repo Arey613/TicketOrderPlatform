@@ -1,4 +1,4 @@
-package com.example.ticketplatform.api.adapter.out.security;
+package com.example.ticketplatform.api.adapter.in.security;
 
 import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
