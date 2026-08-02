@@ -11,6 +11,7 @@
 
     <modules>
         <module>contracts/openapi/ticket-order-api</module>
+        <module>database/java/migrations/ticket-order-db-migrations</module>
         <module>services/java/ticket-order-api</module>
     </modules>
 </project>
