@@ -23,6 +23,10 @@ MODULE_NAME#123 - short description
 
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract
 
+## ticket-order-db-migrations
+
+- DATABASE_MIGRATIONS#1 - add Java database migration modules
+
 ## ticket-order-web
 
 - TICKET_PORTAL#1 - add OpenAPI client generation

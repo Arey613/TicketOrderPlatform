@@ -15,6 +15,36 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  transactional-migrations:
+    image: ticket-order-transactional-migrations
+    build:
+      context: .
+      dockerfile: database/java/migrations/ticket-order-db-migrations/Dockerfile
+      args:
+        MIGRATION_MODULE_PATH: database/java/migrations/ticket-order-db-migrations/ticket-order-transactional-migrations
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/ticket_order
+      FLYWAY_USER: ticket_order
+      FLYWAY_PASSWORD: ticket_order
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  analytical-migrations:
+    image: ticket-order-analytical-migrations
+    build:
+      context: .
+      dockerfile: database/java/migrations/ticket-order-db-migrations/Dockerfile
+      args:
+        MIGRATION_MODULE_PATH: database/java/migrations/ticket-order-db-migrations/ticket-order-analytical-migrations
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/ticket_order
+      FLYWAY_USER: ticket_order
+      FLYWAY_PASSWORD: ticket_order
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   api:
     image: ticket-order-api
     build:
@@ -28,8 +58,10 @@ services:
       SPRING_DATASOURCE_USERNAME: ticket_order
       SPRING_DATASOURCE_PASSWORD: ticket_order
     depends_on:
-      postgres:
-        condition: service_healthy
+      transactional-migrations:
+        condition: service_completed_successfully
+      analytical-migrations:
+        condition: service_completed_successfully
 
   web:
     image: ticket-order-web
