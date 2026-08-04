@@ -13,3 +13,7 @@ DATABASE_MIGRATIONS#123 - short description
 ### Added
 
 - DATABASE_MIGRATIONS#1 - add Java database migration modules
+
+### Changed
+
+- DATABASE_MIGRATIONS#2 - rename application user migrations

@@ -15,7 +15,7 @@ Each schema-specific module has its own `CHANGELOG.md`.
 
 - Initial schema creation uses `V1.0000__create_<schema>_schema.sql`.
 - Versioned DDL migrations after schema creation use `V1.0001__description.sql`.
-- Transactional and analytical CQRS views use repeatable migrations such as `R__app_users.sql`.
+- Transactional and analytical CQRS views use repeatable migrations such as `R__users.sql`.
 - Repeatable view migrations are reapplied by Flyway when their checksum changes.
 
 ## Build
