@@ -24,7 +24,27 @@ For this feature:
 login = email
 ```
 
-The persistence model uses `ticket_transactional.t_users` as the transactional base table. Query-oriented database views may expose the user concept as `users`, but authentication and user persistence should read from the writable base table because it needs `password_hash` and must support user inserts. This spec does not introduce a dedicated `login` column.
+The persistence model uses `ticket_transactional.t_users` as the transactional base table. Query-oriented database views may expose the user concept as `users`, but authentication and user persistence must read from and write to the writable base table because they need `password_hash` and must support user inserts. This spec does not introduce a dedicated `login` column.
+
+## JPA Mapping Decision
+
+Use one JPA user entity for this feature:
+
+```text
+UserEntity -> ticket_transactional.t_users
+```
+
+This entity supports authentication lookup and user persistence. It includes `password_hash` because Spring Security needs the encoded password during Basic Authentication.
+
+Do not map the authentication/persistence entity to the `users` view. Even if the view is simple enough for PostgreSQL to accept some writes, the service should not rely on view write-through behavior for core user persistence.
+
+Do not add a second Java user entity for the `users` view in this feature. A future CQRS read model may introduce a separate read-only entity or projection, for example:
+
+```text
+UserReadEntity -> ticket_transactional.users
+```
+
+That read-side type should be added only when there is a real query use case that benefits from the view and should not include `password_hash`.
 
 ## Scope
 
