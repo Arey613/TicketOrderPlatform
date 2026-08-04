@@ -39,7 +39,7 @@ make generate
 The API exposes:
 
 ```text
-GET /hello
+GET /actuator/health
 ```
 
 The web app can be started with:

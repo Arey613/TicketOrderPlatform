@@ -13,3 +13,7 @@ TICKET_CONTRACTS#123 - short description
 ### Added
 
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract
+
+### Changed
+
+- TICKET_CONTRACTS#2 - align contract with basic authentication spec

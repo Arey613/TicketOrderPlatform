@@ -31,6 +31,11 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders
 - TICKET_SERVICE#1 - add user persistence and postgres wiring
 - TICKET_SERVICE#2 - add OpenAPI MapStruct mapping
+- TICKET_SERVICE#3 - add basic authentication login spec
+
+### Changed
+
+- TICKET_SERVICE#3 - align user persistence mapping with users relation
 
 ## ticket-order-api-contract
 
@@ -38,11 +43,19 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract
 
+### Changed
+
+- TICKET_CONTRACTS#2 - align contract with basic authentication spec
+
 ## ticket-order-db-migrations
 
 ### Added
 
 - DATABASE_MIGRATIONS#1 - add Java database migration modules
+
+### Changed
+
+- DATABASE_MIGRATIONS#2 - rename application user migrations
 
 ## ticket-order-web
 
