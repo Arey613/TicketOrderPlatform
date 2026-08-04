@@ -10,4 +10,6 @@ TICKET_CONTRACTS#123 - short description
 
 ## Unreleased
 
+### Added
+
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract

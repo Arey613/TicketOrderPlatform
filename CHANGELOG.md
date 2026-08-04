@@ -21,6 +21,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 ### Changed
 
 - GLOBAL_CONFIG#4 - add pull request iteration guidance
+- GLOBAL_CONFIG#5 - organize changelog entries
 
 ## ticket-order-api
 
