@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ticket-order-config
+  labels:
+    app.kubernetes.io/part-of: ticket-order-platform
+data:
+  database-name: ticket_order
+  spring-datasource-url: jdbc:postgresql://ticket-order-postgres:5432/ticket_order
+  flyway-url: jdbc:postgresql://ticket-order-postgres:5432/ticket_order

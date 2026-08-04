@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticket-order-web
+  labels:
+    app.kubernetes.io/name: ticket-order-web
+    app.kubernetes.io/part-of: ticket-order-platform
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: ticket-order-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      nodePort: 30080
