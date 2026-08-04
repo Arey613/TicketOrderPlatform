@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ticket-order-transactional-migrations
+  labels:
+    app.kubernetes.io/name: ticket-order-transactional-migrations
+    app.kubernetes.io/part-of: ticket-order-platform
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ticket-order-transactional-migrations
+        app.kubernetes.io/part-of: ticket-order-platform
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:18-alpine
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - until pg_isready -h ticket-order-postgres -p 5432 -U "$FLYWAY_USER" -d ticket_order; do sleep 2; done
+          env:
+            - name: FLYWAY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ticket-order-postgres
+                  key: username
+      containers:
+        - name: migrations
+          image: ticket-order-transactional-migrations:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FLYWAY_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: ticket-order-config
+                  key: flyway-url
+            - name: FLYWAY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ticket-order-postgres
+                  key: username
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ticket-order-postgres
+                  key: password

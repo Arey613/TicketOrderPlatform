@@ -1,14 +1,16 @@
-.PHONY: help build package package-api package-web package-migrations test test-api test-web verify run run-api run-web clean check-maven check-npm check-docker install-web validate-contracts generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
+.PHONY: help build package package-api package-web package-migrations test test-api test-web verify run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
 
 MAVEN ?= $(shell test -x ./mvnw && printf './mvnw' || printf 'mvn')
 NPM ?= npm
 DOCKER ?= docker
+KUBECTL ?= kubectl
 CONTRACT_MODULE := contracts/openapi/ticket-order-api
 DB_MIGRATIONS_MODULE := database/java/migrations/ticket-order-db-migrations
 DB_TRANSACTIONAL_MIGRATIONS_MODULE := $(DB_MIGRATIONS_MODULE)/ticket-order-transactional-migrations
 DB_ANALYTICAL_MIGRATIONS_MODULE := $(DB_MIGRATIONS_MODULE)/ticket-order-analytical-migrations
 API_MODULE := services/java/ticket-order-api
 WEB_MODULE := apps/web/ticket-order-web
+MINIKUBE_K8S_MODULE := infrastructure/kubernetes/minikube-local
 SPRING_PROFILES ?= local
 API_IMAGE ?= ticket-order-api
 WEB_IMAGE ?= ticket-order-web
@@ -26,6 +28,7 @@ help:
 	@printf '  make run-web      Start the React/Vite web app locally\n'
 	@printf '  make install-web  Install web dependencies\n'
 	@printf '  make validate-contracts Validate OpenAPI contracts\n'
+	@printf '  make validate-k8s Validate Kubernetes manifests\n'
 	@printf '  make generate     Generate API code from OpenAPI contracts\n'
 	@printf '  make migrate-transactional Run transactional Flyway migrations\n'
 	@printf '  make migrate-analytical Run analytical Flyway migrations\n'
@@ -79,6 +82,11 @@ clean: check-maven
 validate-contracts: check-npm
 	$(NPM) --prefix $(WEB_MODULE) run validate:api
 
+validate-k8s: check-kubectl
+	$(KUBECTL) kustomize $(MINIKUBE_K8S_MODULE)/postgres >/dev/null
+	$(KUBECTL) kustomize $(MINIKUBE_K8S_MODULE)/migrations >/dev/null
+	$(KUBECTL) kustomize $(MINIKUBE_K8S_MODULE)/apps >/dev/null
+
 generate: generate-api-contracts generate-web-contracts
 
 generate-api-contracts: check-maven
@@ -128,5 +136,11 @@ check-npm:
 check-docker:
 	@command -v $(DOCKER) >/dev/null 2>&1 || { \
 		printf 'Docker is required for image and compose targets.\n' >&2; \
+		exit 1; \
+	}
+
+check-kubectl:
+	@command -v $(KUBECTL) >/dev/null 2>&1 || { \
+		printf 'kubectl is required for Kubernetes manifest validation.\n' >&2; \
 		exit 1; \
 	}

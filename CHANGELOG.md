@@ -16,10 +16,12 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#2 - add OpenAPI contract workflow
 - GLOBAL_CONFIG#3 - add GitHub Actions CI validation
 - GLOBAL_CONFIG#4 - add project navigation guides
+- GLOBAL_CONFIG#5 - add Minikube local Kubernetes deployment
 
 ### Changed
 
 - GLOBAL_CONFIG#4 - add pull request iteration guidance
+- GLOBAL_CONFIG#5 - organize changelog entries
 
 ## ticket-order-api
 
