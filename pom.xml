@@ -9,6 +9,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <!--
+        Root Maven aggregator for repository-level commands and reactor module resolution.
+        Keep module-specific build behavior in module POMs; this file should stay thin.
+    -->
     <modules>
         <module>contracts/openapi/ticket-order-api</module>
         <module>database/java/migrations/ticket-order-db-migrations</module>

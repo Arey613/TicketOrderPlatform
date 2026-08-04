@@ -17,6 +17,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#3 - add GitHub Actions CI validation
 - GLOBAL_CONFIG#4 - add project navigation guides
 - GLOBAL_CONFIG#5 - add Minikube local Kubernetes deployment
+- GLOBAL_CONFIG#6 - add formatter validation
 
 ### Changed
 

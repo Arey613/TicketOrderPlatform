@@ -34,6 +34,7 @@ Use `docs/PROJECT_MAP.md` for fast module routing before scanning broadly.
 - Follow scoped module guidance for contract, database, API, and web implementation rules.
 - Prefer root Makefile targets over ad hoc commands.
 - Keep shared commands at the root and service-specific commands inside the service README.
+- Before installing dependencies or downloading tools from package registries, ask the user in chat and wait for explicit approval, even if tool escalation is available.
 - Keep generated output out of git. Do not commit `target`, `dist`, or `node_modules`.
 - Add a scoped `AGENTS.md` for every new service or app module.
 

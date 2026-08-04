@@ -9,13 +9,12 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 class SecurityConfig {
 
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource)
-            throws Exception {
-        return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
-                .build();
-    }
+  @Bean
+  SecurityFilterChain securityFilterChain(
+      HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+    return http.cors(cors -> cors.configurationSource(corsConfigurationSource))
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+        .build();
+  }
 }

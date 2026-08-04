@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 
 class GreetingServiceTest {
 
-    @Test
-    void returnsDefaultGreeting() {
-        assertThat(new GreetingService().getGreeting().message()).isEqualTo("Hello, World!");
-    }
+  @Test
+  void returnsDefaultGreeting() {
+    assertThat(new GreetingService().getGreeting().message()).isEqualTo("Hello, World!");
+  }
 }
