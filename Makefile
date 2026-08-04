@@ -1,4 +1,4 @@
-.PHONY: help build package package-api package-web package-migrations test test-api test-web verify run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
+.PHONY: help build package package-api package-web package-migrations test test-api test-web verify format format-java format-web check-format check-format-java check-format-web run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
 
 MAVEN ?= $(shell test -x ./mvnw && printf './mvnw' || printf 'mvn')
 NPM ?= npm
@@ -23,6 +23,8 @@ help:
 	@printf '  make package-migrations Package database migration resources\n'
 	@printf '  make test         Run all module tests\n'
 	@printf '  make verify       Run Maven verify and web build\n'
+	@printf '  make format       Apply Java and web formatting\n'
+	@printf '  make check-format Check Java and web formatting\n'
 	@printf '  make run          Start the Java API locally\n'
 	@printf '  make run-api      Start the Java API locally\n'
 	@printf '  make run-web      Start the React/Vite web app locally\n'
@@ -62,6 +64,22 @@ test-web: check-npm
 verify: check-maven check-npm
 	$(MAVEN) verify
 	$(NPM) --prefix $(WEB_MODULE) run build
+
+format: format-java format-web
+
+format-java: check-maven
+	$(MAVEN) -pl $(API_MODULE) spotless:apply
+
+format-web: check-npm
+	$(NPM) --prefix $(WEB_MODULE) run format
+
+check-format: check-format-java check-format-web
+
+check-format-java: check-maven
+	$(MAVEN) -pl $(API_MODULE) spotless:check
+
+check-format-web: check-npm
+	$(NPM) --prefix $(WEB_MODULE) run format:check
 
 run: run-api
 

@@ -18,9 +18,11 @@
     <description>TicketOrderPlatform Spring Boot API</description>
 
     <properties>
+        <google-java-format.version>1.35.0</google-java-format.version>
         <java.version>25</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <openapi.contract>${project.basedir}/../../../contracts/openapi/ticket-order-api/openapi.yml</openapi.contract>
+        <spotless-maven-plugin.version>3.9.0</spotless-maven-plugin.version>
     </properties>
 
     <dependencies>
@@ -114,6 +116,45 @@
                                 <annotationLibrary>none</annotationLibrary>
                             </configOptions>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>${spotless-maven-plugin.version}</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>${google-java-format.version}</version>
+                        </googleJavaFormat>
+                        <importOrder>
+                            <order>java,javax,jakarta,org,com,,\#java,\#javax,\#jakarta,\#org,\#com,\#</order>
+                        </importOrder>
+                        <removeUnusedImports/>
+                        <forbidWildcardImports/>
+                        <forbidModuleImports/>
+                    </java>
+                    <formats>
+                        <format>
+                            <includes>
+                                <include>src/**/*.java</include>
+                            </includes>
+                            <replaceRegex>
+                                <name>Collapse multiple blank lines</name>
+                                <searchRegex>(\r?\n)[ \t]*\r?\n[ \t]*(\r?\n[ \t]*)+</searchRegex>
+                                <replacement>$1$1</replacement>
+                            </replaceRegex>
+                        </format>
+                    </formats>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotless-check</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
