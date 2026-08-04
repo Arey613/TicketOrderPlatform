@@ -19,6 +19,7 @@ Guidance for agents working in `database/java/migrations/ticket-order-db-migrati
 - Name CQRS views after the entity/table concept without a view prefix.
 - Keep transactional and analytical view definitions in repeatable Flyway migrations using `R__view_name.sql`.
 - Every transactional table that supports query behavior must have an analytical CQRS view unless the task explicitly excludes it.
+- Java service database schema changes must be implemented in this module.
 - Use `V1.0000__create_<schema>_schema.sql` for initial schema creation.
 - Use Flyway versions in the `V1.0001__description.sql` pattern for schema DDL after initial schema creation.
 - Transactional and analytical migrations are separate version streams; increment versions only within the same migration path/schema.

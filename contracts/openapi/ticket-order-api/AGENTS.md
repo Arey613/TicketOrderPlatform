@@ -14,6 +14,7 @@ This file applies to `contracts/openapi/ticket-order-api`.
 - Keep the OpenAPI source in YAML.
 - Keep generated API code out of this module.
 - Use stable `operationId` values because downstream generators depend on them.
+- Contract-first API changes must update `openapi.yml` before generated code or implementations.
 
 ## Test
 

@@ -27,6 +27,8 @@ This file applies to `services/java/ticket-order-api`.
 - Keep configuration values externalized in `application.yml` unless a task requires another config source.
 - Generate Spring API interfaces and models from `contracts/openapi/ticket-order-api/openapi.yml`.
 - Do not edit generated OpenAPI sources by hand.
+- API surface changes must update `contracts/openapi/ticket-order-api/openapi.yml` before generated code or implementation.
+- Database schema changes for this service must be implemented through `database/java/migrations/ticket-order-db-migrations`.
 
 ## Test
 
