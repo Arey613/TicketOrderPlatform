@@ -20,6 +20,8 @@ Use `docs/PROJECT_MAP.md` for fast module routing before scanning broadly.
 
 - Create every new work branch from `main` unless the user explicitly asks for a stacked branch.
 - When the user says to push a branch, push it and create or open a pull request unless the user explicitly says to push only.
+- For updates to an existing pull request, keep changes local until the user explicitly asks to push, unless the user has already requested a push or PR-update workflow for that turn.
+- Do not amend, squash, or otherwise rewrite existing pull request commits during review iteration unless the user explicitly asks; squash only as part of the merge workflow when requested or selected.
 - Every commit message must follow `MODULE_NAME#123 - short description`.
 - Pull request titles must be identical to the branch's commit message when the branch has a single commit.
 - Ticket numbers are scoped per module. For example, `GLOBAL_CONFIG#1`, `TICKET_SERVICE#1`, and `TICKET_PORTAL#1` can all exist independently.
