@@ -18,6 +18,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#4 - add project navigation guides
 - GLOBAL_CONFIG#5 - add Minikube local Kubernetes deployment
 - GLOBAL_CONFIG#6 - add formatter validation
+- GLOBAL_CONFIG#7 - add Lombok annotation configuration
 
 ### Changed
 
