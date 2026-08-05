@@ -6,19 +6,16 @@ import com.example.ticketplatform.api.generated.contract.api.UsersApi;
 import com.example.ticketplatform.api.generated.contract.model.UserResponse;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 class UserController implements UsersApi {
 
   private final GetUserUseCase getUserUseCase;
   private final UserContractMapper userContractMapper;
-
-  UserController(GetUserUseCase getUserUseCase, UserContractMapper userContractMapper) {
-    this.getUserUseCase = getUserUseCase;
-    this.userContractMapper = userContractMapper;
-  }
 
   @Override
   public ResponseEntity<UserResponse> getUser(UUID userId) {

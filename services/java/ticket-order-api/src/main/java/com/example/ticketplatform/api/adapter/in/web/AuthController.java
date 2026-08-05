@@ -8,6 +8,7 @@ import com.example.ticketplatform.api.generated.contract.model.LoginResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,18 +18,12 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 class AuthController implements AuthApi {
 
   private final LoginUseCase loginUseCase;
   private final HttpServletRequest request;
   private final HttpServletResponse response;
-
-  AuthController(
-      LoginUseCase loginUseCase, HttpServletRequest request, HttpServletResponse response) {
-    this.loginUseCase = loginUseCase;
-    this.request = request;
-    this.response = response;
-  }
 
   @Override
   public ResponseEntity<Void> getCsrfToken() {
@@ -63,6 +58,10 @@ class AuthController implements AuthApi {
 
   @Override
   public ResponseEntity<Void> logout() {
+    SecurityContextHolder.clearContext();
+    if (request.getSession(false) != null) {
+      request.getSession(false).invalidate();
+    }
     return ResponseEntity.noContent().build();
   }
 }

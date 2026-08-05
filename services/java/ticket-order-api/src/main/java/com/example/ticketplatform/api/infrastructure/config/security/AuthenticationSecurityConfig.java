@@ -1,10 +1,5 @@
-package com.example.ticketplatform.api.infrastructure.config;
+package com.example.ticketplatform.api.infrastructure.config.security;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -16,16 +11,14 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
-class SecurityConfig {
+class AuthenticationSecurityConfig {
 
   @Bean
-  SecurityFilterChain securityFilterChain(
+  SecurityFilterChain authenticationSecurityFilterChain(
       HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
     return http.cors(cors -> cors.configurationSource(corsConfigurationSource))
         .csrf(
@@ -36,8 +29,7 @@ class SecurityConfig {
         .authorizeHttpRequests(
             authorize ->
                 authorize
-                    .requestMatchers(
-                        "/actuator/health", "/auth/csrf", "/auth/login", "/auth/logout")
+                    .requestMatchers("/actuator/health", "/auth/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
@@ -60,19 +52,5 @@ class SecurityConfig {
   @Bean
   PasswordEncoder passwordEncoder() {
     return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-  }
-
-  private static class CsrfCookieFilter extends OncePerRequestFilter {
-
-    @Override
-    protected void doFilterInternal(
-        HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, IOException {
-      CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-      if (csrfToken != null) {
-        csrfToken.getToken();
-      }
-      filterChain.doFilter(request, response);
-    }
   }
 }
