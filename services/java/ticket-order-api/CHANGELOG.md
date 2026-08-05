@@ -22,3 +22,4 @@ TICKET_SERVICE#123 - short description
 
 - TICKET_SERVICE#3 - align user persistence mapping with users relation
 - TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
+- TICKET_SERVICE#4 - simplify login service test state

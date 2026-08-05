@@ -38,6 +38,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - TICKET_SERVICE#3 - align user persistence mapping with users relation
 - TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
+- TICKET_SERVICE#4 - simplify login service test state
 
 ## ticket-order-api-contract
 

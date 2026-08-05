@@ -43,7 +43,8 @@ class LoginServiceTest {
 
     assertThatThrownBy(() -> service.login("missing@example.com", "secret"))
         .isInstanceOf(BadCredentialsException.class);
-    assertThat(passwords.wasCalled).isFalse();
+    assertThat(passwords.lastRawPassword).isNull();
+    assertThat(passwords.lastEncodedPassword).isNull();
   }
 
   @Test
@@ -62,7 +63,8 @@ class LoginServiceTest {
 
     assertThatThrownBy(() -> service.login("disabled@example.com", "secret"))
         .isInstanceOf(BadCredentialsException.class);
-    assertThat(passwords.wasCalled).isFalse();
+    assertThat(passwords.lastRawPassword).isNull();
+    assertThat(passwords.lastEncodedPassword).isNull();
   }
 
   private static User user(String email, boolean enabled) {
@@ -113,7 +115,6 @@ class LoginServiceTest {
   private static class TestPasswordMatcherPort implements PasswordMatcherPort {
 
     private final boolean matches;
-    private boolean wasCalled;
     private String lastRawPassword;
     private String lastEncodedPassword;
 
@@ -123,7 +124,6 @@ class LoginServiceTest {
 
     @Override
     public boolean matches(String rawPassword, String encodedPassword) {
-      wasCalled = true;
       lastRawPassword = rawPassword;
       lastEncodedPassword = encodedPassword;
       return matches;
