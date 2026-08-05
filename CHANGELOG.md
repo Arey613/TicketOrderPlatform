@@ -32,6 +32,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#1 - add user persistence and postgres wiring
 - TICKET_SERVICE#2 - add OpenAPI MapStruct mapping
 - TICKET_SERVICE#4 - add session login authentication and spec
+- TICKET_SERVICE#5 - add registration authentication flow
 
 ### Changed
 
@@ -47,6 +48,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 ### Changed
 
 - TICKET_CONTRACTS#2 - align contract with login authentication
+- TICKET_SERVICE#5 - add registration authentication flow
 
 ## ticket-order-db-migrations
 

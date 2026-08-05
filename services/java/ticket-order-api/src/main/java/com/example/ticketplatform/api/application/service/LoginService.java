@@ -1,6 +1,7 @@
 package com.example.ticketplatform.api.application.service;
 
 import com.example.ticketplatform.api.application.port.in.LoginUseCase;
+import com.example.ticketplatform.api.application.port.in.LoginCommand;
 import com.example.ticketplatform.api.application.port.out.PasswordMatcherPort;
 import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
@@ -16,13 +17,13 @@ class LoginService implements LoginUseCase {
   private final PasswordMatcherPort passwordMatcherPort;
 
   @Override
-  public User login(String login, String password) {
+  public User login(LoginCommand command) {
     User user =
         userRepositoryPort
-            .findByEmail(login)
+            .findByEmail(command.login())
             .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
-    if (!user.enabled() || !passwordMatcherPort.matches(password, user.passwordHash())) {
+    if (!user.enabled() || !passwordMatcherPort.matches(command.rawPassword(), user.passwordHash())) {
       throw new BadCredentialsException("Invalid credentials");
     }
 

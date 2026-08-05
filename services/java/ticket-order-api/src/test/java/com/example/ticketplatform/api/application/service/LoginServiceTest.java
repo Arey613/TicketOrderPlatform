@@ -3,6 +3,7 @@ package com.example.ticketplatform.api.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.ticketplatform.api.application.port.in.LoginCommand;
 import com.example.ticketplatform.api.application.port.out.PasswordMatcherPort;
 import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
@@ -29,7 +30,7 @@ class LoginServiceTest {
     TestPasswordMatcherPort passwords = new TestPasswordMatcherPort(true);
     LoginService service = new LoginService(users, passwords);
 
-    User result = service.login("customer@example.com", "secret");
+    User result = service.login(new LoginCommand("customer@example.com", "secret"));
 
     assertThat(result).isEqualTo(ENABLED_USER);
     assertThat(passwords.lastRawPassword).isEqualTo("secret");
@@ -41,7 +42,7 @@ class LoginServiceTest {
     TestPasswordMatcherPort passwords = new TestPasswordMatcherPort(true);
     LoginService service = new LoginService(TestUserRepositoryPort.empty(), passwords);
 
-    assertThatThrownBy(() -> service.login("missing@example.com", "secret"))
+    assertThatThrownBy(() -> service.login(new LoginCommand("missing@example.com", "secret")))
         .isInstanceOf(BadCredentialsException.class);
     assertThat(passwords.lastRawPassword).isNull();
     assertThat(passwords.lastEncodedPassword).isNull();
@@ -52,7 +53,7 @@ class LoginServiceTest {
     LoginService service =
         new LoginService(TestUserRepositoryPort.withUser(ENABLED_USER), new TestPasswordMatcherPort(false));
 
-    assertThatThrownBy(() -> service.login("customer@example.com", "wrong"))
+    assertThatThrownBy(() -> service.login(new LoginCommand("customer@example.com", "wrong")))
         .isInstanceOf(BadCredentialsException.class);
   }
 
@@ -61,7 +62,7 @@ class LoginServiceTest {
     TestPasswordMatcherPort passwords = new TestPasswordMatcherPort(true);
     LoginService service = new LoginService(TestUserRepositoryPort.withUser(DISABLED_USER), passwords);
 
-    assertThatThrownBy(() -> service.login("disabled@example.com", "secret"))
+    assertThatThrownBy(() -> service.login(new LoginCommand("disabled@example.com", "secret")))
         .isInstanceOf(BadCredentialsException.class);
     assertThat(passwords.lastRawPassword).isNull();
     assertThat(passwords.lastEncodedPassword).isNull();
