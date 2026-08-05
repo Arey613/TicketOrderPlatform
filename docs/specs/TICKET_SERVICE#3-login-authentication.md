@@ -1,8 +1,8 @@
-# TICKET_SERVICE#3 - Basic Authentication Login
+# TICKET_SERVICE#3 - Login Authentication
 
 ## Goal
 
-Enable HTTP Basic Authentication in the Java Ticket Order API. Clients authenticate by sending a login and password pair. For the first implementation, the login is the user's email address.
+Enable login/password authentication in the Java Ticket Order API. Clients authenticate by sending a login and password pair. For the first implementation, the login is the user's email address.
 
 ## Context
 
@@ -34,7 +34,7 @@ Use one JPA user entity for this feature:
 UserEntity -> ticket_transactional.t_users
 ```
 
-This entity supports authentication lookup and user persistence. It includes `password_hash` because Spring Security needs the encoded password during Basic Authentication.
+This entity supports authentication lookup and user persistence. It includes `password_hash` because Spring Security needs the encoded password during login.
 
 Do not map the authentication/persistence entity to the `users` view. Even if the view is simple enough for PostgreSQL to accept some writes, the service should not rely on view write-through behavior for core user persistence.
 
@@ -50,22 +50,21 @@ That read-side type should be added only when there is a real query use case tha
 
 This feature includes:
 
-- HTTP Basic Authentication support.
-- Login/password authentication.
+- Login/password authentication support.
 - Using email as the login value.
 - Validating the submitted password against `password_hash`.
 - Rejecting disabled users.
 - Loading user roles into Spring Security.
+- Public login endpoint.
+- Logout endpoint that invalidates the current authentication artifact.
 - Protecting API endpoints by default.
 - Replacing the `/hello` smoke endpoint with Spring Boot Actuator health.
 - Keeping `GET /actuator/health` public.
-- Regular `@SpringBootTest` integration tests.
+- Regular `@SpringBootTest` integration tests separated by controller.
 
 This feature does not include:
 
-- JWT authentication.
 - Refresh tokens.
-- Session-based login.
 - Frontend login form.
 - User registration.
 - Password reset.
@@ -74,30 +73,39 @@ This feature does not include:
 
 ## Authentication Contract
 
-Clients authenticate with the standard Basic Auth header:
+Clients authenticate through a public login endpoint:
 
 ```http
-Authorization: Basic base64(login:password)
+POST /auth/login
+Content-Type: application/json
 ```
 
-Because `login = email`, decoded credentials should look like:
+Request body:
 
-```text
-user@example.com:secret
+```json
+{
+  "login": "user@example.com",
+  "password": "secret"
+}
 ```
 
-Example request:
+Because `login = email`, the service treats `login` as the user email address.
+
+Successful login returns the current MVP authentication artifact. The artifact may be a server-side session or a replaceable token-based mechanism, but controllers and application use cases must not depend on password hashing or token implementation details.
+
+Clients logout through:
 
 ```http
-GET /some-protected-endpoint
-Authorization: Basic dXNlckBleGFtcGxlLmNvbTpzZWNyZXQ=
+POST /auth/logout
 ```
+
+Logout invalidates the current authentication artifact. If the MVP uses a server-side session, logout invalidates that session. If a later implementation uses tokens, logout must invalidate or revoke the token according to that implementation's strategy.
 
 ## Behavior
 
-When a request contains Basic Auth credentials, the service must:
+When a request calls `POST /auth/login`, the service must:
 
-1. Read the Basic Auth username value as `login`.
+1. Read `login` from the request body.
 2. Treat `login` as the user email.
 3. Load the user by email.
 4. Compare the submitted password with the stored `password_hash`.
@@ -106,6 +114,13 @@ When a request contains Basic Auth credentials, the service must:
 7. Reject authentication if the user is disabled.
 8. On success, expose the authenticated principal through Spring Security.
 9. On success, expose the user role as a Spring Security authority.
+10. On success, return or establish the current authentication artifact.
+
+When a request calls `POST /auth/logout`, the service must:
+
+1. Accept the request without requiring role-specific authorization.
+2. Invalidate the current authentication artifact when one is present.
+3. Return success even if the client is already effectively logged out.
 
 ## Password Handling
 
@@ -123,7 +138,9 @@ Tests may use:
 {noop}secret
 ```
 
-The implementation should support Spring Security's delegating password encoder so existing and future encoding formats can be handled consistently.
+Password hashing and password matching must be isolated behind a replaceable application-level service or port. Spring Security's encoder is an implementation detail of the current adapter/configuration, not a dependency that should leak into domain behavior or controller logic.
+
+The MVP implementation may use Spring Security's delegating password encoder so existing and future encoding formats can be handled consistently.
 
 Recommended encoder:
 
@@ -136,6 +153,8 @@ PasswordEncoderFactories.createDelegatingPasswordEncoder()
 Public endpoints:
 
 - `GET /actuator/health`
+- `POST /auth/login`
+- `POST /auth/logout`
 
 Authenticated endpoints:
 
@@ -149,8 +168,11 @@ The `/hello` endpoint must no longer be the public smoke endpoint. It should be 
 200 OK
 The request succeeds when valid credentials are provided and the endpoint permits the user.
 
+204 No Content
+Logout succeeds when the current authentication artifact is invalidated or when the client is already effectively logged out.
+
 401 Unauthorized
-Returned when credentials are missing, login/email is unknown, password is invalid, or the user is disabled.
+Returned when protected endpoint credentials are missing or invalid, or when login credentials are unknown, invalid, or disabled.
 
 403 Forbidden
 Reserved for future role-based authorization when an authenticated user lacks permission.
@@ -158,27 +180,40 @@ Reserved for future role-based authorization when an authenticated user lacks pe
 
 ## Integration Test Requirement
 
-Use regular Spring Boot integration tests.
+Use regular Spring Boot integration tests separated by controller.
 
 Suggested test style:
 
 ```java
 @SpringBootTest
 @AutoConfigureMockMvc
-class BasicAuthenticationIntegrationTest {
+class AuthControllerIntegrationTest {
+}
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class ActuatorHealthIntegrationTest {
+}
+
+@SpringBootTest
+@AutoConfigureMockMvc
+class UserControllerIntegrationTest {
 }
 ```
 
 The test suite should verify:
 
 1. `GET /actuator/health` works without authentication.
-2. A protected endpoint returns `401 Unauthorized` when no credentials are provided.
-3. A protected endpoint returns `401 Unauthorized` when the login/email does not exist.
-4. A protected endpoint returns `401 Unauthorized` when the password is wrong.
-5. A protected endpoint returns `401 Unauthorized` when the user is disabled.
-6. A protected endpoint succeeds when login/email and password are valid.
-7. The authenticated principal contains the expected email.
-8. The authenticated authorities contain the expected user role.
+2. `POST /auth/login` is public and is not protected by authentication or role rules.
+3. `POST /auth/login` returns `401 Unauthorized` when the login/email does not exist.
+4. `POST /auth/login` returns `401 Unauthorized` when the password is wrong.
+5. `POST /auth/login` returns `401 Unauthorized` when the user is disabled.
+6. `POST /auth/login` succeeds when login/email and password are valid.
+7. `POST /auth/logout` is callable without role-specific authorization and invalidates the current authentication artifact.
+8. A protected controller endpoint returns `401 Unauthorized` when no credentials/authentication artifact is provided.
+9. A protected controller endpoint succeeds when the current authentication artifact is valid.
+10. The authenticated principal contains the expected email.
+11. The authenticated authorities contain the expected user role.
 
 ## Implementation Notes
 
@@ -186,11 +221,14 @@ The likely implementation should:
 
 - Add Spring Boot Actuator if it is not already present.
 - Expose the health endpoint.
-- Update `SecurityConfig` to enable HTTP Basic Authentication.
+- Add login and logout endpoints under a dedicated authentication controller.
 - Permit unauthenticated access to `GET /actuator/health`.
+- Permit unauthenticated access to `POST /auth/login`.
+- Permit unauthenticated access to `POST /auth/logout`.
 - Require authentication by default for all other endpoints.
-- Keep CSRF disabled for stateless API behavior.
-- Add or expose a `PasswordEncoder` bean.
+- Decide and document the MVP authentication artifact used after login.
+- Keep CSRF behavior aligned with the chosen authentication artifact.
+- Add or expose a replaceable password hashing/matching service.
 - Keep `DomainUserDetailsService` as the Spring Security adapter.
 - Continue loading users through the application/user repository port.
 - Avoid adding a new `login` column for now.
@@ -200,13 +238,16 @@ The likely implementation should:
 
 This feature is done when:
 
-- Basic Auth is enabled.
+- Login/password authentication is enabled.
 - Email is accepted as the login value.
 - Valid enabled users can authenticate.
 - Invalid credentials return `401 Unauthorized`.
 - Disabled users return `401 Unauthorized`.
 - `GET /actuator/health` is public.
+- `POST /auth/login` is public.
+- `POST /auth/logout` invalidates the current authentication artifact.
+- Password hashing/matching is isolated behind a replaceable service or port.
 - Protected endpoints require authentication.
 - `/hello` is no longer used as the health/smoke endpoint.
-- `@SpringBootTest` integration coverage proves the behavior.
+- Controller-separated `@SpringBootTest` integration coverage proves the behavior.
 - `make test-api` passes.

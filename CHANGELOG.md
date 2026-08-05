@@ -36,6 +36,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 ### Changed
 
 - TICKET_SERVICE#3 - align user persistence mapping with users relation
+- TICKET_SERVICE#3 - refine login authentication spec
 
 ## ticket-order-api-contract
 

@@ -20,3 +20,4 @@ TICKET_SERVICE#123 - short description
 ### Changed
 
 - TICKET_SERVICE#3 - align user persistence mapping with users relation
+- TICKET_SERVICE#3 - refine login authentication spec
