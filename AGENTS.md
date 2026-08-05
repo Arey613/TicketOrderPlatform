@@ -38,6 +38,8 @@ Use `docs/PROJECT_MAP.md` for fast module routing before scanning broadly.
 - Before installing dependencies or downloading tools from package registries, ask the user in chat and wait for explicit approval, even if tool escalation is available.
 - Keep generated output out of git. Do not commit `target`, `dist`, or `node_modules`.
 - Add a scoped `AGENTS.md` for every new service or app module.
+- For class fields and local variables inside methods, place annotations on their own line above the variable declaration. This rule does not apply to method, constructor, lambda, or record input parameters.
+- When a method, constructor, lambda, or record accepts four or more parameters, format the parameters vertically, one per line.
 
 ## Test
 
