@@ -27,13 +27,13 @@ The module follows a hexagonal architecture package layout:
 ## Endpoints
 
 ```text
-GET /hello
+GET /actuator/health
 ```
 
 Returns:
 
 ```text
-Hello, World!
+Service health details
 ```
 
 ## Commands
@@ -116,8 +116,8 @@ spring:
     password: ticket_order
 ```
 
-The user persistence adapter maps the domain `User` to the `app_users` table:
+The user persistence adapter maps the domain `User` to the `t_users` table:
 
 ```text
-app_users
+t_users
 ```

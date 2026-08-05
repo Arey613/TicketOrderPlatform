@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 class UserEntityMappingTest {
 
   @Test
-  void alignsUserEntityToAppUsersTable() throws NoSuchFieldException {
-    assertThat(UserEntity.class.getAnnotation(Table.class).name()).isEqualTo("app_users");
+  void alignsUserEntityToUsersTable() throws NoSuchFieldException {
+    assertThat(UserEntity.class.getAnnotation(Table.class).name()).isEqualTo("t_users");
     assertThat(columnName("id")).isEqualTo("id");
     assertThat(columnName("email")).isEqualTo("email");
     assertThat(columnName("passwordHash")).isEqualTo("password_hash");
