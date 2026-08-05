@@ -18,7 +18,6 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#4 - add project navigation guides
 - GLOBAL_CONFIG#5 - add Minikube local Kubernetes deployment
 - GLOBAL_CONFIG#6 - add formatter validation
-- GLOBAL_CONFIG#7 - add Lombok annotation configuration
 
 ### Changed
 
@@ -33,6 +32,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#1 - add user persistence and postgres wiring
 - TICKET_SERVICE#2 - add OpenAPI MapStruct mapping
 - TICKET_SERVICE#4 - add session login authentication
+- TICKET_SERVICE#4 - add Lombok annotation configuration
 
 ### Changed
 

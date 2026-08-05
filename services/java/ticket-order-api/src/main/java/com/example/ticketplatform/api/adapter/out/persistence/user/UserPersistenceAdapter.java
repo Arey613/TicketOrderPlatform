@@ -4,18 +4,15 @@ import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 class UserPersistenceAdapter implements UserRepositoryPort {
 
   private final UserJpaRepository repository;
   private final UserMapper mapper;
-
-  UserPersistenceAdapter(UserJpaRepository repository, UserMapper mapper) {
-    this.repository = repository;
-    this.mapper = mapper;
-  }
 
   @Override
   public User save(User user) {
