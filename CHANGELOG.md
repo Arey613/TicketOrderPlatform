@@ -21,7 +21,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 ### Changed
 
-- GLOBAL_CONFIG#4 - add pull request iteration guidance
+- GLOBAL_CONFIG#4 - add pull request iteration and style guidance
 - GLOBAL_CONFIG#5 - organize changelog entries
 
 ## ticket-order-api
@@ -31,10 +31,12 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders
 - TICKET_SERVICE#1 - add user persistence and postgres wiring
 - TICKET_SERVICE#2 - add OpenAPI MapStruct mapping
+- TICKET_SERVICE#4 - add session login authentication
 
 ### Changed
 
 - TICKET_SERVICE#3 - align user persistence mapping with users relation
+- TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
 
 ## ticket-order-api-contract
 

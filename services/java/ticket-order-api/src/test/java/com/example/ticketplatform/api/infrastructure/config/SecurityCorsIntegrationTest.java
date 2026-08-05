@@ -1,6 +1,5 @@
 package com.example.ticketplatform.api.infrastructure.config;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,7 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @TestPropertySource(
     properties = {
       "ticket-order-platform.cors.allowed-origins=http://localhost:5173",
-      "ticket-order-platform.cors.allowed-methods=GET,OPTIONS",
+      "ticket-order-platform.cors.allowed-methods=GET,POST,OPTIONS",
       "ticket-order-platform.cors.allowed-headers=*",
       "ticket-order-platform.cors.allow-credentials=false",
       "ticket-order-platform.cors.max-age=3600"
@@ -27,20 +26,15 @@ class SecurityCorsIntegrationTest {
   @Autowired private MockMvc mockMvc;
 
   @Test
-  void permitsHelloEndpointWithoutAuthentication() throws Exception {
-    mockMvc.perform(get("/hello")).andExpect(status().isOk());
-  }
-
-  @Test
   void appliesCorsHeadersToAllowedPreflightRequest() throws Exception {
     mockMvc
         .perform(
-            options("/hello")
+            options("/auth/login")
                 .header("Origin", "http://localhost:5173")
-                .header("Access-Control-Request-Method", "GET"))
+                .header("Access-Control-Request-Method", "POST"))
         .andExpect(status().isOk())
         .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
-        .andExpect(header().string("Access-Control-Allow-Methods", "GET,OPTIONS"))
+        .andExpect(header().string("Access-Control-Allow-Methods", "GET,POST,OPTIONS"))
         .andExpect(header().string("Access-Control-Max-Age", "3600"));
   }
 }

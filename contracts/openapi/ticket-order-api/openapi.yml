@@ -7,15 +7,60 @@ servers:
   - url: http://localhost:8080
     description: Local API server
 tags:
+  - name: Auth
+    description: Login and logout resources
   - name: Users
     description: User resources
 paths:
+  /auth/csrf:
+    get:
+      operationId: getCsrfToken
+      tags:
+        - Auth
+      summary: Create a CSRF token cookie
+      responses:
+        "204":
+          description: CSRF token cookie was created
+  /auth/login:
+    post:
+      operationId: login
+      tags:
+        - Auth
+      summary: Authenticate a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Login request was invalid
+        "401":
+          description: Login credentials are unknown, invalid, or disabled
+  /auth/logout:
+    post:
+      operationId: logout
+      tags:
+        - Auth
+      summary: Logout the current user
+      responses:
+        "204":
+          description: Logout succeeded
   /users/{userId}:
     get:
       operationId: getUser
       tags:
         - Users
       summary: Return a user
+      security:
+        - sessionAuth: []
       parameters:
         - name: userId
           in: path
@@ -36,10 +81,36 @@ paths:
           description: User was not found
 components:
   securitySchemes:
-    basicAuth:
-      type: http
-      scheme: basic
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
   schemas:
+    LoginRequest:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          type: string
+          format: email
+          maxLength: 320
+        password:
+          type: string
+          minLength: 1
+    LoginResponse:
+      type: object
+      required:
+        - email
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 320
+        role:
+          $ref: "#/components/schemas/UserRole"
     UserRole:
       type: string
       enum:
@@ -72,5 +143,3 @@ components:
         updatedAt:
           type: string
           format: date-time
-security:
-  - basicAuth: []
