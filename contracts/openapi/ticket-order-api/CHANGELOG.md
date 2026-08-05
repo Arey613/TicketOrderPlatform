@@ -16,4 +16,4 @@ TICKET_CONTRACTS#123 - short description
 
 ### Changed
 
-- TICKET_CONTRACTS#2 - align contract with basic authentication spec
+- TICKET_CONTRACTS#2 - align contract with login authentication
