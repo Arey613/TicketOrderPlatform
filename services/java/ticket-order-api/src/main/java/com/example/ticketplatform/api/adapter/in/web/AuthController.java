@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,12 +35,12 @@ class AuthController implements AuthApi {
   public ResponseEntity<LoginResponse> login(LoginRequest loginRequest) {
     try {
       User user = loginUseCase.login(loginRequest.getLogin(), loginRequest.getPassword());
-      var authentication =
+      UsernamePasswordAuthenticationToken authentication =
           UsernamePasswordAuthenticationToken.authenticated(
               user.email(),
               null,
               List.of(new SimpleGrantedAuthority("ROLE_" + user.role().name())));
-      var context = SecurityContextHolder.createEmptyContext();
+      SecurityContext context = SecurityContextHolder.createEmptyContext();
       context.setAuthentication(authentication);
       SecurityContextHolder.setContext(context);
       new HttpSessionSecurityContextRepository().saveContext(context, request, response);
