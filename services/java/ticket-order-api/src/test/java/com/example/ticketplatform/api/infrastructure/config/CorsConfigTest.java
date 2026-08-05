@@ -21,7 +21,7 @@ class CorsConfigTest {
     CorsConfigurationSource source = new CorsConfig().corsConfigurationSource(properties);
 
     CorsConfiguration configuration =
-        source.getCorsConfiguration(new MockHttpServletRequest("GET", "/hello"));
+        source.getCorsConfiguration(new MockHttpServletRequest("POST", "/auth/login"));
     assertThat(configuration).isNotNull();
     assertThat(configuration.getAllowedOrigins()).containsExactly("http://localhost:5173");
     assertThat(configuration.getAllowedMethods()).containsExactly("GET", "OPTIONS");

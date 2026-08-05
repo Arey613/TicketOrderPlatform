@@ -52,6 +52,16 @@ make generate-api-contracts
   - controller tests under `adapter/in/web`
   - service tests under `application/service`
   - configuration tests under `infrastructure/config`
+- For controller integration tests, prefer `@SpringBootTest` with `@AutoConfigureMockMvc`
+  and keep tests separated per controller or web concern.
+- Controller integration tests should exercise HTTP, security, request/response mapping,
+  and controller-to-port wiring. They should not set up data through `JdbcTemplate` or
+  depend on migration/table details.
+- When controller tests need application state, import a test configuration that overrides
+  the existing application port bean with a test implementation of the same port. Keep
+  reusable test fixtures static and reset mutable test state in `@BeforeEach`.
+- Use direct service/domain unit tests for business branching that does not require the
+  web/security filter chain.
 
 ## Deploy
 
