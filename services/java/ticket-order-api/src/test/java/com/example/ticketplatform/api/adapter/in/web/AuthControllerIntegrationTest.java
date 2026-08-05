@@ -137,6 +137,50 @@ class AuthControllerIntegrationTest {
   }
 
   @Test
+  void registersUserAndAllowsSessionBackedAccess() throws Exception {
+    Cookie csrfCookie = csrfCookie();
+
+    MvcResult registerResult =
+        mockMvc
+            .perform(
+                post("/auth/register")
+                    .cookie(csrfCookie)
+                    .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "email": "new.customer@example.com",
+                          "password": "new-secret"
+                        }
+                        """))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.email").value("new.customer@example.com"))
+            .andExpect(jsonPath("$.role").value("CUSTOMER"))
+            .andExpect(jsonPath("$.enabled").value(true))
+            .andExpect(jsonPath("$.password").doesNotExist())
+            .andExpect(jsonPath("$.passwordHash").doesNotExist())
+            .andReturn();
+
+    MockHttpSession session = (MockHttpSession) registerResult.getRequest().getSession(false);
+    SecurityContext securityContext =
+        (SecurityContext)
+            session.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+    User registeredUser =
+        testUsers.findByEmail("new.customer@example.com").orElseThrow();
+
+    assertThat(securityContext.getAuthentication().getName()).isEqualTo("new.customer@example.com");
+    assertThat(securityContext.getAuthentication().getAuthorities())
+        .extracting("authority")
+        .containsExactly("ROLE_CUSTOMER");
+    assertThat(registeredUser.passwordHash()).isNotEqualTo("new-secret");
+
+    mockMvc
+        .perform(get("/users/{userId}", registeredUser.id()).session(session))
+        .andExpect(status().isOk());
+  }
+
+  @Test
   void logoutInvalidatesSessionBackedAccess() throws Exception {
     MvcResult loginResult = mockMvc.perform(validLogin()).andExpect(status().isOk()).andReturn();
     MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);

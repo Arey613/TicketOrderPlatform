@@ -1,6 +1,6 @@
 package com.example.ticketplatform.api.application.service;
 
-import com.example.ticketplatform.api.application.port.in.GetUserUseCase;
+import com.example.ticketplatform.api.application.port.in.UserQueryUseCase;
 import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import java.util.NoSuchElementException;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-class UserQueryService implements GetUserUseCase {
+class UserQueryService implements UserQueryUseCase {
 
   private final UserRepositoryPort userRepositoryPort;
 

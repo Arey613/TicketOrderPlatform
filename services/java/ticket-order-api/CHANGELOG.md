@@ -16,6 +16,7 @@ TICKET_SERVICE#123 - short description
 - TICKET_SERVICE#1 - add user persistence and postgres wiring
 - TICKET_SERVICE#2 - add OpenAPI MapStruct mapping
 - TICKET_SERVICE#4 - add session login authentication
+- TICKET_SERVICE#5 - add registration authentication flow
 
 ### Changed
 

@@ -17,3 +17,4 @@ TICKET_CONTRACTS#123 - short description
 ### Changed
 
 - TICKET_CONTRACTS#2 - align contract with login authentication
+- TICKET_SERVICE#5 - add registration authentication flow
