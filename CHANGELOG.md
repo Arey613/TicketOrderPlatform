@@ -33,6 +33,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#2 - add OpenAPI MapStruct mapping
 - TICKET_SERVICE#4 - add session login authentication and spec
 - TICKET_SERVICE#5 - add registration authentication flow
+- TICKET_SERVICE#6 - add event management specification
 
 ### Changed
 
