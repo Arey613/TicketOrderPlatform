@@ -24,7 +24,6 @@ paths:
       responses:
         '204':
           description: CSRF token cookie was created
-
   "/auth/login":
     post:
       operationId: login
@@ -48,7 +47,6 @@ paths:
           description: Login request was invalid
         '401':
           description: Login credentials are unknown, invalid, or disabled
-
   "/auth/register":
     post:
       operationId: registerUser
@@ -72,7 +70,6 @@ paths:
           description: Registration request was invalid
         '409':
           description: User email is already registered
-
   "/auth/logout":
     post:
       operationId: logout
@@ -82,7 +79,6 @@ paths:
       responses:
         '204':
           description: Logout succeeded
-
   "/users/{userId}":
     get:
       operationId: getUser
@@ -109,7 +105,6 @@ paths:
           description: Authentication credentials are missing or invalid
         '404':
           description: User was not found
-
   "/events":
     post:
       operationId: createEvent
@@ -161,7 +156,6 @@ paths:
           description: Authentication credentials are missing or invalid
         '403':
           description: Authenticated user is not allowed to use the requested scope
-
   "/events/{eventId}":
     get:
       operationId: getEvent
@@ -217,7 +211,6 @@ paths:
           description: Authenticated user is not allowed to update this event
         '404':
           description: Event was not found
-
   "/events/{eventId}/publish":
     post:
       operationId: publishEvent
@@ -245,7 +238,6 @@ paths:
           description: Event was not found
         '409':
           description: Event status does not allow publishing
-
   "/events/{eventId}/unpublish":
     post:
       operationId: unpublishEvent
@@ -271,7 +263,6 @@ paths:
           description: Event was not found
         '409':
           description: Event status does not allow unpublishing
-
   "/events/orders":
     post:
       operationId: createEventOrders
@@ -322,7 +313,6 @@ paths:
             order
         '404':
           description: At least one event order was not found
-
   "/events/orders/mine":
     get:
       operationId: listMyEventOrders
@@ -340,7 +330,6 @@ paths:
                 "$ref": "#/components/schemas/MyEventOrdersResponse"
         '401':
           description: Authentication credentials are missing or invalid
-
 components:
   parameters:
     EventId:
@@ -350,7 +339,6 @@ components:
       schema:
         type: string
         format: uuid
-
   securitySchemes:
     sessionAuth:
       type: apiKey
@@ -370,7 +358,6 @@ components:
         password:
           type: string
           minLength: 1
-
     RegisterUserRequest:
       type: object
       required:
@@ -385,7 +372,6 @@ components:
           type: string
           minLength: 8
           maxLength: 128
-
     LoginResponse:
       type: object
       required:
@@ -398,28 +384,24 @@ components:
           maxLength: 320
         role:
           "$ref": "#/components/schemas/UserRole"
-
     UserRole:
       type: string
       enum:
       - CUSTOMER
       - MANAGER
       - ADMIN
-
     EventStatus:
       type: string
       enum:
       - DRAFT
       - PUBLISHED
       - CANCELLED
-
     EventListScope:
       type: string
       default: published
       enum:
       - published
       - mine
-
     EventDetailsRequest:
       type: object
       required:
@@ -440,11 +422,9 @@ components:
         seatsPerRow:
           type: integer
           minimum: 1
-
     EventDetailsResponse:
       allOf:
       - "$ref": "#/components/schemas/EventDetailsRequest"
-
     CreateEventRequest:
       type: object
       required:
@@ -472,11 +452,9 @@ components:
         details:
           "$ref": "#/components/schemas/EventDetailsRequest"
       additionalProperties: false
-
     UpdateEventRequest:
       allOf:
       - "$ref": "#/components/schemas/CreateEventRequest"
-
     TakenPlaceResponse:
       type: object
       required:
@@ -489,7 +467,6 @@ components:
         place:
           type: integer
           minimum: 1
-
     EventResponse:
       type: object
       required:
@@ -533,7 +510,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/TakenPlaceResponse"
-
     EventListResponse:
       type: object
       required:
@@ -543,7 +519,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/EventResponse"
-
     CreateEventOrderItem:
       type: object
       required:
@@ -568,7 +543,6 @@ components:
           type: string
           minLength: 1
           maxLength: 100
-
     CreateEventOrdersRequest:
       type: object
       required:
@@ -579,7 +553,6 @@ components:
           minItems: 1
           items:
             "$ref": "#/components/schemas/CreateEventOrderItem"
-
     DeleteEventOrdersRequest:
       type: object
       required:
@@ -591,7 +564,6 @@ components:
           items:
             type: string
             format: uuid
-
     MyEventOrderResponse:
       type: object
       required:
@@ -628,7 +600,6 @@ components:
         reservationDate:
           type: string
           format: date-time
-
     MyEventOrdersResponse:
       type: object
       required:
@@ -638,7 +609,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/MyEventOrderResponse"
-
     UserResponse:
       type: object
       required:

@@ -18,3 +18,4 @@ DATABASE_MIGRATIONS#123 - short description
 ### Changed
 
 - DATABASE_MIGRATIONS#2 - rename application user migrations
+- TICKET_SERVICE#6 - address event management review comments

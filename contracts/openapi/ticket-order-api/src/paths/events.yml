@@ -1,51 +1,159 @@
 ---
-post:
-  operationId: createEvent
-  tags:
-  - Events
-  summary: Create an event
-  security:
-  - sessionAuth: []
-  requestBody:
-    required: true
-    content:
-      application/json:
-        schema:
-          "$ref": "#/components/schemas/CreateEventRequest"
-  responses:
-    '201':
-      description: Event was created
+"/events":
+  post:
+    operationId: createEvent
+    tags:
+    - Events
+    summary: Create an event
+    security:
+    - sessionAuth: []
+    requestBody:
+      required: true
       content:
         application/json:
           schema:
-            "$ref": "#/components/schemas/EventResponse"
-    '400':
-      description: Event request was invalid
-    '401':
-      description: Authentication credentials are missing or invalid
-    '403':
-      description: Authenticated user is not allowed to create events
-get:
-  operationId: listEvents
-  tags:
-  - Events
-  summary: List events
-  security:
-  - sessionAuth: []
-  parameters:
-  - name: scope
-    in: query
-    required: false
-    schema:
-      "$ref": "#/components/schemas/EventListScope"
-  responses:
-    '200':
-      description: Events response
+            "$ref": "#/components/schemas/CreateEventRequest"
+    responses:
+      '201':
+        description: Event was created
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventResponse"
+      '400':
+        description: Event request was invalid
+      '401':
+        description: Authentication credentials are missing or invalid
+      '403':
+        description: Authenticated user is not allowed to create events
+  get:
+    operationId: listEvents
+    tags:
+    - Events
+    summary: List events
+    security:
+    - sessionAuth: []
+    parameters:
+    - name: scope
+      in: query
+      required: false
+      schema:
+        "$ref": "#/components/schemas/EventListScope"
+    responses:
+      '200':
+        description: Events response
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventListResponse"
+      '401':
+        description: Authentication credentials are missing or invalid
+      '403':
+        description: Authenticated user is not allowed to use the requested scope
+"/events/{eventId}":
+  get:
+    operationId: getEvent
+    tags:
+    - Events
+    summary: Return an event
+    security:
+    - sessionAuth: []
+    parameters:
+    - "$ref": "#/components/parameters/EventId"
+    responses:
+      '200':
+        description: Event response
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventResponse"
+      '401':
+        description: Authentication credentials are missing or invalid
+      '403':
+        description: Authenticated user is not allowed to read this event
+      '404':
+        description: Event was not found
+      '409':
+        description: Event status does not allow updating
+  put:
+    operationId: updateEvent
+    tags:
+    - Events
+    summary: Update an event
+    security:
+    - sessionAuth: []
+    parameters:
+    - "$ref": "#/components/parameters/EventId"
+    requestBody:
+      required: true
       content:
         application/json:
           schema:
-            "$ref": "#/components/schemas/EventListResponse"
-    '401':
-      description: Authentication credentials are missing or invalid
-    '403':
-      description: Authenticated user is not allowed to use the requested scope
+            "$ref": "#/components/schemas/UpdateEventRequest"
+    responses:
+      '200':
+        description: Event was updated
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventResponse"
+      '400':
+        description: Event request was invalid
+      '401':
+        description: Authentication credentials are missing or invalid
+      '403':
+        description: Authenticated user is not allowed to update this event
+      '404':
+        description: Event was not found
+"/events/{eventId}/publish":
+  post:
+    operationId: publishEvent
+    tags:
+    - Events
+    summary: Publish an event
+    security:
+    - sessionAuth: []
+    parameters:
+    - "$ref": "#/components/parameters/EventId"
+    responses:
+      '200':
+        description: Event was published
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventResponse"
+      '400':
+        description: Event is missing required publish data
+      '401':
+        description: Authentication credentials are missing or invalid
+      '403':
+        description: Authenticated user is not allowed to publish this event
+      '404':
+        description: Event was not found
+      '409':
+        description: Event status does not allow publishing
+"/events/{eventId}/unpublish":
+  post:
+    operationId: unpublishEvent
+    tags:
+    - Events
+    summary: Unpublish an event
+    security:
+    - sessionAuth: []
+    parameters:
+    - "$ref": "#/components/parameters/EventId"
+    responses:
+      '200':
+        description: Event was unpublished
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventResponse"
+      '401':
+        description: Authentication credentials are missing or invalid
+      '403':
+        description: Authenticated user is not allowed to unpublish this event
+      '404':
+        description: Event was not found
+      '409':
+        description: Event status does not allow unpublishing

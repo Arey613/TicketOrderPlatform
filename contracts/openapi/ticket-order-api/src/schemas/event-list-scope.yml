@@ -1,6 +1,0 @@
----
-type: string
-default: published
-enum:
-- published
-- mine

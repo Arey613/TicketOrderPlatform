@@ -1,9 +1,0 @@
----
-get:
-  operationId: getCsrfToken
-  tags:
-  - Auth
-  summary: Create a CSRF token cookie
-  responses:
-    '204':
-      description: CSRF token cookie was created

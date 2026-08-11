@@ -16,31 +16,31 @@ tags:
   description: Event management and event order resources
 paths:
   "/auth/csrf":
-    "$ref": "./paths/auth-csrf.yml"
+    "$ref": "./paths/auth.yml#/~1auth~1csrf"
   "/auth/login":
-    "$ref": "./paths/auth-login.yml"
+    "$ref": "./paths/auth.yml#/~1auth~1login"
   "/auth/register":
-    "$ref": "./paths/auth-register.yml"
+    "$ref": "./paths/auth.yml#/~1auth~1register"
   "/auth/logout":
-    "$ref": "./paths/auth-logout.yml"
+    "$ref": "./paths/auth.yml#/~1auth~1logout"
   "/users/{userId}":
-    "$ref": "./paths/users-user-id.yml"
+    "$ref": "./paths/users.yml#/~1users~1{userId}"
   "/events":
-    "$ref": "./paths/events.yml"
+    "$ref": "./paths/events.yml#/~1events"
   "/events/{eventId}":
-    "$ref": "./paths/events-event-id.yml"
+    "$ref": "./paths/events.yml#/~1events~1{eventId}"
   "/events/{eventId}/publish":
-    "$ref": "./paths/events-event-id-publish.yml"
+    "$ref": "./paths/events.yml#/~1events~1{eventId}~1publish"
   "/events/{eventId}/unpublish":
-    "$ref": "./paths/events-event-id-unpublish.yml"
+    "$ref": "./paths/events.yml#/~1events~1{eventId}~1unpublish"
   "/events/orders":
-    "$ref": "./paths/events-orders.yml"
+    "$ref": "./paths/event-orders.yml#/~1events~1orders"
   "/events/orders/mine":
-    "$ref": "./paths/events-orders-mine.yml"
+    "$ref": "./paths/event-orders.yml#/~1events~1orders~1mine"
 components:
   parameters:
     EventId:
-      "$ref": "./schemas/event-id.parameter.yml"
+      "$ref": "./schemas/event.yml#/EventId"
   securitySchemes:
     sessionAuth:
       type: apiKey
@@ -48,40 +48,40 @@ components:
       name: JSESSIONID
   schemas:
     LoginRequest:
-      "$ref": "./schemas/login-request.yml"
+      "$ref": "./schemas/auth.yml#/LoginRequest"
     RegisterUserRequest:
-      "$ref": "./schemas/register-user-request.yml"
+      "$ref": "./schemas/auth.yml#/RegisterUserRequest"
     LoginResponse:
-      "$ref": "./schemas/login-response.yml"
+      "$ref": "./schemas/auth.yml#/LoginResponse"
     UserRole:
-      "$ref": "./schemas/user-role.yml"
+      "$ref": "./schemas/user.yml#/UserRole"
     EventStatus:
-      "$ref": "./schemas/event-status.yml"
+      "$ref": "./schemas/event.yml#/EventStatus"
     EventListScope:
-      "$ref": "./schemas/event-list-scope.yml"
+      "$ref": "./schemas/event.yml#/EventListScope"
     EventDetailsRequest:
-      "$ref": "./schemas/event-details-request.yml"
+      "$ref": "./schemas/event.yml#/EventDetailsRequest"
     EventDetailsResponse:
-      "$ref": "./schemas/event-details-response.yml"
+      "$ref": "./schemas/event.yml#/EventDetailsResponse"
     CreateEventRequest:
-      "$ref": "./schemas/create-event-request.yml"
+      "$ref": "./schemas/event.yml#/CreateEventRequest"
     UpdateEventRequest:
-      "$ref": "./schemas/update-event-request.yml"
+      "$ref": "./schemas/event.yml#/UpdateEventRequest"
     TakenPlaceResponse:
-      "$ref": "./schemas/taken-place-response.yml"
+      "$ref": "./schemas/event.yml#/TakenPlaceResponse"
     EventResponse:
-      "$ref": "./schemas/event-response.yml"
+      "$ref": "./schemas/event.yml#/EventResponse"
     EventListResponse:
-      "$ref": "./schemas/event-list-response.yml"
+      "$ref": "./schemas/event.yml#/EventListResponse"
     CreateEventOrderItem:
-      "$ref": "./schemas/create-event-order-item.yml"
+      "$ref": "./schemas/event-order.yml#/CreateEventOrderItem"
     CreateEventOrdersRequest:
-      "$ref": "./schemas/create-event-orders-request.yml"
+      "$ref": "./schemas/event-order.yml#/CreateEventOrdersRequest"
     DeleteEventOrdersRequest:
-      "$ref": "./schemas/delete-event-orders-request.yml"
+      "$ref": "./schemas/event-order.yml#/DeleteEventOrdersRequest"
     MyEventOrderResponse:
-      "$ref": "./schemas/my-event-order-response.yml"
+      "$ref": "./schemas/event-order.yml#/MyEventOrderResponse"
     MyEventOrdersResponse:
-      "$ref": "./schemas/my-event-orders-response.yml"
+      "$ref": "./schemas/event-order.yml#/MyEventOrdersResponse"
     UserResponse:
-      "$ref": "./schemas/user-response.yml"
+      "$ref": "./schemas/user.yml#/UserResponse"

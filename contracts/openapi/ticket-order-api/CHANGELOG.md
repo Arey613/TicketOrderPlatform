@@ -19,3 +19,4 @@ TICKET_CONTRACTS#123 - short description
 
 - TICKET_CONTRACTS#2 - align contract with login authentication
 - TICKET_SERVICE#5 - add registration authentication flow
+- TICKET_SERVICE#6 - address event management review comments

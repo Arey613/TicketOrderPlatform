@@ -1,0 +1,40 @@
+---
+LoginRequest:
+  type: object
+  required:
+  - login
+  - password
+  properties:
+    login:
+      type: string
+      format: email
+      maxLength: 320
+    password:
+      type: string
+      minLength: 1
+RegisterUserRequest:
+  type: object
+  required:
+  - email
+  - password
+  properties:
+    email:
+      type: string
+      format: email
+      maxLength: 320
+    password:
+      type: string
+      minLength: 8
+      maxLength: 128
+LoginResponse:
+  type: object
+  required:
+  - email
+  - role
+  properties:
+    email:
+      type: string
+      format: email
+      maxLength: 320
+    role:
+      "$ref": "#/components/schemas/UserRole"

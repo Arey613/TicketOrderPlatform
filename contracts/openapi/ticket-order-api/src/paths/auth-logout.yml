@@ -1,9 +1,0 @@
----
-post:
-  operationId: logout
-  tags:
-  - Auth
-  summary: Logout the current user
-  responses:
-    '204':
-      description: Logout succeeded

@@ -41,6 +41,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - TICKET_SERVICE#3 - align user persistence mapping with users relation
 - TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
+- TICKET_SERVICE#6 - address event management review comments
 
 ## ticket-order-api-contract
 
@@ -53,6 +54,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - TICKET_CONTRACTS#2 - align contract with login authentication
 - TICKET_SERVICE#5 - add registration authentication flow
+- TICKET_SERVICE#6 - address event management review comments
 
 ## ticket-order-db-migrations
 
@@ -64,6 +66,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 ### Changed
 
 - DATABASE_MIGRATIONS#2 - rename application user migrations
+- TICKET_SERVICE#6 - address event management review comments
 
 ## ticket-order-web
 
