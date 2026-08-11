@@ -13,7 +13,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class ActuatorHealthIntegrationTest {
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
   @Test
   void exposesHealthWithoutAuthentication() throws Exception {

@@ -1,0 +1,137 @@
+---
+EventId:
+  name: eventId
+  in: path
+  required: true
+  schema:
+    type: string
+    format: uuid
+EventStatus:
+  type: string
+  enum:
+  - DRAFT
+  - PUBLISHED
+  - CANCELLED
+EventListScope:
+  type: string
+  default: published
+  enum:
+  - published
+  - mine
+EventDetailsRequest:
+  type: object
+  required:
+  - description
+  - numberOfPlaces
+  - numberOfRows
+  - seatsPerRow
+  properties:
+    description:
+      type: string
+      minLength: 1
+    numberOfPlaces:
+      type: integer
+      minimum: 1
+    numberOfRows:
+      type: integer
+      minimum: 1
+    seatsPerRow:
+      type: integer
+      minimum: 1
+EventDetailsResponse:
+  allOf:
+  - "$ref": "#/components/schemas/EventDetailsRequest"
+CreateEventRequest:
+  type: object
+  required:
+  - name
+  - date
+  - place
+  - type
+  - details
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 200
+    date:
+      type: string
+      format: date-time
+    place:
+      type: string
+      minLength: 1
+      maxLength: 200
+    type:
+      type: string
+      minLength: 1
+      maxLength: 100
+    details:
+      "$ref": "#/components/schemas/EventDetailsRequest"
+  additionalProperties: false
+UpdateEventRequest:
+  allOf:
+  - "$ref": "#/components/schemas/CreateEventRequest"
+TakenPlaceResponse:
+  type: object
+  required:
+  - row
+  - place
+  properties:
+    row:
+      type: integer
+      minimum: 1
+    place:
+      type: integer
+      minimum: 1
+EventResponse:
+  type: object
+  required:
+  - eventId
+  - ownerId
+  - name
+  - date
+  - place
+  - type
+  - status
+  - details
+  - ordersTaken
+  - takenPlaces
+  properties:
+    eventId:
+      type: string
+      format: uuid
+    ownerId:
+      type: string
+      format: uuid
+    name:
+      type: string
+      maxLength: 200
+    date:
+      type: string
+      format: date-time
+    place:
+      type: string
+      maxLength: 200
+    type:
+      type: string
+      maxLength: 100
+    status:
+      "$ref": "#/components/schemas/EventStatus"
+    details:
+      "$ref": "#/components/schemas/EventDetailsResponse"
+    ordersTaken:
+      type: integer
+      minimum: 0
+    takenPlaces:
+      type: array
+      items:
+        "$ref": "#/components/schemas/TakenPlaceResponse"
+EventListResponse:
+  type: object
+  required:
+  - events
+  properties:
+    events:
+      type: array
+      items:
+        "$ref": "#/components/schemas/EventResponse"

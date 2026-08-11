@@ -23,7 +23,8 @@ import org.springframework.test.web.servlet.MockMvc;
     })
 class SecurityCorsIntegrationTest {
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
   @Test
   void appliesCorsHeadersToAllowedPreflightRequest() throws Exception {

@@ -6,4 +6,6 @@ import java.util.UUID;
 public interface UserQueryUseCase {
 
   User getUser(UUID userId);
+
+  User getUserByEmail(String email);
 }

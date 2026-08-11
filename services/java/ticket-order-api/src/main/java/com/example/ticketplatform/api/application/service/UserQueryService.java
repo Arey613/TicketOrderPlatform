@@ -20,4 +20,11 @@ class UserQueryService implements UserQueryUseCase {
         .findById(userId)
         .orElseThrow(() -> new NoSuchElementException("User not found: " + userId));
   }
+
+  @Override
+  public User getUserByEmail(String email) {
+    return userRepositoryPort
+        .findByEmail(email)
+        .orElseThrow(() -> new NoSuchElementException("User not found: " + email));
+  }
 }

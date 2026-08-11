@@ -1,4 +1,4 @@
-.PHONY: help build package package-api package-web package-migrations test test-api test-web verify format format-java format-web check-format check-format-java check-format-web run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
+.PHONY: help build package package-api package-web package-migrations test test-api test-web verify format format-java format-web check-format check-format-java check-format-web run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web bundle-contracts validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
 
 MAVEN ?= $(shell test -x ./mvnw && printf './mvnw' || printf 'mvn')
 NPM ?= npm
@@ -29,6 +29,7 @@ help:
 	@printf '  make run-api      Start the Java API locally\n'
 	@printf '  make run-web      Start the React/Vite web app locally\n'
 	@printf '  make install-web  Install web dependencies\n'
+	@printf '  make bundle-contracts Bundle split OpenAPI contract sources\n'
 	@printf '  make validate-contracts Validate OpenAPI contracts\n'
 	@printf '  make validate-k8s Validate Kubernetes manifests\n'
 	@printf '  make generate     Generate API code from OpenAPI contracts\n'
@@ -98,7 +99,11 @@ clean: check-maven
 	rm -rf $(WEB_MODULE)/src/generated
 
 validate-contracts: check-npm
+	node $(CONTRACT_MODULE)/scripts/bundle-openapi.mjs
 	$(NPM) --prefix $(WEB_MODULE) run validate:api
+
+bundle-contracts:
+	node $(CONTRACT_MODULE)/scripts/bundle-openapi.mjs
 
 validate-k8s: check-kubectl
 	$(KUBECTL) kustomize $(MINIKUBE_K8S_MODULE)/postgres >/dev/null
@@ -108,9 +113,11 @@ validate-k8s: check-kubectl
 generate: generate-api-contracts generate-web-contracts
 
 generate-api-contracts: check-maven
+	node $(CONTRACT_MODULE)/scripts/bundle-openapi.mjs
 	$(MAVEN) -pl $(API_MODULE) generate-sources
 
 generate-web-contracts: check-npm
+	node $(CONTRACT_MODULE)/scripts/bundle-openapi.mjs
 	$(NPM) --prefix $(WEB_MODULE) run generate:api
 
 migrate-transactional: check-maven

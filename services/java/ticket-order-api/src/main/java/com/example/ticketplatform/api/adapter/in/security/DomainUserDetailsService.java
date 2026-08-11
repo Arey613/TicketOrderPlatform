@@ -8,6 +8,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import static java.lang.Boolean.TRUE;
+
 @Service
 @RequiredArgsConstructor
 class DomainUserDetailsService implements UserDetailsService {
@@ -26,7 +28,7 @@ class DomainUserDetailsService implements UserDetailsService {
     return org.springframework.security.core.userdetails.User.withUsername(user.email())
         .password(user.passwordHash())
         .roles(user.role().name())
-        .disabled(!user.enabled())
+        .disabled(!TRUE.equals(user.enabled()))
         .build();
   }
 }

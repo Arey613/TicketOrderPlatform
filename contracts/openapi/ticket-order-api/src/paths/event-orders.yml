@@ -1,0 +1,68 @@
+---
+"/events/orders":
+  post:
+    operationId: createEventOrders
+    tags:
+    - Events
+    summary: Create event orders
+    security:
+    - sessionAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/CreateEventOrdersRequest"
+    responses:
+      '201':
+        description: Event orders were created
+      '400':
+        description: Event order request was invalid
+      '401':
+        description: Authentication credentials are missing or invalid
+      '404':
+        description: Referenced event was not found
+      '409':
+        description: Event order conflicts with an already reserved row and place
+  delete:
+    operationId: deleteEventOrders
+    tags:
+    - Events
+    summary: Delete event orders
+    security:
+    - sessionAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/DeleteEventOrdersRequest"
+    responses:
+      '204':
+        description: Event orders were deleted
+      '400':
+        description: Event order deletion request was invalid
+      '401':
+        description: Authentication credentials are missing or invalid
+      '403':
+        description: Authenticated user is not allowed to delete at least one event
+          order
+      '404':
+        description: At least one event order was not found
+"/events/orders/mine":
+  get:
+    operationId: listMyEventOrders
+    tags:
+    - Events
+    summary: List event orders for the current user
+    security:
+    - sessionAuth: []
+    responses:
+      '200':
+        description: Event orders response
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/MyEventOrdersResponse"
+      '401':
+        description: Authentication credentials are missing or invalid

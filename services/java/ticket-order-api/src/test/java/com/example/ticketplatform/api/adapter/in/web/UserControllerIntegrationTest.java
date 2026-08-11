@@ -31,9 +31,11 @@ class UserControllerIntegrationTest {
       WebControllerIntegrationTestConfiguration.user(
           USER_ID, "reader@example.com", "{noop}secret", true);
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-  @Autowired private TestUsers testUsers;
+  @Autowired
+  private TestUsers testUsers;
 
   @BeforeEach
   void setUp() {

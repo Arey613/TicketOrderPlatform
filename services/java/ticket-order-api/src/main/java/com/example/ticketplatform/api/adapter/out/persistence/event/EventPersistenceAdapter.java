@@ -1,0 +1,79 @@
+package com.example.ticketplatform.api.adapter.out.persistence.event;
+
+import com.example.ticketplatform.api.application.port.out.EventRepositoryPort;
+import com.example.ticketplatform.api.domain.model.event.Event;
+import com.example.ticketplatform.api.domain.model.event.EventOrder;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+@Repository
+@RequiredArgsConstructor
+class EventPersistenceAdapter implements EventRepositoryPort {
+
+  private final EventJpaRepository eventRepository;
+  private final EventOrderJpaRepository eventOrderRepository;
+  private final EventMapper eventMapper;
+
+  @Override
+  public Event save(Event event) {
+    return eventMapper.toDomain(eventRepository.save(eventMapper.toEntity(event)));
+  }
+
+  @Override
+  public Optional<Event> findById(UUID id) {
+    return eventRepository.findById(id).map(eventMapper::toDomain);
+  }
+
+  @Override
+  public List<Event> findPublished() {
+    return eventRepository.findByStatus(EventStatusEntity.PUBLISHED).stream()
+        .map(eventMapper::toDomain)
+        .toList();
+  }
+
+  @Override
+  public List<Event> findByOwnerId(UUID ownerId) {
+    return eventRepository.findByOwnerId(ownerId).stream().map(eventMapper::toDomain).toList();
+  }
+
+  @Override
+  public boolean existsOrderPosition(UUID eventId, int rowNumber, int placeNumber) {
+    return eventOrderRepository.existsByEventIdAndRowNumberAndPlaceNumber(
+        eventId, rowNumber, placeNumber);
+  }
+
+  @Override
+  public List<EventOrder> saveOrders(List<EventOrder> orders) {
+    return eventOrderRepository
+        .saveAll(orders.stream().map(this::toOrderEntity).toList())
+        .stream()
+        .map(eventMapper::toDomain)
+        .toList();
+  }
+
+  @Override
+  public List<EventOrder> findOrdersByCustomerReference(UUID customerReference) {
+    return eventOrderRepository.findByCustomerReference(customerReference).stream()
+        .map(eventMapper::toDomain)
+        .toList();
+  }
+
+  @Override
+  public List<EventOrder> findOrdersByIds(Collection<UUID> ids) {
+    return eventOrderRepository.findByIdIn(ids).stream().map(eventMapper::toDomain).toList();
+  }
+
+  @Override
+  public long deleteOrders(Collection<UUID> ids) {
+    return eventOrderRepository.deleteByIdIn(ids);
+  }
+
+  private EventOrderEntity toOrderEntity(EventOrder order) {
+    EventEntity event = eventRepository.getReferenceById(order.eventId());
+    return eventMapper.toEntity(order, event);
+  }
+}
