@@ -38,9 +38,11 @@ class AuthControllerIntegrationTest {
       WebControllerIntegrationTestConfiguration.user(
           DISABLED_USER_ID, "disabled@example.com", "{noop}secret", false);
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-  @Autowired private TestUsers testUsers;
+  @Autowired
+  private TestUsers testUsers;
 
   @BeforeEach
   void setUp() {

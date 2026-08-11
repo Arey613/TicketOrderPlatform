@@ -52,11 +52,14 @@ class EventControllerIntegrationTest {
       WebControllerIntegrationTestConfiguration.user(
           CUSTOMER_ID, "customer.events@example.com", "{noop}secret", UserRole.CUSTOMER, true);
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-  @Autowired private TestUsers testUsers;
+  @Autowired
+  private TestUsers testUsers;
 
-  @Autowired private TestEvents testEvents;
+  @Autowired
+  private TestEvents testEvents;
 
   @BeforeEach
   void setUp() {

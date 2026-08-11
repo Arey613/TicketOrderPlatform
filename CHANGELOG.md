@@ -43,6 +43,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
 - TICKET_SERVICE#6 - address event management review comments
 - TICKET_SERVICE#6 - box API record and domain model primitive fields
+- TICKET_SERVICE#6 - align Java style guidance and mappings
 
 ## ticket-order-api-contract
 

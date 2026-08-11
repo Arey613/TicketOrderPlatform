@@ -34,9 +34,11 @@ class EventPersistenceAdapterTest {
   private static final Instant EVENT_DATE = Instant.parse("2026-09-15T19:30:00Z");
   private static final Instant NOW = Instant.parse("2026-08-11T10:00:00Z");
 
-  @Autowired private EntityManager entityManager;
+  @Autowired
+  private EntityManager entityManager;
 
-  @Autowired private EventPersistenceAdapter adapter;
+  @Autowired
+  private EventPersistenceAdapter adapter;
 
   @BeforeEach
   void setUp() {
