@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
+import static java.lang.Boolean.TRUE;
+
 @Service
 @RequiredArgsConstructor
 class LoginService implements LoginUseCase {
@@ -23,7 +25,8 @@ class LoginService implements LoginUseCase {
             .findByEmail(command.login())
             .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
-    if (!user.enabled() || !passwordMatcherPort.matches(command.rawPassword(), user.passwordHash())) {
+    if (!TRUE.equals(user.enabled())
+        || !passwordMatcherPort.matches(command.rawPassword(), user.passwordHash())) {
       throw new BadCredentialsException("Invalid credentials");
     }
 
