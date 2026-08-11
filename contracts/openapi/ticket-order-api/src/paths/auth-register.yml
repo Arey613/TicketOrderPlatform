@@ -1,0 +1,23 @@
+---
+post:
+  operationId: registerUser
+  tags:
+  - Auth
+  summary: Register a customer account
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          "$ref": "#/components/schemas/RegisterUserRequest"
+  responses:
+    '201':
+      description: Registration succeeded
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/UserResponse"
+    '400':
+      description: Registration request was invalid
+    '409':
+      description: User email is already registered

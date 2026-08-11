@@ -21,6 +21,11 @@ This file applies to `services/java/ticket-order-api`.
   - `adapter/out/*` for driven adapters such as persistence, messaging, or external clients
   - `infrastructure/config` for Spring, CORS, security, and runtime configuration
 - Controllers must call application ports, not own business behavior.
+- Controllers must not read `SecurityContextHolder` directly. Use a shared web adapter helper
+  for current authenticated user resolution.
+- Use Spring Security method annotations such as `@PreAuthorize` for coarse role checks at the
+  HTTP adapter boundary.
+- Keep ownership and business-state authorization checks inside application services.
 - Application services may depend on domain objects and ports.
 - Domain code must not depend on Spring or web framework APIs.
 - Use YAML for Spring configuration files. Prefer `application.yml` over `application.properties`.

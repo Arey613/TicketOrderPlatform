@@ -1,0 +1,9 @@
+---
+type: object
+required:
+- events
+properties:
+  events:
+    type: array
+    items:
+      "$ref": "#/components/schemas/EventResponse"

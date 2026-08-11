@@ -119,7 +119,7 @@ Rules:
 21. An event cannot have two event orders with the same row and place number.
 22. Event creation does not create event orders.
 23. New events start in `DRAFT`.
-24. Only `DRAFT` events can be edited without extra rules in this feature.
+24. Only `DRAFT` events can be edited in this feature.
 25. `PUBLISHED` events are visible to regular authenticated users through read endpoints.
 26. `CANCELLED` is reserved for future cancellation behavior unless this feature explicitly implements cancellation.
 
@@ -355,6 +355,9 @@ Authorization:
 Behavior:
 
 - Updates editable event fields.
+- Requires the event to be in `DRAFT`.
+- Published events cannot be updated directly in this ticket. Managers must unpublish the event, update it while `DRAFT`, then publish it again.
+- This applies to place, layout, and seat-count changes as well, so existing orders are not affected by undefined published-event layout changes.
 - Does not allow changing `ownerId`.
 - Does not allow changing `status`; status transitions use dedicated endpoints.
 
@@ -448,6 +451,7 @@ Behavior:
 - Rejects the request when the payload contains duplicate `(eventId, row, place)` values.
 - Defaults `reservationDate` to the insert date for each created order when the request does not provide one.
 - Treats `customerReference` as an optional placeholder until viewer/customer ownership is introduced.
+- When `customerReference` is omitted, the created order is treated as an unowned placeholder until customer ownership is introduced.
 - Persists the order list atomically: either all valid orders are created, or none are created.
 
 Successful response:
@@ -471,7 +475,9 @@ Authorization:
 Behavior:
 
 - Uses `customerReference` as the temporary ownership marker until viewer/customer ownership is introduced.
+- Event orders with null `customerReference` are treated as unowned placeholders.
 - Returns the authenticated user's event orders.
+- Does not return unowned placeholder event orders.
 - Includes enough event summary data for the user to recognize the order.
 - Does not return event orders owned by other users.
 
@@ -524,6 +530,8 @@ Behavior:
 - Loads each event order by id.
 - Confirms every event order belongs to the authenticated user.
 - Uses `customerReference` as the temporary ownership marker until viewer/customer ownership is introduced.
+- Event orders with null `customerReference` are treated as unowned placeholders.
+- Unowned placeholder event orders cannot be deleted through user-owned deletion.
 - Deletes the event-order records atomically.
 - After deletion, the row/place is no longer reserved because reservation is represented by the presence of a row in `t_event_order`.
 
@@ -642,12 +650,15 @@ Responsibilities:
 - Reject duplicate `(eventId, row, place)` values inside the same request.
 - Persist the event-order list atomically.
 - Treat `customerReference` as optional until viewer/customer ownership is introduced.
+- Treat orders with null `customerReference` as unowned placeholders.
 - List only event orders owned by the authenticated user.
+- Exclude unowned placeholder event orders from the authenticated user's order list.
 - Join or compose minimal event summary data for the user's order list.
 - Read event-order ids from the delete command payload.
 - Require at least one event-order id.
 - Treat single-order deletion as a singleton list.
 - Delete only event orders owned by the authenticated user.
+- Reject deletion for unowned placeholder event orders.
 - Delete the event-order list atomically.
 - Use `customerReference` as the temporary ownership marker for deletion until viewer/customer ownership is introduced.
 
@@ -739,18 +750,21 @@ The event-ordering test suite should verify:
 12. Event-order creation rejects duplicate `(eventId, row, place)` values inside the same request.
 13. Event-order creation rejects duplicate `(row, place)` values already reserved for the same event.
 14. Event-order creation accepts omitted `customerReference`.
-15. Event-order creation defaults `reservationDate` when the request omits it.
-16. Event-order creation is atomic when one item in the list is invalid.
-17. An unauthenticated request cannot list my event orders.
-18. Listing my event orders returns only records owned by the authenticated user.
-19. Listing my event orders includes event summary data.
-20. An unauthenticated request cannot delete event orders.
-21. Event-order deletion requires a non-empty `eventOrderIds` list.
-22. A single event order can be deleted through a singleton `eventOrderIds` list.
-23. Bulk event-order deletion can delete multiple owned event-order records.
-24. A user cannot delete another user's event-order record.
-25. Event-order deletion is atomic when one requested id is not owned by the user.
-26. Deleting event orders frees their row/place reservations because the reservation rows no longer exist.
+15. Event-order creation treats omitted `customerReference` as an unowned placeholder.
+16. Event-order creation defaults `reservationDate` when the request omits it.
+17. Event-order creation is atomic when one item in the list is invalid.
+18. An unauthenticated request cannot list my event orders.
+19. Listing my event orders returns only records owned by the authenticated user.
+20. Listing my event orders excludes unowned placeholder orders.
+21. Listing my event orders includes event summary data.
+22. An unauthenticated request cannot delete event orders.
+23. Event-order deletion requires a non-empty `eventOrderIds` list.
+24. A single event order can be deleted through a singleton `eventOrderIds` list.
+25. Bulk event-order deletion can delete multiple owned event-order records.
+26. A user cannot delete another user's event-order record.
+27. A user cannot delete an unowned placeholder order.
+28. Event-order deletion is atomic when one requested id is not owned by the user.
+29. Deleting event orders frees their row/place reservations because the reservation rows no longer exist.
 
 ## Done Criteria
 

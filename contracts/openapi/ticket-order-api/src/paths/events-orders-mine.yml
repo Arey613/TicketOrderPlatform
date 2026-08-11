@@ -1,0 +1,17 @@
+---
+get:
+  operationId: listMyEventOrders
+  tags:
+  - Events
+  summary: List event orders for the current user
+  security:
+  - sessionAuth: []
+  responses:
+    '200':
+      description: Event orders response
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/MyEventOrdersResponse"
+    '401':
+      description: Authentication credentials are missing or invalid

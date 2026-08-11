@@ -37,7 +37,7 @@ class UserEntity {
   private UserRoleEntity role;
 
   @Column(name = "enabled", nullable = false)
-  private boolean enabled;
+  private Boolean enabled;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;

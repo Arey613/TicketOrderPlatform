@@ -1,0 +1,27 @@
+---
+type: object
+required:
+- name
+- date
+- place
+- type
+- details
+properties:
+  name:
+    type: string
+    minLength: 1
+    maxLength: 200
+  date:
+    type: string
+    format: date-time
+  place:
+    type: string
+    minLength: 1
+    maxLength: 200
+  type:
+    type: string
+    minLength: 1
+    maxLength: 100
+  details:
+    "$ref": "#/components/schemas/EventDetailsRequest"
+additionalProperties: false

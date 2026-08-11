@@ -13,6 +13,7 @@ TICKET_CONTRACTS#123 - short description
 ### Added
 
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract
+- TICKET_CONTRACTS#3 - add event management contract
 
 ### Changed
 

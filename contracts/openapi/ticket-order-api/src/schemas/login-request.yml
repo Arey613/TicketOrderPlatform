@@ -1,0 +1,13 @@
+---
+type: object
+required:
+- login
+- password
+properties:
+  login:
+    type: string
+    format: email
+    maxLength: 320
+  password:
+    type: string
+    minLength: 1

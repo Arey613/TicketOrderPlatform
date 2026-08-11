@@ -1,0 +1,9 @@
+---
+type: object
+required:
+- orders
+properties:
+  orders:
+    type: array
+    items:
+      "$ref": "#/components/schemas/MyEventOrderResponse"

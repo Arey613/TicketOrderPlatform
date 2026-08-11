@@ -1,0 +1,43 @@
+---
+type: object
+required:
+- eventId
+- ownerId
+- name
+- date
+- place
+- type
+- status
+- details
+- ordersTaken
+- takenPlaces
+properties:
+  eventId:
+    type: string
+    format: uuid
+  ownerId:
+    type: string
+    format: uuid
+  name:
+    type: string
+    maxLength: 200
+  date:
+    type: string
+    format: date-time
+  place:
+    type: string
+    maxLength: 200
+  type:
+    type: string
+    maxLength: 100
+  status:
+    "$ref": "#/components/schemas/EventStatus"
+  details:
+    "$ref": "#/components/schemas/EventDetailsResponse"
+  ordersTaken:
+    type: integer
+    minimum: 0
+  takenPlaces:
+    type: array
+    items:
+      "$ref": "#/components/schemas/TakenPlaceResponse"

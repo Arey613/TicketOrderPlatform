@@ -1,0 +1,51 @@
+---
+post:
+  operationId: createEvent
+  tags:
+  - Events
+  summary: Create an event
+  security:
+  - sessionAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          "$ref": "#/components/schemas/CreateEventRequest"
+  responses:
+    '201':
+      description: Event was created
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/EventResponse"
+    '400':
+      description: Event request was invalid
+    '401':
+      description: Authentication credentials are missing or invalid
+    '403':
+      description: Authenticated user is not allowed to create events
+get:
+  operationId: listEvents
+  tags:
+  - Events
+  summary: List events
+  security:
+  - sessionAuth: []
+  parameters:
+  - name: scope
+    in: query
+    required: false
+    schema:
+      "$ref": "#/components/schemas/EventListScope"
+  responses:
+    '200':
+      description: Events response
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/EventListResponse"
+    '401':
+      description: Authentication credentials are missing or invalid
+    '403':
+      description: Authenticated user is not allowed to use the requested scope

@@ -23,6 +23,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - GLOBAL_CONFIG#4 - add pull request iteration and style guidance
 - GLOBAL_CONFIG#5 - organize changelog entries
+- TICKET_CONTRACTS#3 - add split OpenAPI contract bundling workflow
 
 ## ticket-order-api
 
@@ -34,6 +35,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#4 - add session login authentication and spec
 - TICKET_SERVICE#5 - add registration authentication flow
 - TICKET_SERVICE#6 - add event management specification
+- TICKET_SERVICE#6 - add event management API implementation
 
 ### Changed
 
@@ -45,6 +47,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 ### Added
 
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract
+- TICKET_CONTRACTS#3 - add event management contract
 
 ### Changed
 
@@ -56,6 +59,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 ### Added
 
 - DATABASE_MIGRATIONS#1 - add Java database migration modules
+- DATABASE_MIGRATIONS#3 - add event management schema
 
 ### Changed
 

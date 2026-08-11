@@ -18,6 +18,7 @@ TICKET_SERVICE#123 - short description
 - TICKET_SERVICE#4 - add session login authentication
 - TICKET_SERVICE#5 - add registration authentication flow
 - TICKET_SERVICE#6 - add event management specification
+- TICKET_SERVICE#6 - add event management API implementation
 
 ### Changed
 

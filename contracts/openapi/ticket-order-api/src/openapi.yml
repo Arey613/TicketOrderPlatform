@@ -1,0 +1,87 @@
+---
+openapi: 3.1.0
+info:
+  title: Ticket Service API
+  version: 0.1.0
+  description: API contract for the TicketOrderPlatform ticket service.
+servers:
+- url: http://localhost:8080
+  description: Local API server
+tags:
+- name: Auth
+  description: Registration, login, and logout resources
+- name: Users
+  description: User resources
+- name: Events
+  description: Event management and event order resources
+paths:
+  "/auth/csrf":
+    "$ref": "./paths/auth-csrf.yml"
+  "/auth/login":
+    "$ref": "./paths/auth-login.yml"
+  "/auth/register":
+    "$ref": "./paths/auth-register.yml"
+  "/auth/logout":
+    "$ref": "./paths/auth-logout.yml"
+  "/users/{userId}":
+    "$ref": "./paths/users-user-id.yml"
+  "/events":
+    "$ref": "./paths/events.yml"
+  "/events/{eventId}":
+    "$ref": "./paths/events-event-id.yml"
+  "/events/{eventId}/publish":
+    "$ref": "./paths/events-event-id-publish.yml"
+  "/events/{eventId}/unpublish":
+    "$ref": "./paths/events-event-id-unpublish.yml"
+  "/events/orders":
+    "$ref": "./paths/events-orders.yml"
+  "/events/orders/mine":
+    "$ref": "./paths/events-orders-mine.yml"
+components:
+  parameters:
+    EventId:
+      "$ref": "./schemas/event-id.parameter.yml"
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+  schemas:
+    LoginRequest:
+      "$ref": "./schemas/login-request.yml"
+    RegisterUserRequest:
+      "$ref": "./schemas/register-user-request.yml"
+    LoginResponse:
+      "$ref": "./schemas/login-response.yml"
+    UserRole:
+      "$ref": "./schemas/user-role.yml"
+    EventStatus:
+      "$ref": "./schemas/event-status.yml"
+    EventListScope:
+      "$ref": "./schemas/event-list-scope.yml"
+    EventDetailsRequest:
+      "$ref": "./schemas/event-details-request.yml"
+    EventDetailsResponse:
+      "$ref": "./schemas/event-details-response.yml"
+    CreateEventRequest:
+      "$ref": "./schemas/create-event-request.yml"
+    UpdateEventRequest:
+      "$ref": "./schemas/update-event-request.yml"
+    TakenPlaceResponse:
+      "$ref": "./schemas/taken-place-response.yml"
+    EventResponse:
+      "$ref": "./schemas/event-response.yml"
+    EventListResponse:
+      "$ref": "./schemas/event-list-response.yml"
+    CreateEventOrderItem:
+      "$ref": "./schemas/create-event-order-item.yml"
+    CreateEventOrdersRequest:
+      "$ref": "./schemas/create-event-orders-request.yml"
+    DeleteEventOrdersRequest:
+      "$ref": "./schemas/delete-event-orders-request.yml"
+    MyEventOrderResponse:
+      "$ref": "./schemas/my-event-order-response.yml"
+    MyEventOrdersResponse:
+      "$ref": "./schemas/my-event-orders-response.yml"
+    UserResponse:
+      "$ref": "./schemas/user-response.yml"

@@ -1,0 +1,12 @@
+---
+type: object
+required:
+- row
+- place
+properties:
+  row:
+    type: integer
+    minimum: 1
+  place:
+    type: integer
+    minimum: 1

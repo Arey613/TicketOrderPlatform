@@ -33,7 +33,7 @@ class UserMapperTest {
     assertThat(entity.getEmail()).isEqualTo(domainUser.email());
     assertThat(entity.getPasswordHash()).isEqualTo(domainUser.passwordHash());
     assertThat(entity.getRole()).isEqualTo(UserRoleEntity.CUSTOMER);
-    assertThat(entity.isEnabled()).isEqualTo(domainUser.enabled());
+    assertThat(entity.getEnabled()).isEqualTo(domainUser.enabled());
     assertThat(entity.getCreatedAt()).isEqualTo(domainUser.createdAt());
     assertThat(entity.getUpdatedAt()).isEqualTo(domainUser.updatedAt());
     assertThat(mappedUser).isEqualTo(domainUser);
