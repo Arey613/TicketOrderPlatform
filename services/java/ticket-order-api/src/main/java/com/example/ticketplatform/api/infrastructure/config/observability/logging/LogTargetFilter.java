@@ -1,4 +1,4 @@
-package com.example.ticketplatform.api.infrastructure.config.observability;
+package com.example.ticketplatform.api.infrastructure.config.observability.logging;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.filter.Filter;

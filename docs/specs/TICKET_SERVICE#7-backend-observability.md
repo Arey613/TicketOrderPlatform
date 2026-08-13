@@ -489,7 +489,8 @@ Rules:
 3. Counter metrics should be incremented only after the operation outcome is known.
 4. Timer metrics should wrap meaningful work units, not every small private method.
 5. Reuse Spring Boot default HTTP request metrics instead of creating duplicate request counters.
-6. Custom metrics must be controlled through external configuration:
+6. Authentication metrics must be recorded through an infrastructure aspect at the login use-case boundary, not through direct controller calls.
+7. Custom metrics must be controlled through external configuration:
 
 ```yaml
 ticket-order-platform:
@@ -612,6 +613,7 @@ Profiles should separate local development from production:
 6. Correlation ID behavior must be implemented as infrastructure, not repeated in every controller.
 7. Security configuration must explicitly define actuator access rules.
 8. Time-dependent observability code must reuse the shared `Supplier<Instant>` bean from core configuration when it only needs the current instant.
+9. Observability infrastructure must be split into focused subpackages for correlation, logging, and metrics instead of one broad package for all concerns.
 
 ## Testing Requirements
 

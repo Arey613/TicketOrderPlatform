@@ -1,5 +1,6 @@
-package com.example.ticketplatform.api.infrastructure.config.observability;
+package com.example.ticketplatform.api.infrastructure.config.observability.metrics;
 
+import com.example.ticketplatform.api.infrastructure.config.observability.ObservabilityProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Component;
 

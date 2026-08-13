@@ -1,4 +1,4 @@
-package com.example.ticketplatform.api.infrastructure.config.observability;
+package com.example.ticketplatform.api.infrastructure.config.observability.correlation;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -10,12 +10,12 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class CorrelationId {
+public final class CorrelationId {
 
-  static final String HEADER_NAME = "X-Correlation-ID";
+  public static final String HEADER_NAME = "X-Correlation-ID";
   static final String MDC_KEY = "correlationId";
-  static final String DEFAULT_VALUE_TEMPLATE = "{uuid}-{date:dd-MM-yyyy}";
-  static final String DEFAULT_VALIDATION_PATTERN =
+  public static final String DEFAULT_VALUE_TEMPLATE = "{uuid}-{date:dd-MM-yyyy}";
+  public static final String DEFAULT_VALIDATION_PATTERN =
       "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-\\d{2}-\\d{2}-\\d{4}$";
 
   private static final int UUID_LENGTH = 36;

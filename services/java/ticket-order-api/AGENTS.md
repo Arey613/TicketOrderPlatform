@@ -45,6 +45,7 @@ This file applies to `services/java/ticket-order-api`.
 - Use YAML for Spring configuration files. Prefer `application.yml` over `application.properties`.
 - Keep configuration values externalized in `application.yml` unless a task requires another config source.
 - Observability changes must preserve the existing SLF4J, MDC, Logback, Micrometer, and OpenTelemetry setup.
+- Keep observability infrastructure split by concern under focused subpackages such as `correlation`, `logging`, and `metrics`.
 - Prefer Lombok `@Slf4j` for class loggers unless a named logger is required for routing, such as security or telemetry logs.
 - Reuse the shared `Supplier<Instant>` time source from `CoreConfig` for generated timestamps in application and infrastructure code. Do not add feature-local `Clock` beans when the shared supplier is sufficient.
 - Per-request logs must use the correlation MDC filter and the `X-Correlation-ID` response header. Missing IDs are generated server-side. Present invalid IDs must clear authentication/session state and return `401`.
@@ -55,7 +56,7 @@ This file applies to `services/java/ticket-order-api`.
 - Do not log raw credentials, password hashes, session cookies, CSRF tokens, authorization headers, or other sensitive values. Update the sensitive-data filter when adding new sensitive field names.
 - Avoid duplicate exception logs. Log an exception at the layer that has the actionable context, then propagate or translate without logging the same failure again.
 - Use `INFO` for successful system calls, `WARN` for high-level visibility and security-relevant events, and `ERROR` for exceptions.
-- Add or update Micrometer metrics for observable user/system flows, and protect non-health actuator endpoints from anonymous access.
+- Add or update Micrometer metrics for observable user/system flows, and protect non-health actuator endpoints from anonymous access. Prefer infrastructure aspects for cross-cutting metric instrumentation instead of direct controller calls.
 - Generate Spring API interfaces and models from `contracts/openapi/ticket-order-api/openapi.yml`.
 - Do not edit generated OpenAPI sources by hand.
 - Treat warnings from generated OpenAPI sources as contract or generator-configuration issues.

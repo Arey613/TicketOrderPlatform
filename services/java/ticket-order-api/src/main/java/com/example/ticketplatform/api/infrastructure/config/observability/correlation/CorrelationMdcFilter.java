@@ -1,5 +1,6 @@
-package com.example.ticketplatform.api.infrastructure.config.observability;
+package com.example.ticketplatform.api.infrastructure.config.observability.correlation;
 
+import com.example.ticketplatform.api.infrastructure.config.observability.ObservabilityProperties;
 import com.example.ticketplatform.api.infrastructure.config.security.AuthenticatedUserPrincipal;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

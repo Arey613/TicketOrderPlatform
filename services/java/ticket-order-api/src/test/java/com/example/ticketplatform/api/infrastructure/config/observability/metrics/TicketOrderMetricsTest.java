@@ -1,7 +1,8 @@
-package com.example.ticketplatform.api.infrastructure.config.observability;
+package com.example.ticketplatform.api.infrastructure.config.observability.metrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.ticketplatform.api.infrastructure.config.observability.ObservabilityProperties;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 

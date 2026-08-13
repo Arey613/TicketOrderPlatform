@@ -1,4 +1,4 @@
-package com.example.ticketplatform.api.infrastructure.config.observability;
+package com.example.ticketplatform.api.infrastructure.config.observability.logging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

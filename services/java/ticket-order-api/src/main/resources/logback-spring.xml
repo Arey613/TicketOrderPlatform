@@ -37,13 +37,13 @@
                     source="ticket-order-platform.observability.logging.rolling.total-size-cap"
                     defaultValue="1GB"/>
 
-    <turboFilter class="com.example.ticketplatform.api.infrastructure.config.observability.SensitiveDataTurboFilter">
+    <turboFilter class="com.example.ticketplatform.api.infrastructure.config.observability.logging.SensitiveDataTurboFilter">
         <enabled>${maskingEnabled}</enabled>
         <additionalFields>${additionalSensitiveFields}</additionalFields>
     </turboFilter>
 
     <appender name="APPLICATION_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.logging.LogTargetFilter">
             <enabled>${loggingEnabled}</enabled>
             <targets>${applicationLogTargets}</targets>
             <target>console</target>
@@ -62,7 +62,7 @@
     </appender>
 
     <appender name="SECURITY_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.logging.LogTargetFilter">
             <enabled>${loggingEnabled}</enabled>
             <targets>${securityLogTargets}</targets>
             <target>console</target>
@@ -81,7 +81,7 @@
     </appender>
 
     <appender name="TELEMETRY_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.logging.LogTargetFilter">
             <enabled>${loggingEnabled}</enabled>
             <targets>${telemetryLogTargets}</targets>
             <target>console</target>
@@ -100,7 +100,7 @@
     </appender>
 
     <appender name="APPLICATION_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.logging.LogTargetFilter">
             <enabled>${loggingEnabled}</enabled>
             <targets>${applicationLogTargets}</targets>
             <target>file</target>
@@ -126,7 +126,7 @@
     </appender>
 
     <appender name="SECURITY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.logging.LogTargetFilter">
             <enabled>${loggingEnabled}</enabled>
             <targets>${securityLogTargets}</targets>
             <target>file</target>
@@ -152,7 +152,7 @@
     </appender>
 
     <appender name="TELEMETRY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.logging.LogTargetFilter">
             <enabled>${loggingEnabled}</enabled>
             <targets>${telemetryLogTargets}</targets>
             <target>file</target>

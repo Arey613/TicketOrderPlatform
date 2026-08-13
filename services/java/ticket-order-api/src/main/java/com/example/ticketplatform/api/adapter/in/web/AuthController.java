@@ -9,7 +9,6 @@ import com.example.ticketplatform.api.generated.contract.model.LoginRequest;
 import com.example.ticketplatform.api.generated.contract.model.LoginResponse;
 import com.example.ticketplatform.api.generated.contract.model.RegisterUserRequest;
 import com.example.ticketplatform.api.generated.contract.model.UserResponse;
-import com.example.ticketplatform.api.infrastructure.config.observability.TicketOrderMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,7 +27,6 @@ class AuthController implements AuthApi {
   private final AuthContractMapper authContractMapper;
   private final UserContractMapper userContractMapper;
   private final AuthenticationSessionManager authenticationSessionManager;
-  private final TicketOrderMetrics ticketOrderMetrics;
 
   @Override
   public ResponseEntity<Void> getCsrfToken() {
@@ -37,15 +35,12 @@ class AuthController implements AuthApi {
 
   @Override
   public ResponseEntity<LoginResponse> login(LoginRequest loginRequest) {
-    ticketOrderMetrics.recordLoginAttempt();
     try {
       User user = loginUseCase.login(authContractMapper.toCommand(loginRequest));
       authenticationSessionManager.authenticate(user);
-      ticketOrderMetrics.recordLoginSuccess();
 
       return ResponseEntity.ok(authContractMapper.toLoginResponse(user));
     } catch (BadCredentialsException exception) {
-      ticketOrderMetrics.recordLoginFailure("invalid_credentials");
       log.warn("auth.login.failed reason=invalid_credentials");
       return ResponseEntity.status(401).build();
     }
