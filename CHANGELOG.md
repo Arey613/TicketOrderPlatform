@@ -24,6 +24,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#4 - add pull request iteration and style guidance
 - GLOBAL_CONFIG#5 - organize changelog entries
 - TICKET_CONTRACTS#3 - add split OpenAPI contract bundling workflow
+- GLOBAL_CONFIG#7 - require latest main for new branches
 
 ## ticket-order-api
 

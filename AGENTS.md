@@ -18,7 +18,7 @@ Use `docs/PROJECT_MAP.md` for fast module routing before scanning broadly.
 
 ## Development
 
-- Create every new work branch from `main` unless the user explicitly asks for a stacked branch.
+- Create every new work branch from the latest `origin/main` unless the user explicitly asks for a stacked branch. Before branching, fetch the remote and update local `main` so the branch starts from the current remote mainline.
 - When the user says to push a branch, push it and create or open a pull request unless the user explicitly says to push only.
 - For updates to an existing pull request, keep changes local until the user explicitly asks to push, unless the user has already requested a push or PR-update workflow for that turn.
 - Do not amend, squash, or otherwise rewrite existing pull request commits during review iteration unless the user explicitly asks; squash only as part of the merge workflow when requested or selected.
