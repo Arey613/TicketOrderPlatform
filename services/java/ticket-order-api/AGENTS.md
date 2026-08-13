@@ -44,6 +44,18 @@ This file applies to `services/java/ticket-order-api`.
   than a mapper.
 - Use YAML for Spring configuration files. Prefer `application.yml` over `application.properties`.
 - Keep configuration values externalized in `application.yml` unless a task requires another config source.
+- Observability changes must preserve the existing SLF4J, MDC, Logback, Micrometer, and OpenTelemetry setup.
+- Prefer Lombok `@Slf4j` for class loggers unless a named logger is required for routing, such as security or telemetry logs.
+- Reuse the shared `Supplier<Instant>` time source from `CoreConfig` for generated timestamps in application and infrastructure code. Do not add feature-local `Clock` beans when the shared supplier is sufficient.
+- Per-request logs must use the correlation MDC filter and the `X-Correlation-ID` response header. Missing IDs are generated server-side. Present invalid IDs must clear authentication/session state and return `401`.
+- Correlation IDs must default to the `<UUID>-<dd-MM-yyyy>` format. Do not include time in the correlation ID date segment. When custom correlation formats are needed, configure both validation and generation through `ticket-order-platform.observability.correlation.*` application properties.
+- Keep JSON logging configured through `logback-spring.xml`; keep the companion `logback-spring.yml` and `*-log-structure.yml` files aligned when log structure or routing changes.
+- Keep log output targets and log file locations configurable through `ticket-order-platform.observability.logging.*` properties.
+- Keep application, security, and telemetry logs routable independently. Use named loggers only when independent routing is needed.
+- Do not log raw credentials, password hashes, session cookies, CSRF tokens, authorization headers, or other sensitive values. Update the sensitive-data filter when adding new sensitive field names.
+- Avoid duplicate exception logs. Log an exception at the layer that has the actionable context, then propagate or translate without logging the same failure again.
+- Use `INFO` for successful system calls, `WARN` for high-level visibility and security-relevant events, and `ERROR` for exceptions.
+- Add or update Micrometer metrics for observable user/system flows, and protect non-health actuator endpoints from anonymous access.
 - Generate Spring API interfaces and models from `contracts/openapi/ticket-order-api/openapi.yml`.
 - Do not edit generated OpenAPI sources by hand.
 - Treat warnings from generated OpenAPI sources as contract or generator-configuration issues.

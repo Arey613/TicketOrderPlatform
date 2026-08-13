@@ -1,0 +1,48 @@
+fields:
+  - name: timestamp
+    required: true
+    source: logEvent
+    masking: none
+  - name: level
+    required: true
+    source: logEvent
+    masking: none
+  - name: logger
+    required: true
+    source: logEvent
+    masking: none
+  - name: thread
+    required: true
+    source: logEvent
+    masking: none
+  - name: message
+    required: true
+    source: logEvent
+    masking: sensitive-patterns
+  - name: correlationId
+    required: true
+    source: mdc
+    mdcKey: correlationId
+    masking: none
+  - name: traceId
+    required: false
+    source: openTelemetry
+    masking: none
+  - name: spanId
+    required: false
+    source: openTelemetry
+    masking: none
+  - name: requestMethod
+    required: false
+    source: mdc
+    mdcKey: requestMethod
+    masking: none
+  - name: requestPath
+    required: false
+    source: mdc
+    mdcKey: requestPath
+    masking: none
+  - name: exception
+    required: false
+    source: logEvent
+    masking: sensitive-patterns

@@ -16,7 +16,63 @@ spring:
     init:
       mode: always
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:}
+
+otel:
+  service:
+    name: ${OTEL_SERVICE_NAME:${spring.application.name}}
+  traces:
+    exporter: ${OTEL_TRACES_EXPORTER:none}
+  metrics:
+    exporter: ${OTEL_METRICS_EXPORTER:none}
+  logs:
+    exporter: ${OTEL_LOGS_EXPORTER:none}
+  propagators: ${OTEL_PROPAGATORS:tracecontext,baggage}
+
 ticket-order-platform:
+  observability:
+    correlation:
+      header-name: X-Correlation-ID
+      validation-pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-\d{2}-\d{2}-\d{4}$'
+      value-template: '{uuid}-{date:dd-MM-yyyy}'
+      invalid-id-action: invalidate-session
+      generate-when-missing: true
+    metrics:
+      enabled: ${TICKET_ORDER_METRICS_ENABLED:true}
+      auth-metrics-enabled: ${TICKET_ORDER_AUTH_METRICS_ENABLED:true}
+    logging:
+      enabled: ${TICKET_ORDER_LOGGING_ENABLED:true}
+      request-logging-enabled: ${TICKET_ORDER_REQUEST_LOGGING_ENABLED:true}
+      application:
+        targets: ${TICKET_ORDER_LOGGING_APPLICATION_TARGETS:console}
+        file: ${TICKET_ORDER_LOGGING_APPLICATION_FILE:logs/application.log}
+      telemetry:
+        targets: ${TICKET_ORDER_LOGGING_TELEMETRY_TARGETS:console}
+        file: ${TICKET_ORDER_LOGGING_TELEMETRY_FILE:logs/telemetry.log}
+      security:
+        targets: ${TICKET_ORDER_LOGGING_SECURITY_TARGETS:console}
+        file: ${TICKET_ORDER_LOGGING_SECURITY_FILE:logs/security.log}
+      masking:
+        enabled: ${TICKET_ORDER_LOGGING_MASKING_ENABLED:true}
+        additional-fields: ${TICKET_ORDER_LOGGING_MASKING_ADDITIONAL_FIELDS:}
+      rolling:
+        max-file-size: ${TICKET_ORDER_LOGGING_ROLLING_MAX_FILE_SIZE:50MB}
+        max-history-days: ${TICKET_ORDER_LOGGING_ROLLING_MAX_HISTORY_DAYS:14}
+        total-size-cap: ${TICKET_ORDER_LOGGING_ROLLING_TOTAL_SIZE_CAP:1GB}
   cors:
     allowed-origins:
       - http://localhost:5173

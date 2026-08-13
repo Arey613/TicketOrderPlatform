@@ -1,6 +1,7 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
 import com.example.ticketplatform.api.domain.model.user.User;
+import com.example.ticketplatform.api.infrastructure.config.security.AuthenticatedUserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -22,7 +23,9 @@ class AuthenticationSessionManager {
   void authenticate(User user) {
     UsernamePasswordAuthenticationToken authentication =
         UsernamePasswordAuthenticationToken.authenticated(
-            user.email(), null, List.of(new SimpleGrantedAuthority("ROLE_" + user.role().name())));
+            new AuthenticatedUserPrincipal(user.id(), user.email(), user.role()),
+            null,
+            List.of(new SimpleGrantedAuthority("ROLE_" + user.role().name())));
     SecurityContext context = SecurityContextHolder.createEmptyContext();
     context.setAuthentication(authentication);
     SecurityContextHolder.setContext(context);

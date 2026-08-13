@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: ticket-order-api
   datasource:
     url: jdbc:h2:mem:ticket_order_api;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
     username: sa
@@ -11,3 +13,61 @@ spring:
   sql:
     init:
       mode: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  otlp:
+    tracing:
+      endpoint: ""
+
+otel:
+  service:
+    name: ${spring.application.name}
+  traces:
+    exporter: none
+  metrics:
+    exporter: none
+  logs:
+    exporter: none
+  propagators: tracecontext,baggage
+
+ticket-order-platform:
+  observability:
+    correlation:
+      header-name: X-Correlation-ID
+      validation-pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-\d{2}-\d{2}-\d{4}$'
+      value-template: '{uuid}-{date:dd-MM-yyyy}'
+      invalid-id-action: invalidate-session
+      generate-when-missing: true
+    metrics:
+      enabled: true
+      auth-metrics-enabled: true
+    logging:
+      enabled: true
+      request-logging-enabled: true
+      application:
+        targets: console
+        file: build/logs/application-test.log
+      telemetry:
+        targets: console
+        file: build/logs/telemetry-test.log
+      security:
+        targets: console
+        file: build/logs/security-test.log
+      masking:
+        enabled: true
+        additional-fields:
+      rolling:
+        max-file-size: 50MB
+        max-history-days: 14
+        total-size-cap: 1GB

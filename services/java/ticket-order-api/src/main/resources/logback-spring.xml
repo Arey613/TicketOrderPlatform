@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="applicationLogFile"
+                    source="ticket-order-platform.observability.logging.application.file"
+                    defaultValue="logs/application.log"/>
+    <springProperty scope="context" name="loggingEnabled"
+                    source="ticket-order-platform.observability.logging.enabled"
+                    defaultValue="true"/>
+    <springProperty scope="context" name="applicationLogTargets"
+                    source="ticket-order-platform.observability.logging.application.targets"
+                    defaultValue="console"/>
+    <springProperty scope="context" name="securityLogFile"
+                    source="ticket-order-platform.observability.logging.security.file"
+                    defaultValue="logs/security.log"/>
+    <springProperty scope="context" name="securityLogTargets"
+                    source="ticket-order-platform.observability.logging.security.targets"
+                    defaultValue="console"/>
+    <springProperty scope="context" name="telemetryLogFile"
+                    source="ticket-order-platform.observability.logging.telemetry.file"
+                    defaultValue="logs/telemetry.log"/>
+    <springProperty scope="context" name="telemetryLogTargets"
+                    source="ticket-order-platform.observability.logging.telemetry.targets"
+                    defaultValue="console"/>
+    <springProperty scope="context" name="maskingEnabled"
+                    source="ticket-order-platform.observability.logging.masking.enabled"
+                    defaultValue="true"/>
+    <springProperty scope="context" name="additionalSensitiveFields"
+                    source="ticket-order-platform.observability.logging.masking.additional-fields"
+                    defaultValue=""/>
+    <springProperty scope="context" name="rollingMaxFileSize"
+                    source="ticket-order-platform.observability.logging.rolling.max-file-size"
+                    defaultValue="50MB"/>
+    <springProperty scope="context" name="rollingMaxHistoryDays"
+                    source="ticket-order-platform.observability.logging.rolling.max-history-days"
+                    defaultValue="14"/>
+    <springProperty scope="context" name="rollingTotalSizeCap"
+                    source="ticket-order-platform.observability.logging.rolling.total-size-cap"
+                    defaultValue="1GB"/>
+
+    <turboFilter class="com.example.ticketplatform.api.infrastructure.config.observability.SensitiveDataTurboFilter">
+        <enabled>${maskingEnabled}</enabled>
+        <additionalFields>${additionalSensitiveFields}</additionalFields>
+    </turboFilter>
+
+    <appender name="APPLICATION_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+            <enabled>${loggingEnabled}</enabled>
+            <targets>${applicationLogTargets}</targets>
+            <target>console</target>
+        </filter>
+        <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <withTimestamp>true</withTimestamp>
+            <withLevel>true</withLevel>
+            <withThreadName>true</withThreadName>
+            <withLoggerName>true</withLoggerName>
+            <withMDC>true</withMDC>
+            <withMessage>true</withMessage>
+            <withFormattedMessage>true</withFormattedMessage>
+            <withThrowable>true</withThrowable>
+            <withArguments>false</withArguments>
+        </encoder>
+    </appender>
+
+    <appender name="SECURITY_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+            <enabled>${loggingEnabled}</enabled>
+            <targets>${securityLogTargets}</targets>
+            <target>console</target>
+        </filter>
+        <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <withTimestamp>true</withTimestamp>
+            <withLevel>true</withLevel>
+            <withThreadName>true</withThreadName>
+            <withLoggerName>true</withLoggerName>
+            <withMDC>true</withMDC>
+            <withMessage>true</withMessage>
+            <withFormattedMessage>true</withFormattedMessage>
+            <withThrowable>true</withThrowable>
+            <withArguments>false</withArguments>
+        </encoder>
+    </appender>
+
+    <appender name="TELEMETRY_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+            <enabled>${loggingEnabled}</enabled>
+            <targets>${telemetryLogTargets}</targets>
+            <target>console</target>
+        </filter>
+        <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <withTimestamp>true</withTimestamp>
+            <withLevel>true</withLevel>
+            <withThreadName>true</withThreadName>
+            <withLoggerName>true</withLoggerName>
+            <withMDC>true</withMDC>
+            <withMessage>true</withMessage>
+            <withFormattedMessage>true</withFormattedMessage>
+            <withThrowable>true</withThrowable>
+            <withArguments>false</withArguments>
+        </encoder>
+    </appender>
+
+    <appender name="APPLICATION_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+            <enabled>${loggingEnabled}</enabled>
+            <targets>${applicationLogTargets}</targets>
+            <target>file</target>
+        </filter>
+        <file>${applicationLogFile}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${applicationLogFile}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>${rollingMaxFileSize}</maxFileSize>
+            <maxHistory>${rollingMaxHistoryDays}</maxHistory>
+            <totalSizeCap>${rollingTotalSizeCap}</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <withTimestamp>true</withTimestamp>
+            <withLevel>true</withLevel>
+            <withThreadName>true</withThreadName>
+            <withLoggerName>true</withLoggerName>
+            <withMDC>true</withMDC>
+            <withMessage>true</withMessage>
+            <withFormattedMessage>true</withFormattedMessage>
+            <withThrowable>true</withThrowable>
+            <withArguments>false</withArguments>
+        </encoder>
+    </appender>
+
+    <appender name="SECURITY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+            <enabled>${loggingEnabled}</enabled>
+            <targets>${securityLogTargets}</targets>
+            <target>file</target>
+        </filter>
+        <file>${securityLogFile}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${securityLogFile}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>${rollingMaxFileSize}</maxFileSize>
+            <maxHistory>${rollingMaxHistoryDays}</maxHistory>
+            <totalSizeCap>${rollingTotalSizeCap}</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <withTimestamp>true</withTimestamp>
+            <withLevel>true</withLevel>
+            <withThreadName>true</withThreadName>
+            <withLoggerName>true</withLoggerName>
+            <withMDC>true</withMDC>
+            <withMessage>true</withMessage>
+            <withFormattedMessage>true</withFormattedMessage>
+            <withThrowable>true</withThrowable>
+            <withArguments>false</withArguments>
+        </encoder>
+    </appender>
+
+    <appender name="TELEMETRY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="com.example.ticketplatform.api.infrastructure.config.observability.LogTargetFilter">
+            <enabled>${loggingEnabled}</enabled>
+            <targets>${telemetryLogTargets}</targets>
+            <target>file</target>
+        </filter>
+        <file>${telemetryLogFile}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${telemetryLogFile}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>${rollingMaxFileSize}</maxFileSize>
+            <maxHistory>${rollingMaxHistoryDays}</maxHistory>
+            <totalSizeCap>${rollingTotalSizeCap}</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.JsonEncoder">
+            <withTimestamp>true</withTimestamp>
+            <withLevel>true</withLevel>
+            <withThreadName>true</withThreadName>
+            <withLoggerName>true</withLoggerName>
+            <withMDC>true</withMDC>
+            <withMessage>true</withMessage>
+            <withFormattedMessage>true</withFormattedMessage>
+            <withThrowable>true</withThrowable>
+            <withArguments>false</withArguments>
+        </encoder>
+    </appender>
+
+    <logger name="com.example.ticketplatform.api.security" level="WARN" additivity="false">
+        <appender-ref ref="SECURITY_CONSOLE"/>
+        <appender-ref ref="SECURITY_FILE"/>
+    </logger>
+
+    <logger name="com.example.ticketplatform.api.telemetry" level="WARN" additivity="false">
+        <appender-ref ref="TELEMETRY_CONSOLE"/>
+        <appender-ref ref="TELEMETRY_FILE"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="APPLICATION_CONSOLE"/>
+        <appender-ref ref="APPLICATION_FILE"/>
+    </root>
+</configuration>

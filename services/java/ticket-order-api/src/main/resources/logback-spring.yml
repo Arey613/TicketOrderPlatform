@@ -1,0 +1,26 @@
+logging:
+  structures:
+    application: classpath:application-log-structure.yml
+    telemetry: classpath:telemetry-log-structure.yml
+    security: classpath:security-log-structure.yml
+  streams:
+    application:
+      logger: com.example.ticketplatform.api
+      targets: ${TICKET_ORDER_LOGGING_APPLICATION_TARGETS:-console}
+      file: ${TICKET_ORDER_LOGGING_APPLICATION_FILE:-logs/application.log}
+    telemetry:
+      logger: com.example.ticketplatform.api.telemetry
+      targets: ${TICKET_ORDER_LOGGING_TELEMETRY_TARGETS:-console}
+      file: ${TICKET_ORDER_LOGGING_TELEMETRY_FILE:-logs/telemetry.log}
+    security:
+      logger: com.example.ticketplatform.api.security
+      targets: ${TICKET_ORDER_LOGGING_SECURITY_TARGETS:-console}
+      file: ${TICKET_ORDER_LOGGING_SECURITY_FILE:-logs/security.log}
+  masking:
+    enabled: ${TICKET_ORDER_LOGGING_MASKING_ENABLED:-true}
+    additionalFields: ${TICKET_ORDER_LOGGING_MASKING_ADDITIONAL_FIELDS:-}
+    replacement: "[REDACTED]"
+  rolling:
+    maxFileSize: ${TICKET_ORDER_LOGGING_ROLLING_MAX_FILE_SIZE:-50MB}
+    maxHistoryDays: ${TICKET_ORDER_LOGGING_ROLLING_MAX_HISTORY_DAYS:-14}
+    totalSizeCap: ${TICKET_ORDER_LOGGING_ROLLING_TOTAL_SIZE_CAP:-1GB}
