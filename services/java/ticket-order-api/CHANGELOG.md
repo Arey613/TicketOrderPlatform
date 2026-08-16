@@ -19,9 +19,11 @@ TICKET_SERVICE#123 - short description
 - TICKET_SERVICE#5 - add registration authentication flow
 - TICKET_SERVICE#6 - add event management specification
 - TICKET_SERVICE#6 - add event management API implementation
+- TICKET_SERVICE#7 - add backend observability
 
 ### Changed
 
 - TICKET_SERVICE#3 - align user persistence mapping with users relation
 - TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
 - TICKET_SERVICE#6 - address event management review comments
+- TICKET_SERVICE#7 - address observability review comments

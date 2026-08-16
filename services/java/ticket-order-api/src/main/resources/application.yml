@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: classpath:observability-logging.yml
   application:
     name: ticket-order-api
   datasource:
@@ -16,7 +18,45 @@ spring:
     init:
       mode: always
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:}
+
+otel:
+  service:
+    name: ${OTEL_SERVICE_NAME:${spring.application.name}}
+  traces:
+    exporter: ${OTEL_TRACES_EXPORTER:none}
+  metrics:
+    exporter: ${OTEL_METRICS_EXPORTER:none}
+  logs:
+    exporter: ${OTEL_LOGS_EXPORTER:none}
+  propagators: ${OTEL_PROPAGATORS:tracecontext,baggage}
+
 ticket-order-platform:
+  observability:
+    correlation:
+      header-name: X-Correlation-ID
+      validation-pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-\d{2}-\d{2}-\d{4}$'
+      value-template: '{uuid}-{date:dd-MM-yyyy}'
+      time-zone: ${TICKET_ORDER_CORRELATION_TIME_ZONE:UTC}
+      invalid-id-action: invalidate-session
+      generate-when-missing: true
+    metrics:
+      enabled: ${TICKET_ORDER_METRICS_ENABLED:true}
+      auth-metrics-enabled: ${TICKET_ORDER_AUTH_METRICS_ENABLED:true}
   cors:
     allowed-origins:
       - http://localhost:5173

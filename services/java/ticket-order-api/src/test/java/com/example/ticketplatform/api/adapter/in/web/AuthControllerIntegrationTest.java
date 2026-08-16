@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.ticketplatform.api.adapter.in.web.WebControllerIntegrationTestConfiguration.TestUsers;
 import com.example.ticketplatform.api.domain.model.user.User;
+import com.example.ticketplatform.api.infrastructure.config.security.AuthenticatedUserPrincipal;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
 import java.util.UUID;
@@ -128,7 +129,10 @@ class AuthControllerIntegrationTest {
         (SecurityContext)
             session.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
 
-    assertThat(securityContext.getAuthentication().getName()).isEqualTo("customer@example.com");
+    assertThat(securityContext.getAuthentication().getPrincipal())
+        .isEqualTo(
+            new AuthenticatedUserPrincipal(
+                ENABLED_USER_ID, "customer@example.com", ENABLED_USER.role()));
     assertThat(securityContext.getAuthentication().getAuthorities())
         .extracting("authority")
         .containsExactly("ROLE_CUSTOMER");
@@ -171,7 +175,10 @@ class AuthControllerIntegrationTest {
     User registeredUser =
         testUsers.findByEmail("new.customer@example.com").orElseThrow();
 
-    assertThat(securityContext.getAuthentication().getName()).isEqualTo("new.customer@example.com");
+    assertThat(securityContext.getAuthentication().getPrincipal())
+        .isEqualTo(
+            new AuthenticatedUserPrincipal(
+                registeredUser.id(), "new.customer@example.com", registeredUser.role()));
     assertThat(securityContext.getAuthentication().getAuthorities())
         .extracting("authority")
         .containsExactly("ROLE_CUSTOMER");

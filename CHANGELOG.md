@@ -24,6 +24,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#4 - add pull request iteration and style guidance
 - GLOBAL_CONFIG#5 - organize changelog entries
 - TICKET_CONTRACTS#3 - add split OpenAPI contract bundling workflow
+- GLOBAL_CONFIG#7 - require latest main for new branches
 
 ## ticket-order-api
 
@@ -36,12 +37,14 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#5 - add registration authentication flow
 - TICKET_SERVICE#6 - add event management specification
 - TICKET_SERVICE#6 - add event management API implementation
+- TICKET_SERVICE#7 - add backend observability
 
 ### Changed
 
 - TICKET_SERVICE#3 - align user persistence mapping with users relation
 - TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
 - TICKET_SERVICE#6 - address event management review comments
+- TICKET_SERVICE#7 - address observability review comments
 
 ## ticket-order-api-contract
 

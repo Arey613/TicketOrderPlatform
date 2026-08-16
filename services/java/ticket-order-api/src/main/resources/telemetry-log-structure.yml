@@ -1,0 +1,38 @@
+fields:
+  - name: timestamp
+    required: true
+    source: logEvent
+    masking: none
+  - name: level
+    required: true
+    source: logEvent
+    masking: none
+  - name: logger
+    required: true
+    source: logEvent
+    masking: none
+  - name: message
+    required: true
+    source: logEvent
+    masking: sensitive-patterns
+  - name: service
+    required: true
+    source: application
+    default: ticket-order-api
+    masking: none
+  - name: environment
+    required: false
+    source: application
+    masking: none
+  - name: trace_id
+    required: false
+    source: openTelemetry
+    masking: none
+  - name: span_id
+    required: false
+    source: openTelemetry
+    masking: none
+  - name: exception
+    required: false
+    source: logEvent
+    masking: sensitive-patterns

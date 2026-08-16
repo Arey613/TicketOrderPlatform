@@ -10,6 +10,7 @@ import com.example.ticketplatform.api.generated.contract.model.LoginResponse;
 import com.example.ticketplatform.api.generated.contract.model.RegisterUserRequest;
 import com.example.ticketplatform.api.generated.contract.model.UserResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 class AuthController implements AuthApi {
 
   private final LoginUseCase loginUseCase;
@@ -39,6 +41,7 @@ class AuthController implements AuthApi {
 
       return ResponseEntity.ok(authContractMapper.toLoginResponse(user));
     } catch (BadCredentialsException exception) {
+      log.warn("auth.login.failed reason=invalid_credentials");
       return ResponseEntity.status(401).build();
     }
   }
@@ -46,13 +49,16 @@ class AuthController implements AuthApi {
   @Override
   public ResponseEntity<Void> logout() {
     authenticationSessionManager.clear();
+    log.warn("auth.logout.completed");
     return ResponseEntity.noContent().build();
   }
 
   @Override
   public ResponseEntity<UserResponse> registerUser(RegisterUserRequest registerUserRequest) {
     String passwordHash = passwordHasherPort.hash(registerUserRequest.getPassword());
-    User user = userCommandUseCase.registerUser(authContractMapper.toCommand(registerUserRequest, passwordHash));
+    User user =
+        userCommandUseCase.registerUser(
+            authContractMapper.toCommand(registerUserRequest, passwordHash));
     authenticationSessionManager.authenticate(user);
     return ResponseEntity.status(HttpStatus.CREATED).body(userContractMapper.toContract(user));
   }

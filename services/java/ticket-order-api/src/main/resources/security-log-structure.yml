@@ -1,0 +1,50 @@
+fields:
+  - name: timestamp
+    required: true
+    source: logEvent
+    masking: none
+  - name: level
+    required: true
+    source: logEvent
+    masking: none
+  - name: logger
+    required: true
+    source: logEvent
+    masking: none
+  - name: message
+    required: true
+    source: logEvent
+    masking: sensitive-patterns
+  - name: event
+    required: true
+    source: application
+    masking: none
+  - name: correlationId
+    required: true
+    source: mdc
+    mdcKey: correlationId
+    masking: none
+  - name: requestMethod
+    required: false
+    source: mdc
+    mdcKey: requestMethod
+    masking: none
+  - name: requestPath
+    required: false
+    source: mdc
+    mdcKey: requestPath
+    masking: none
+  - name: authenticatedUserId
+    required: false
+    source: mdc
+    mdcKey: authenticatedUserId
+    masking: sensitive-patterns
+  - name: authenticatedUserRole
+    required: false
+    source: mdc
+    mdcKey: authenticatedUserRole
+    masking: none
+  - name: exception
+    required: false
+    source: logEvent
+    masking: sensitive-patterns

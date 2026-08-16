@@ -18,7 +18,7 @@ Use `docs/PROJECT_MAP.md` for fast module routing before scanning broadly.
 
 ## Development
 
-- Create every new work branch from `main` unless the user explicitly asks for a stacked branch.
+- Create every new work branch from the latest `origin/main` unless the user explicitly asks for a stacked branch. Before branching, fetch the remote and update local `main` so the branch starts from the current remote mainline.
 - When the user says to push a branch, push it and create or open a pull request unless the user explicitly says to push only.
 - For updates to an existing pull request, keep changes local until the user explicitly asks to push, unless the user has already requested a push or PR-update workflow for that turn.
 - Do not amend, squash, or otherwise rewrite existing pull request commits during review iteration unless the user explicitly asks; squash only as part of the merge workflow when requested or selected.
@@ -28,7 +28,8 @@ Use `docs/PROJECT_MAP.md` for fast module routing before scanning broadly.
 - Ticket numbers are scoped per module. For example, `GLOBAL_CONFIG#1`, `TICKET_SERVICE#1`, and `TICKET_PORTAL#1` can all exist independently.
 - Use `GLOBAL_CONFIG` as the module name for repository-wide configuration, guidance, and workflow changes.
 - If there is no real ticket number, ask the user for one before committing.
-- Update changelogs before every commit using the exact commit message.
+- Keep changelogs concise. Add one changelog entry for the user-visible feature or meaningful delivered change, not one entry per commit.
+- For review fixes, refactors, test-only adjustments, documentation wording updates, or follow-up corrections within the same ticket, update the existing changelog entry only when its wording would otherwise become inaccurate. Do not add a new changelog line just because there is a new fix/update commit.
 - The root `CHANGELOG.md` must include every change grouped by module.
 - Each module-level `CHANGELOG.md` must include only changes for that module.
 - Keep modules independent. Do not mix Java API and web app changes unless the task requires cross-service behavior.
