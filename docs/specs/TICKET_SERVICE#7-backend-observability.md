@@ -142,6 +142,7 @@ ticket-order-platform:
       header-name: X-Correlation-ID
       validation-pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-\d{2}-\d{2}-\d{4}$'
       value-template: '{uuid}-{date:dd-MM-yyyy}'
+      time-zone: UTC
       invalid-id-action: invalidate-session
       generate-when-missing: true
 ```
@@ -156,10 +157,11 @@ Rules:
 6. The configured `value-template` should generate values accepted by the configured `validation-pattern`.
 7. The default validation path must still reject invalid UUIDs and invalid `dd-MM-yyyy` dates.
 8. Custom validation patterns are allowed for deployment integration, but they must be configured in application properties, not read directly from environment variables in code.
-9. `invalid-id-action` defaults to `invalidate-session`.
-10. `generate-when-missing` defaults to `true` because frontend correlation is optional.
-11. If `generate-when-missing` is set to `false`, a missing correlation ID may be rejected as a hardened deployment mode.
-12. Backend-generated correlation ID dates must use the service's shared `Supplier<Instant>` time source instead of introducing an observability-specific `Clock` bean.
+9. `time-zone` controls the timezone used for backend-generated correlation ID dates and defaults to `UTC`.
+10. `invalid-id-action` defaults to `invalidate-session`.
+11. `generate-when-missing` defaults to `true` because frontend correlation is optional.
+12. If `generate-when-missing` is set to `false`, a missing correlation ID may be rejected as a hardened deployment mode.
+13. Backend-generated correlation ID dates must use the service's shared `Supplier<Instant>` time source instead of introducing an observability-specific `Clock` bean.
 
 ## MDC Fields
 
@@ -578,6 +580,7 @@ logging.level.com.example.ticketplatform
 ticket-order-platform.observability.correlation.header-name
 ticket-order-platform.observability.correlation.validation-pattern
 ticket-order-platform.observability.correlation.value-template
+ticket-order-platform.observability.correlation.time-zone
 ticket-order-platform.observability.correlation.invalid-id-action
 ticket-order-platform.observability.correlation.generate-when-missing
 ticket-order-platform.observability.metrics.enabled

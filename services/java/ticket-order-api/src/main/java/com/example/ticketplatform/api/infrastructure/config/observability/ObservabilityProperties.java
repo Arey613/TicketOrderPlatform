@@ -47,10 +47,11 @@ public record ObservabilityProperties(
   private static Correlation defaultCorrelation() {
     return new Correlation(
         CorrelationId.HEADER_NAME,
-        CorrelationId.DEFAULT_VALIDATION_PATTERN,
-        CorrelationId.DEFAULT_VALUE_TEMPLATE,
-        "invalidate-session",
-        true);
+            CorrelationId.DEFAULT_VALIDATION_PATTERN,
+            CorrelationId.DEFAULT_VALUE_TEMPLATE,
+            "UTC",
+            "invalidate-session",
+            true);
   }
 
   private static Metrics defaultMetrics() {
@@ -104,6 +105,7 @@ public record ObservabilityProperties(
       @DefaultValue(CorrelationId.HEADER_NAME) String headerName,
       @DefaultValue(CorrelationId.DEFAULT_VALIDATION_PATTERN) String validationPattern,
       @DefaultValue(CorrelationId.DEFAULT_VALUE_TEMPLATE) String valueTemplate,
+      @DefaultValue("UTC") String timeZone,
       @DefaultValue("invalidate-session") String invalidIdAction,
       @DefaultValue("true") boolean generateWhenMissing) {
   }

@@ -51,6 +51,7 @@ ticket-order-platform:
       header-name: X-Correlation-ID
       validation-pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-\d{2}-\d{2}-\d{4}$'
       value-template: '{uuid}-{date:dd-MM-yyyy}'
+      time-zone: ${TICKET_ORDER_CORRELATION_TIME_ZONE:UTC}
       invalid-id-action: invalidate-session
       generate-when-missing: true
     metrics:

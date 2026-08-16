@@ -30,15 +30,11 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
       LoggerFactory.getLogger("com.example.ticketplatform.api.security");
 
   private final Supplier<Instant> currentTimeSupplier;
-  private final ZoneId applicationZoneId;
   private final ObservabilityProperties observabilityProperties;
 
   CorrelationMdcFilter(
-      Supplier<Instant> currentTimeSupplier,
-      ZoneId applicationZoneId,
-      ObservabilityProperties observabilityProperties) {
+      Supplier<Instant> currentTimeSupplier, ObservabilityProperties observabilityProperties) {
     this.currentTimeSupplier = currentTimeSupplier;
-    this.applicationZoneId = applicationZoneId;
     this.observabilityProperties = observabilityProperties;
   }
 
@@ -62,7 +58,7 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
             ? CorrelationId.generate(
                 currentTimeSupplier.get(),
                 observabilityProperties.correlation().valueTemplate(),
-                applicationZoneId)
+                correlationZoneId())
             : effectiveCorrelationId(incomingCorrelationId);
 
     response.setHeader(correlationHeaderName, correlationId);
@@ -98,9 +94,13 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
       return CorrelationId.generate(
           currentTimeSupplier.get(),
           observabilityProperties.correlation().valueTemplate(),
-          applicationZoneId);
+          correlationZoneId());
     }
     return incomingCorrelationId;
+  }
+
+  private ZoneId correlationZoneId() {
+    return ZoneId.of(observabilityProperties.correlation().timeZone());
   }
 
   private void rejectCorrelationId(

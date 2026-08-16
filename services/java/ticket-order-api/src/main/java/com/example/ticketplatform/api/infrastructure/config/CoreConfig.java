@@ -12,13 +12,8 @@ import org.springframework.context.annotation.Configuration;
 class CoreConfig {
 
   @Bean
-  ZoneId applicationZoneId(@Value("${application.time-zone:UTC}") String timeZone) {
-    return ZoneId.of(timeZone);
-  }
-
-  @Bean
-  Clock clock(ZoneId applicationZoneId) {
-    return Clock.system(applicationZoneId);
+  Clock clock(@Value("${application.time-zone:UTC}") String timeZone) {
+    return Clock.system(ZoneId.of(timeZone));
   }
 
   @Bean
