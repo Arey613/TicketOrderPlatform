@@ -45,9 +45,6 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
 - TICKET_SERVICE#6 - address event management review comments
 - TICKET_SERVICE#7 - address observability review comments
-- TICKET_SERVICE#7 - align observability configuration review fixes
-- TICKET_SERVICE#7 - configure correlation timezone
-- TICKET_SERVICE#7 - address observability Lombok review comments
 
 ## ticket-order-api-contract
 

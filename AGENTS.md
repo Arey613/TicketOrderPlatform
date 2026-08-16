@@ -28,7 +28,8 @@ Use `docs/PROJECT_MAP.md` for fast module routing before scanning broadly.
 - Ticket numbers are scoped per module. For example, `GLOBAL_CONFIG#1`, `TICKET_SERVICE#1`, and `TICKET_PORTAL#1` can all exist independently.
 - Use `GLOBAL_CONFIG` as the module name for repository-wide configuration, guidance, and workflow changes.
 - If there is no real ticket number, ask the user for one before committing.
-- Update changelogs before every commit using the exact commit message.
+- Keep changelogs concise. Add one changelog entry for the user-visible feature or meaningful delivered change, not one entry per commit.
+- For review fixes, refactors, test-only adjustments, documentation wording updates, or follow-up corrections within the same ticket, update the existing changelog entry only when its wording would otherwise become inaccurate. Do not add a new changelog line just because there is a new fix/update commit.
 - The root `CHANGELOG.md` must include every change grouped by module.
 - Each module-level `CHANGELOG.md` must include only changes for that module.
 - Keep modules independent. Do not mix Java API and web app changes unless the task requires cross-service behavior.

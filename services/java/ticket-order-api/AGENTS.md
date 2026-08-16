@@ -9,8 +9,9 @@ This file applies to `services/java/ticket-order-api`.
 ## Development
 
 - Commit messages for this module must follow `TICKET_SERVICE#123 - short description`.
-- Update this module's `CHANGELOG.md` before every commit that changes this module.
-- Also update the root `CHANGELOG.md` under the `ticket-order-api` module section.
+- Keep this module's `CHANGELOG.md` concise with one entry per meaningful delivered change, not one entry per commit.
+- For review fixes, refactors, test-only adjustments, documentation wording updates, or follow-up corrections within the same ticket, update the existing changelog entry only when its wording would otherwise become inaccurate. Do not add a new changelog line just because there is a new fix/update commit.
+- Also keep the root `CHANGELOG.md` under the `ticket-order-api` module section aligned with the same concise-entry rule.
 - Use Java 25 and Spring Boot 4.1.
 - Follow hexagonal architecture:
   - `domain/model` for framework-free domain objects
