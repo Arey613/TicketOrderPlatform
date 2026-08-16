@@ -29,3 +29,4 @@ TICKET_SERVICE#123 - short description
 - TICKET_SERVICE#7 - address observability review comments
 - TICKET_SERVICE#7 - align observability configuration review fixes
 - TICKET_SERVICE#7 - configure correlation timezone
+- TICKET_SERVICE#7 - address observability Lombok review comments

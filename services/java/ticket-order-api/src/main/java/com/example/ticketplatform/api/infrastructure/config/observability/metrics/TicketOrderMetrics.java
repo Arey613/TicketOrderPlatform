@@ -2,9 +2,11 @@ package com.example.ticketplatform.api.infrastructure.config.observability.metri
 
 import com.example.ticketplatform.api.infrastructure.config.observability.ObservabilityProperties;
 import io.micrometer.core.instrument.MeterRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class TicketOrderMetrics {
 
   private static final String RESULT = "result";
@@ -12,11 +14,6 @@ public class TicketOrderMetrics {
 
   private final MeterRegistry meterRegistry;
   private final ObservabilityProperties observabilityProperties;
-
-  TicketOrderMetrics(MeterRegistry meterRegistry, ObservabilityProperties observabilityProperties) {
-    this.meterRegistry = meterRegistry;
-    this.observabilityProperties = observabilityProperties;
-  }
 
   public void recordLoginAttempt() {
     if (!authMetricsEnabled()) {

@@ -9,8 +9,10 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.experimental.UtilityClass;
 
-public final class CorrelationId {
+@UtilityClass
+public class CorrelationId {
 
   public static final String HEADER_NAME = "X-Correlation-ID";
   static final String MDC_KEY = "correlationId";
@@ -24,8 +26,6 @@ public final class CorrelationId {
   private static final Pattern RANDOM_HEX_TOKEN_PATTERN = Pattern.compile("\\{random-hex:(\\d+)}");
   private static final DateTimeFormatter DATE_FORMATTER =
       DateTimeFormatter.ofPattern("dd-MM-uuuu", Locale.ROOT).withResolverStyle(ResolverStyle.STRICT);
-
-  private CorrelationId() {}
 
   static String generate(Instant currentTime) {
     return generate(currentTime, DEFAULT_VALUE_TEMPLATE, ZoneId.of("UTC"));
