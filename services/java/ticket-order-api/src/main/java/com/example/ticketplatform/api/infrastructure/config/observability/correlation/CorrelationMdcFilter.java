@@ -32,6 +32,9 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
   private final Supplier<Instant> currentTimeSupplier;
   private final ObservabilityProperties observabilityProperties;
 
+  private record CorrelationDecision(
+      String headerName, String correlationId, boolean rejected, boolean missing) {}
+
   CorrelationMdcFilter(
       Supplier<Instant> currentTimeSupplier, ObservabilityProperties observabilityProperties) {
     this.currentTimeSupplier = currentTimeSupplier;
@@ -43,6 +46,26 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
     long startedAt = System.nanoTime();
+    CorrelationDecision correlation = decideCorrelation(request);
+
+    response.setHeader(correlation.headerName(), correlation.correlationId());
+    populateRequestMdc(request, correlation.correlationId());
+
+    try {
+      if (correlation.rejected()) {
+        rejectRequestForInvalidCorrelation(request, response, correlation.missing());
+        return;
+      }
+
+      filterChain.doFilter(request, response);
+    } finally {
+      addAuthenticationMdc();
+      logRequestCompletion(request, response, startedAt);
+      MDC.clear();
+    }
+  }
+
+  private CorrelationDecision decideCorrelation(HttpServletRequest request) {
     String correlationHeaderName = observabilityProperties.correlation().headerName();
     String incomingCorrelationId = request.getHeader(correlationHeaderName);
     boolean missingCorrelationId = incomingCorrelationId == null || incomingCorrelationId.isBlank();
@@ -61,32 +84,14 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
                 correlationZoneId())
             : effectiveCorrelationId(incomingCorrelationId);
 
-    response.setHeader(correlationHeaderName, correlationId);
+    return new CorrelationDecision(
+        correlationHeaderName, correlationId, rejectedCorrelationId, missingCorrelationId);
+  }
+
+  private void populateRequestMdc(HttpServletRequest request, String correlationId) {
     MDC.put(CorrelationId.MDC_KEY, correlationId);
     MDC.put("requestMethod", request.getMethod());
     MDC.put("requestPath", request.getRequestURI());
-
-    try {
-      if (rejectedCorrelationId) {
-        rejectCorrelationId(request, response, missingCorrelationId);
-        return;
-      }
-
-      filterChain.doFilter(request, response);
-    } finally {
-      addAuthenticationMdc();
-      if (observabilityProperties.logging().enabled()
-          && observabilityProperties.logging().requestLoggingEnabled()) {
-        log.warn(
-            "http.request.completed method={} path={} status={} durationMs={} authenticated={}",
-            request.getMethod(),
-            request.getRequestURI(),
-            response.getStatus(),
-            elapsedMillis(startedAt),
-            isRealAuthentication(SecurityContextHolder.getContext().getAuthentication()));
-      }
-      MDC.clear();
-    }
   }
 
   private String effectiveCorrelationId(String incomingCorrelationId) {
@@ -103,7 +108,7 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
     return ZoneId.of(observabilityProperties.correlation().timeZone());
   }
 
-  private void rejectCorrelationId(
+  private void rejectRequestForInvalidCorrelation(
       HttpServletRequest request, HttpServletResponse response, boolean missingCorrelationId)
       throws IOException {
     HttpSession session = request.getSession(false);
@@ -114,6 +119,22 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
     response.setStatus(HttpStatus.UNAUTHORIZED.value());
     String eventName = missingCorrelationId ? "http.correlation.missing" : "http.correlation.invalid";
     securityLog.warn("{} status={}", eventName, HttpStatus.UNAUTHORIZED.value());
+  }
+
+  private void logRequestCompletion(
+      HttpServletRequest request, HttpServletResponse response, long startedAt) {
+    if (!observabilityProperties.logging().enabled()
+        || !observabilityProperties.logging().requestLoggingEnabled()) {
+      return;
+    }
+
+    log.warn(
+        "http.request.completed method={} path={} status={} durationMs={} authenticated={}",
+        request.getMethod(),
+        request.getRequestURI(),
+        response.getStatus(),
+        elapsedMillis(startedAt),
+        isRealAuthentication(SecurityContextHolder.getContext().getAuthentication()));
   }
 
   private boolean shouldInvalidateSession() {
