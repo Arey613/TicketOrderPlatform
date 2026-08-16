@@ -24,11 +24,11 @@ fields:
     source: mdc
     mdcKey: correlationId
     masking: none
-  - name: traceId
+  - name: trace_id
     required: false
     source: openTelemetry
     masking: none
-  - name: spanId
+  - name: span_id
     required: false
     source: openTelemetry
     masking: none

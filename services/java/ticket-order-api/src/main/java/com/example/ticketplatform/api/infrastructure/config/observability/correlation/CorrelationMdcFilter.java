@@ -11,11 +11,15 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,12 +28,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
 @Slf4j
 class CorrelationMdcFilter extends OncePerRequestFilter {
 
   private static final Logger securityLog =
       LoggerFactory.getLogger("com.example.ticketplatform.api.security");
+  private static final String TRACEPARENT_HEADER = "traceparent";
+  private static final String TRACE_ID_MDC_KEY = "trace_id";
+  private static final String SPAN_ID_MDC_KEY = "span_id";
+  private static final Pattern TRACEPARENT_PATTERN =
+      Pattern.compile("^[\\da-f]{2}-([\\da-f]{32})-([\\da-f]{16})-[\\da-f]{2}$");
 
   private final Supplier<Instant> currentTimeSupplier;
   private final ObservabilityProperties observabilityProperties;
@@ -88,6 +98,26 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
     MDC.put(CorrelationId.MDC_KEY, correlationId);
     MDC.put("requestMethod", request.getMethod());
     MDC.put("requestPath", request.getRequestURI());
+    populateTraceMdc(request);
+  }
+
+  private void populateTraceMdc(HttpServletRequest request) {
+    if (MDC.get(TRACE_ID_MDC_KEY) != null && MDC.get(SPAN_ID_MDC_KEY) != null) {
+      return;
+    }
+
+    String traceparent = request.getHeader(TRACEPARENT_HEADER);
+    if (traceparent == null) {
+      return;
+    }
+
+    Matcher matcher = TRACEPARENT_PATTERN.matcher(traceparent);
+    if (!matcher.matches()) {
+      return;
+    }
+
+    MDC.put(TRACE_ID_MDC_KEY, matcher.group(1));
+    MDC.put(SPAN_ID_MDC_KEY, matcher.group(2));
   }
 
   private String effectiveCorrelationId(String incomingCorrelationId) {

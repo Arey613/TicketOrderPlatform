@@ -24,11 +24,11 @@ fields:
     required: false
     source: application
     masking: none
-  - name: traceId
+  - name: trace_id
     required: false
     source: openTelemetry
     masking: none
-  - name: spanId
+  - name: span_id
     required: false
     source: openTelemetry
     masking: none

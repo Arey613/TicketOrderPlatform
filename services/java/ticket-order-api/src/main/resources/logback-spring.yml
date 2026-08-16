@@ -17,6 +17,8 @@ logging:
       targets: ${TICKET_ORDER_LOGGING_SECURITY_TARGETS:-console}
       file: ${TICKET_ORDER_LOGGING_SECURITY_FILE:-logs/security.log}
   masking:
+    filter: com.example.ticketplatform.api.infrastructure.config.observability.logging.SensitiveDataTurboFilter
+    mode: deny-before-json-encoding
     enabled: ${TICKET_ORDER_LOGGING_MASKING_ENABLED:-true}
     additionalFields: ${TICKET_ORDER_LOGGING_MASKING_ADDITIONAL_FIELDS:-}
     replacement: "[REDACTED]"

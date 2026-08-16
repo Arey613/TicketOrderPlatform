@@ -315,8 +315,8 @@ event
 service
 environment
 correlationId
-traceId
-spanId
+trace_id
+span_id
 requestMethod
 requestPath
 status
