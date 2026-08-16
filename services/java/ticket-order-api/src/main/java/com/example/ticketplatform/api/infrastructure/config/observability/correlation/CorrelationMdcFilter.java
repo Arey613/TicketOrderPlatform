@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.function.Supplier;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 class CorrelationMdcFilter extends OncePerRequestFilter {
 
@@ -34,12 +36,6 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
 
   private record CorrelationDecision(
       String headerName, String correlationId, boolean rejected, boolean missing) {}
-
-  CorrelationMdcFilter(
-      Supplier<Instant> currentTimeSupplier, ObservabilityProperties observabilityProperties) {
-    this.currentTimeSupplier = currentTimeSupplier;
-    this.observabilityProperties = observabilityProperties;
-  }
 
   @Override
   protected void doFilterInternal(
