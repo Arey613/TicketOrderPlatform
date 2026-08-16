@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -29,11 +30,15 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
       LoggerFactory.getLogger("com.example.ticketplatform.api.security");
 
   private final Supplier<Instant> currentTimeSupplier;
+  private final ZoneId applicationZoneId;
   private final ObservabilityProperties observabilityProperties;
 
   CorrelationMdcFilter(
-      Supplier<Instant> currentTimeSupplier, ObservabilityProperties observabilityProperties) {
+      Supplier<Instant> currentTimeSupplier,
+      ZoneId applicationZoneId,
+      ObservabilityProperties observabilityProperties) {
     this.currentTimeSupplier = currentTimeSupplier;
+    this.applicationZoneId = applicationZoneId;
     this.observabilityProperties = observabilityProperties;
   }
 
@@ -55,7 +60,9 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
     String correlationId =
         rejectedCorrelationId
             ? CorrelationId.generate(
-                currentTimeSupplier.get(), observabilityProperties.correlation().valueTemplate())
+                currentTimeSupplier.get(),
+                observabilityProperties.correlation().valueTemplate(),
+                applicationZoneId)
             : effectiveCorrelationId(incomingCorrelationId);
 
     response.setHeader(correlationHeaderName, correlationId);
@@ -89,7 +96,9 @@ class CorrelationMdcFilter extends OncePerRequestFilter {
   private String effectiveCorrelationId(String incomingCorrelationId) {
     if (incomingCorrelationId == null || incomingCorrelationId.isBlank()) {
       return CorrelationId.generate(
-          currentTimeSupplier.get(), observabilityProperties.correlation().valueTemplate());
+          currentTimeSupplier.get(),
+          observabilityProperties.correlation().valueTemplate(),
+          applicationZoneId);
     }
     return incomingCorrelationId;
   }

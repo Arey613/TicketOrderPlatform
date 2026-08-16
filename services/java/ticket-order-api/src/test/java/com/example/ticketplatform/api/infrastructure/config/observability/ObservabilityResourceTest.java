@@ -11,6 +11,7 @@ class ObservabilityResourceTest {
   void providesSeparateLoggingConfigurationAndStructureDefinitions() {
     assertThat(new ClassPathResource("logback-spring.xml").exists()).isTrue();
     assertThat(new ClassPathResource("logback-spring.yml").exists()).isTrue();
+    assertThat(new ClassPathResource("observability-logging.yml").exists()).isTrue();
     assertThat(new ClassPathResource("application-log-structure.yml").exists()).isTrue();
     assertThat(new ClassPathResource("telemetry-log-structure.yml").exists()).isTrue();
     assertThat(new ClassPathResource("security-log-structure.yml").exists()).isTrue();

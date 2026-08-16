@@ -28,16 +28,16 @@ public final class CorrelationId {
   private CorrelationId() {}
 
   static String generate(Instant currentTime) {
-    return generate(currentTime, DEFAULT_VALUE_TEMPLATE);
+    return generate(currentTime, DEFAULT_VALUE_TEMPLATE, ZoneId.of("UTC"));
   }
 
-  static String generate(Instant currentTime, String valueTemplate) {
+  static String generate(Instant currentTime, String valueTemplate, ZoneId zoneId) {
     if (valueTemplate == null || valueTemplate.isBlank()) {
-      return generate(currentTime);
+      return generate(currentTime, DEFAULT_VALUE_TEMPLATE, zoneId);
     }
 
     String generatedValue = valueTemplate.replace("{uuid}", UUID.randomUUID().toString());
-    generatedValue = replaceDateTokens(generatedValue, currentTime);
+    generatedValue = replaceDateTokens(generatedValue, currentTime, zoneId);
     generatedValue = replaceRandomHexTokens(generatedValue);
     return generatedValue;
   }
@@ -80,14 +80,14 @@ public final class CorrelationId {
         .anyMatch(character -> Character.isWhitespace(character) || Character.isISOControl(character));
   }
 
-  private static String replaceDateTokens(String value, Instant currentTime) {
+  private static String replaceDateTokens(String value, Instant currentTime, ZoneId zoneId) {
     Matcher matcher = DATE_TOKEN_PATTERN.matcher(value);
     StringBuffer result = new StringBuffer();
     while (matcher.find()) {
       DateTimeFormatter formatter =
           DateTimeFormatter.ofPattern(matcher.group(1).replace("yyyy", "uuuu"), Locale.ROOT)
               .withResolverStyle(ResolverStyle.STRICT);
-      LocalDate currentDate = LocalDate.ofInstant(currentTime, ZoneId.systemDefault());
+      LocalDate currentDate = LocalDate.ofInstant(currentTime, zoneId);
       matcher.appendReplacement(result, Matcher.quoteReplacement(formatter.format(currentDate)));
     }
     matcher.appendTail(result);

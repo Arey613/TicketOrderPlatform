@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  config:
+    import: classpath:observability-logging.yml
   application:
     name: ticket-order-api
   datasource:
@@ -54,25 +56,6 @@ ticket-order-platform:
     metrics:
       enabled: ${TICKET_ORDER_METRICS_ENABLED:true}
       auth-metrics-enabled: ${TICKET_ORDER_AUTH_METRICS_ENABLED:true}
-    logging:
-      enabled: ${TICKET_ORDER_LOGGING_ENABLED:true}
-      request-logging-enabled: ${TICKET_ORDER_REQUEST_LOGGING_ENABLED:true}
-      application:
-        targets: ${TICKET_ORDER_LOGGING_APPLICATION_TARGETS:console}
-        file: ${TICKET_ORDER_LOGGING_APPLICATION_FILE:logs/application.log}
-      telemetry:
-        targets: ${TICKET_ORDER_LOGGING_TELEMETRY_TARGETS:console}
-        file: ${TICKET_ORDER_LOGGING_TELEMETRY_FILE:logs/telemetry.log}
-      security:
-        targets: ${TICKET_ORDER_LOGGING_SECURITY_TARGETS:console}
-        file: ${TICKET_ORDER_LOGGING_SECURITY_FILE:logs/security.log}
-      masking:
-        enabled: ${TICKET_ORDER_LOGGING_MASKING_ENABLED:true}
-        additional-fields: ${TICKET_ORDER_LOGGING_MASKING_ADDITIONAL_FIELDS:}
-      rolling:
-        max-file-size: ${TICKET_ORDER_LOGGING_ROLLING_MAX_FILE_SIZE:50MB}
-        max-history-days: ${TICKET_ORDER_LOGGING_ROLLING_MAX_HISTORY_DAYS:14}
-        total-size-cap: ${TICKET_ORDER_LOGGING_ROLLING_TOTAL_SIZE_CAP:1GB}
   cors:
     allowed-origins:
       - http://localhost:5173

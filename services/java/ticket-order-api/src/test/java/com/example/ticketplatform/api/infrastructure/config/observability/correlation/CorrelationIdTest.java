@@ -3,6 +3,7 @@ package com.example.ticketplatform.api.infrastructure.config.observability.corre
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import org.junit.jupiter.api.Test;
 
 class CorrelationIdTest {
@@ -21,9 +22,21 @@ class CorrelationIdTest {
   @Test
   void generatesCorrelationIdFromConfiguredTemplate() {
     String correlationId =
-        CorrelationId.generate(TEST_TIME, "ticket-order-{random-hex:8}-{date:dd-MM-yyyy}");
+        CorrelationId.generate(
+            TEST_TIME, "ticket-order-{random-hex:8}-{date:dd-MM-yyyy}", ZoneId.of("UTC"));
 
     assertThat(correlationId).matches("ticket-order-[0-9a-f]{8}-13-08-2026");
+  }
+
+  @Test
+  void usesProvidedZoneForGeneratedDate() {
+    String correlationId =
+        CorrelationId.generate(
+            Instant.parse("2026-08-13T22:30:00Z"),
+            "ticket-order-{random-hex:8}-{date:dd-MM-yyyy}",
+            ZoneId.of("Europe/Chisinau"));
+
+    assertThat(correlationId).matches("ticket-order-[0-9a-f]{8}-14-08-2026");
   }
 
   @Test
