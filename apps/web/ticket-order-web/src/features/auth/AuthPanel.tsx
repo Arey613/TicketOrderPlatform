@@ -18,18 +18,31 @@ export function AuthPanel({ initialMode, onClose, onAuthenticated }: AuthPanelPr
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const panelRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
 
   const title = mode === 'login' ? 'Login' : 'Create account';
 
   useEffect(() => {
+    previousActiveElementRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeButtonRef.current?.focus();
+
+    return () => {
+      previousActiveElementRef.current?.focus();
+    };
   }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        trapFocus(event);
       }
     };
 
@@ -71,6 +84,7 @@ export function AuthPanel({ initialMode, onClose, onAuthenticated }: AuthPanelPr
         aria-modal="true"
         className="ml-auto flex min-h-full w-full max-w-md flex-col bg-white px-6 py-5 shadow-2xl sm:px-10 sm:py-8"
         onMouseDown={(event) => event.stopPropagation()}
+        ref={panelRef}
         role="dialog"
       >
         <button
@@ -162,4 +176,37 @@ export function AuthPanel({ initialMode, onClose, onAuthenticated }: AuthPanelPr
       </aside>
     </div>
   );
+
+  function trapFocus(event: KeyboardEvent) {
+    const panel = panelRef.current;
+
+    if (!panel) {
+      return;
+    }
+
+    const focusableElements = Array.from(
+      panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((element) => !element.hasAttribute('aria-hidden'));
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements.at(-1);
+
+    if (!firstElement || !lastElement) {
+      event.preventDefault();
+      return;
+    }
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+      return;
+    }
+
+    if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
 }

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../src/App';
@@ -49,7 +49,8 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getAllByRole('button', { name: 'Login' })[0]);
+    const loginButton = screen.getAllByRole('button', { name: 'Login' })[0];
+    await user.click(loginButton);
 
     expect(await screen.findByRole('dialog', { name: 'Login' })).toBeVisible();
 
@@ -58,6 +59,28 @@ describe('App', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Login' })).not.toBeInTheDocument();
     });
+    expect(loginButton).toHaveFocus();
+  });
+
+  it('keeps keyboard focus inside the login panel', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getAllByRole('button', { name: 'Login' })[0]);
+    const dialog = await screen.findByRole('dialog', { name: 'Login' });
+    const closeButton = screen.getByRole('button', { name: 'Close account form' });
+    const modeSwitchButton = within(dialog).getByRole('button', { name: 'Create account' });
+
+    expect(closeButton).toHaveFocus();
+
+    await user.keyboard('{Shift>}{Tab}{/Shift}');
+
+    expect(modeSwitchButton).toHaveFocus();
+
+    await user.tab();
+
+    expect(closeButton).toHaveFocus();
+    expect(dialog).toBeVisible();
   });
 
   it('logs in through the auth panel and shows the current user', async () => {

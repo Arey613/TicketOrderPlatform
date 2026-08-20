@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
       "ticket-order-platform.cors.allowed-origins=http://localhost:5173",
       "ticket-order-platform.cors.allowed-methods=GET,POST,OPTIONS",
       "ticket-order-platform.cors.allowed-headers=*",
-      "ticket-order-platform.cors.allow-credentials=false",
+      "ticket-order-platform.cors.allow-credentials=true",
       "ticket-order-platform.cors.max-age=3600"
     })
 class SecurityCorsIntegrationTest {
@@ -35,6 +35,7 @@ class SecurityCorsIntegrationTest {
                 .header("Access-Control-Request-Method", "POST"))
         .andExpect(status().isOk())
         .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+        .andExpect(header().string("Access-Control-Allow-Credentials", "true"))
         .andExpect(header().string("Access-Control-Allow-Methods", "GET,POST,OPTIONS"))
         .andExpect(header().string("Access-Control-Max-Age", "3600"));
   }

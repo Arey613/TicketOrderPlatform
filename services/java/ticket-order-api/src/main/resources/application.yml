@@ -69,5 +69,5 @@ ticket-order-platform:
       - OPTIONS
     allowed-headers:
       - "*"
-    allow-credentials: false
+    allow-credentials: true
     max-age: 3600

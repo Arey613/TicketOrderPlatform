@@ -48,7 +48,7 @@ package: package-api package-web package-migrations
 package-api: check-maven
 	$(MAVEN) -pl $(API_MODULE) -am package
 
-package-web: check-npm
+package-web: generate-web-contracts
 	$(NPM) --prefix $(WEB_MODULE) run build
 
 package-migrations: check-maven
@@ -59,10 +59,10 @@ test: test-api test-web
 test-api: check-maven
 	$(MAVEN) -pl $(API_MODULE) -am test
 
-test-web: check-npm
+test-web: generate-web-contracts
 	$(NPM) --prefix $(WEB_MODULE) run test
 
-verify: check-maven check-npm
+verify: check-maven generate-web-contracts
 	$(MAVEN) verify
 	$(NPM) --prefix $(WEB_MODULE) run build
 
@@ -87,7 +87,7 @@ run: run-api
 run-api: check-maven
 	$(MAVEN) -pl $(API_MODULE) spring-boot:run -Dspring-boot.run.profiles=$(SPRING_PROFILES)
 
-run-web: check-npm
+run-web: generate-web-contracts
 	$(NPM) --prefix $(WEB_MODULE) run dev
 
 install-web: check-npm
