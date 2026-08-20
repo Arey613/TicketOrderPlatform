@@ -78,4 +78,4 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders
 - TICKET_PORTAL#1 - add OpenAPI client generation
-- TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI
+- TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI and review guidance
