@@ -3,6 +3,10 @@ FROM maven:3.9-eclipse-temurin-25 AS build
 WORKDIR /workspace
 
 COPY pom.xml .
+COPY contracts/openapi/ticket-order-api contracts/openapi/ticket-order-api
+COPY database/java/migrations/ticket-order-db-migrations/pom.xml database/java/migrations/ticket-order-db-migrations/pom.xml
+COPY database/java/migrations/ticket-order-db-migrations/ticket-order-analytical-migrations/pom.xml database/java/migrations/ticket-order-db-migrations/ticket-order-analytical-migrations/pom.xml
+COPY database/java/migrations/ticket-order-db-migrations/ticket-order-transactional-migrations/pom.xml database/java/migrations/ticket-order-db-migrations/ticket-order-transactional-migrations/pom.xml
 COPY services/java/ticket-order-api/pom.xml services/java/ticket-order-api/pom.xml
 COPY services/java/ticket-order-api/src services/java/ticket-order-api/src
 

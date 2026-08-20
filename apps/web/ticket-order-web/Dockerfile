@@ -2,6 +2,8 @@ FROM node:26-alpine AS build
 
 WORKDIR /workspace
 
+RUN apk add --no-cache openjdk21-jre
+
 COPY apps/web/ticket-order-web/package*.json apps/web/ticket-order-web/
 RUN npm --prefix apps/web/ticket-order-web ci
 
