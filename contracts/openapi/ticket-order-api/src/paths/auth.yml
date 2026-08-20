@@ -3,16 +3,16 @@
   get:
     operationId: getCsrfToken
     tags:
-    - Auth
+      - Auth
     summary: Create a CSRF token cookie
     responses:
-      '204':
+      "204":
         description: CSRF token cookie was created
 "/auth/login":
   post:
     operationId: login
     tags:
-    - Auth
+      - Auth
     summary: Authenticate a user
     requestBody:
       required: true
@@ -21,30 +21,30 @@
           schema:
             "$ref": "#/components/schemas/LoginRequest"
     responses:
-      '200':
+      "200":
         description: Login succeeded
         content:
           application/json:
             schema:
               "$ref": "#/components/schemas/LoginResponse"
-      '400':
-        description: Login request was invalid
-      '401':
-        description: Login credentials are unknown, invalid, or disabled
+      "400":
+        "$ref": "#/components/responses/BadRequest"
+      "401":
+        "$ref": "#/components/responses/Unauthorized"
 "/auth/logout":
   post:
     operationId: logout
     tags:
-    - Auth
+      - Auth
     summary: Logout the current user
     responses:
-      '204':
+      "204":
         description: Logout succeeded
 "/auth/register":
   post:
     operationId: registerUser
     tags:
-    - Auth
+      - Auth
     summary: Register a customer account
     requestBody:
       required: true
@@ -53,13 +53,13 @@
           schema:
             "$ref": "#/components/schemas/RegisterUserRequest"
     responses:
-      '201':
+      "201":
         description: Registration succeeded
         content:
           application/json:
             schema:
               "$ref": "#/components/schemas/UserResponse"
-      '400':
-        description: Registration request was invalid
-      '409':
-        description: User email is already registered
+      "400":
+        "$ref": "#/components/responses/BadRequest"
+      "409":
+        "$ref": "#/components/responses/Conflict"

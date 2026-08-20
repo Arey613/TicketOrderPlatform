@@ -159,7 +159,13 @@ class EventControllerIntegrationTest {
                           ]
                         }
                         """)))
-        .andExpect(status().isCreated());
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.orders").isArray())
+        .andExpect(jsonPath("$.orders.length()").value(2))
+        .andExpect(jsonPath("$.orders[0].eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.orders[0].row").value(4))
+        .andExpect(jsonPath("$.orders[0].place").value(8))
+        .andExpect(jsonPath("$.orders[0].placeType").value("STANDARD"));
 
     assertThat(testEvents.lastCommandUserId()).isEqualTo(CUSTOMER_ID);
     assertThat(testEvents.createdOrderCount()).isEqualTo(2);

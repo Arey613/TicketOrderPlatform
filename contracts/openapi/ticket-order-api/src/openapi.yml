@@ -5,15 +5,15 @@ info:
   version: 0.1.0
   description: API contract for the TicketOrderPlatform ticket service.
 servers:
-- url: http://localhost:8080
-  description: Local API server
+  - url: http://localhost:8080
+    description: Local API server
 tags:
-- name: Auth
-  description: Registration, login, and logout resources
-- name: Users
-  description: User resources
-- name: Events
-  description: Event management and event order resources
+  - name: Auth
+    description: Registration, login, and logout resources
+  - name: Users
+    description: User resources
+  - name: Events
+    description: Event management and event order resources
 paths:
   "/auth/csrf":
     "$ref": "./paths/auth.yml#/~1auth~1csrf"
@@ -29,6 +29,10 @@ paths:
     "$ref": "./paths/events.yml#/~1events"
   "/events/{eventId}":
     "$ref": "./paths/events.yml#/~1events~1{eventId}"
+  "/public/events":
+    "$ref": "./paths/events.yml#/~1public~1events"
+  "/public/events/{eventId}":
+    "$ref": "./paths/events.yml#/~1public~1events~1{eventId}"
   "/events/{eventId}/publish":
     "$ref": "./paths/events.yml#/~1events~1{eventId}~1publish"
   "/events/{eventId}/unpublish":
@@ -41,6 +45,37 @@ components:
   parameters:
     EventId:
       "$ref": "./schemas/event.yml#/EventId"
+  responses:
+    BadRequest:
+      description: Request was invalid
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication credentials are missing or invalid
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Authenticated user is not allowed to perform this action
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource was not found
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Request conflicts with current resource state
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
   securitySchemes:
     sessionAuth:
       type: apiKey
@@ -53,6 +88,10 @@ components:
       "$ref": "./schemas/auth.yml#/RegisterUserRequest"
     LoginResponse:
       "$ref": "./schemas/auth.yml#/LoginResponse"
+    ErrorResponse:
+      "$ref": "./schemas/auth.yml#/ErrorResponse"
+    FieldErrorResponse:
+      "$ref": "./schemas/auth.yml#/FieldErrorResponse"
     UserRole:
       "$ref": "./schemas/user.yml#/UserRole"
     EventStatus:
@@ -63,6 +102,8 @@ components:
       "$ref": "./schemas/event.yml#/EventDetailsRequest"
     EventDetailsResponse:
       "$ref": "./schemas/event.yml#/EventDetailsResponse"
+    EventPlaceTypeRequest:
+      "$ref": "./schemas/event.yml#/EventPlaceTypeRequest"
     CreateEventRequest:
       "$ref": "./schemas/event.yml#/CreateEventRequest"
     UpdateEventRequest:
@@ -77,6 +118,10 @@ components:
       "$ref": "./schemas/event-order.yml#/CreateEventOrderItem"
     CreateEventOrdersRequest:
       "$ref": "./schemas/event-order.yml#/CreateEventOrdersRequest"
+    CreatedEventOrderResponse:
+      "$ref": "./schemas/event-order.yml#/CreatedEventOrderResponse"
+    CreatedEventOrdersResponse:
+      "$ref": "./schemas/event-order.yml#/CreatedEventOrdersResponse"
     DeleteEventOrdersRequest:
       "$ref": "./schemas/event-order.yml#/DeleteEventOrdersRequest"
     MyEventOrderResponse:

@@ -5,22 +5,38 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run format:check && vite build",
+    "build": "npm run format:check && npm run typecheck && npm run test:unit && vite build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate:api": "openapi-generator-cli generate -i ../../../contracts/openapi/ticket-order-api/openapi.yml -g typescript-fetch -o src/generated/api --additional-properties=typescriptThreePlus=true",
     "validate:api": "openapi-generator-cli validate -i ../../../contracts/openapi/ticket-order-api/openapi.yml",
     "preview": "vite preview",
-    "test": "npm run build"
+    "test": "npm run build",
+    "test:e2e": "playwright test",
+    "test:unit": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^6.0.4",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.32.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "vite": "^8.1.5"
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.25.2",
-    "prettier": "^3.9.6"
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.5",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "jsdom": "^30.0.1",
+    "prettier": "^3.9.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   }
 }

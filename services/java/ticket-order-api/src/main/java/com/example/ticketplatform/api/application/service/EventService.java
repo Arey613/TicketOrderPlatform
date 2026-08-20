@@ -88,7 +88,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
 
   @Override
   @Transactional
-  public int createEventOrders(UUID userId, List<CreateEventOrderCommand> commands) {
+  public List<EventOrder> createEventOrders(UUID userId, List<CreateEventOrderCommand> commands) {
     getUser(userId);
     Set<String> positions = new HashSet<>();
 
@@ -104,14 +104,12 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
     }
 
     Instant now = currentTimeSupplier.get();
-    return eventRepositoryPort
-        .saveOrders(
-            commands.stream()
-                .map(
-                    command ->
-                        eventApplicationMapper.toOrder(command, UUID.randomUUID(), userId, now))
-                .toList())
-        .size();
+    return eventRepositoryPort.saveOrders(
+        commands.stream()
+            .map(
+                command ->
+                    eventApplicationMapper.toOrder(command, UUID.randomUUID(), userId, now))
+            .toList());
   }
 
   @Override
