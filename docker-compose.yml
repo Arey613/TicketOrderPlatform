@@ -46,6 +46,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      transactional-migrations:
+        condition: service_completed_successfully
 
   api:
     image: ticket-order-api
