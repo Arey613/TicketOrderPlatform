@@ -71,7 +71,7 @@ class MigrationSchemaBoundaryTest {
             "ticket-order-transactional-migrations/src/main/resources/db/migrations/V1.0001__create_users.sql");
     Path analyticalUsers =
         MIGRATIONS_ROOT.resolve(
-            "ticket-order-analytical-migrations/src/main/resources/db/migrations/V1.0001__create_read_model_tables.sql");
+            "ticket-order-analytical-migrations/src/main/resources/db/migrations/V1.0001__create_users.sql");
 
     assertThat(Files.readString(transactionalUsers)).contains("password_hash");
     assertThat(Files.readString(analyticalUsers)).doesNotContain("password_hash");
