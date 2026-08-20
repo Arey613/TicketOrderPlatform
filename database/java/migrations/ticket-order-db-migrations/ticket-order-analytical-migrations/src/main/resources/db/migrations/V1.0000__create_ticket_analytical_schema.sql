@@ -1,1 +1,1 @@
-CREATE SCHEMA IF NOT EXISTS ticket_analytical;
+-- Schema creation is managed by the Flyway Maven profile.

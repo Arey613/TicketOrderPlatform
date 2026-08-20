@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "t_event_order")
+@Table(name = "t_event_order", schema = "ticket_transactional")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

@@ -1,1 +1,1 @@
-CREATE SCHEMA IF NOT EXISTS ticket_transactional;
+-- Schema creation is managed by the Flyway Maven profile.

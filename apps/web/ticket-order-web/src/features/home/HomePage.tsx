@@ -1,10 +1,18 @@
 import { CalendarCheck, ShieldCheck, Smartphone } from 'lucide-react';
+import type { AuthenticatedUser } from '../../api/authClient';
 import { EventPreviewList } from '../events/EventPreviewList';
 
 type HomePageProps = {
+  currentUser: AuthenticatedUser | null;
   onLogin: () => void;
   onRegister: () => void;
 };
+
+const actionsByRole = {
+  ADMIN: ['User administration', 'Platform operations', 'Event oversight'],
+  MANAGER: ['My events', 'Create event', 'Event orders'],
+  CUSTOMER: ['Browse events', 'My orders', 'My tickets'],
+} as const;
 
 const benefits = [
   {
@@ -24,7 +32,9 @@ const benefits = [
   },
 ];
 
-export function HomePage({ onLogin, onRegister }: HomePageProps) {
+export function HomePage({ currentUser, onLogin, onRegister }: HomePageProps) {
+  const roleActions = currentUser ? actionsByRole[currentUser.role] : [];
+
   return (
     <main>
       <section className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8 lg:py-16">
@@ -40,22 +50,38 @@ export function HomePage({ onLogin, onRegister }: HomePageProps) {
             single account.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button
-              className="rounded-md bg-teal-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
-              onClick={onRegister}
-              type="button"
-            >
-              Create account
-            </button>
-            <button
-              className="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-teal-700 hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
-              onClick={onLogin}
-              type="button"
-            >
-              Login
-            </button>
-          </div>
+          {currentUser ? (
+            <div className="mt-8">
+              <div className="flex flex-wrap gap-3" aria-label={`${currentUser.role} actions`}>
+                {roleActions.map((action) => (
+                  <button
+                    className="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-teal-700 hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
+                    key={action}
+                    type="button"
+                  >
+                    {action}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button
+                className="rounded-md bg-teal-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
+                onClick={onRegister}
+                type="button"
+              >
+                Create account
+              </button>
+              <button
+                className="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:border-teal-700 hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
+                onClick={onLogin}
+                type="button"
+              >
+                Login
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid content-center gap-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">

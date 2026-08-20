@@ -1,9 +1,8 @@
-CREATE OR REPLACE VIEW ticket_analytical.users AS
-SELECT
-    id,
-    email,
-    role,
-    enabled,
-    created_at,
-    updated_at
-FROM ticket_transactional.t_users;
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY,
+    email VARCHAR(320) NOT NULL UNIQUE,
+    role VARCHAR(32) NOT NULL,
+    enabled BOOLEAN NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);

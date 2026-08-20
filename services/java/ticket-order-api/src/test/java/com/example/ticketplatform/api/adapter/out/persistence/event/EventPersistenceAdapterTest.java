@@ -124,7 +124,8 @@ class EventPersistenceAdapterTest {
     entityManager
         .createNativeQuery(
             """
-            INSERT INTO t_users (id, email, password_hash, role, enabled, created_at, updated_at)
+            INSERT INTO ticket_transactional.t_users
+                (id, email, password_hash, role, enabled, created_at, updated_at)
             VALUES (:id, :email, '{noop}secret', :role, true, :createdAt, :updatedAt)
             """)
         .setParameter("id", id)

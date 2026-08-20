@@ -18,3 +18,4 @@ DATABASE_MIGRATIONS#123 - short description
 ### Changed
 
 - DATABASE_MIGRATIONS#2 - rename application user migrations
+- BUGFIX#2 - use profile-selected schema and keep analytical users password-free

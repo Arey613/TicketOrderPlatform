@@ -16,10 +16,6 @@
     <name>ticket-order-analytical-migrations</name>
     <description>Analytical Flyway migrations for TicketOrderPlatform Java services</description>
 
-    <properties>
-        <migration.schema>ticket_analytical</migration.schema>
-    </properties>
-
     <build>
         <plugins>
             <plugin>

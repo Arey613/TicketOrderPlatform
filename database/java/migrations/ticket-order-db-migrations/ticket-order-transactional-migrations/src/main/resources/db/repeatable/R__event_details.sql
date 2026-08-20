@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW ticket_transactional.event_details AS
+CREATE OR REPLACE VIEW event_details AS
 SELECT
     event_details_id,
     event_id,
@@ -8,4 +8,4 @@ SELECT
     seats_per_row,
     created_at,
     updated_at
-FROM ticket_transactional.t_event_details;
+FROM t_event_details;

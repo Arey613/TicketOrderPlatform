@@ -1,10 +1,9 @@
-CREATE OR REPLACE VIEW ticket_analytical.event_orders AS
-SELECT
-    event_order_id,
-    event_id,
-    customer_reference,
-    row_number,
-    place_number,
-    place_type,
-    reservation_date
-FROM ticket_transactional.t_event_order;
+CREATE TABLE IF NOT EXISTS event_orders (
+    event_order_id UUID PRIMARY KEY,
+    event_id UUID NOT NULL,
+    customer_reference UUID NULL,
+    row_number INTEGER NOT NULL,
+    place_number INTEGER NOT NULL,
+    place_type VARCHAR(100) NOT NULL,
+    reservation_date TIMESTAMP WITH TIME ZONE NOT NULL
+);

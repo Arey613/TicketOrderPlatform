@@ -12,9 +12,11 @@ Guidance for agents working in `database/java/migrations/ticket-order-db-migrati
 - Keep analytical repeatable migrations under `ticket-order-analytical-migrations/src/main/resources/db/repeatable`.
 - Keep a separate `CHANGELOG.md` in each schema-specific migration module.
 - Package each schema stream as its own Maven jar module.
-- Configure Flyway plugin locations and schemas in each child module POM; do not require profiles or migration paths in root commands.
-- Define each child module's Flyway schema through the `migration.schema` Maven property.
+- Configure Flyway plugin locations in each child module POM.
+- Define the Flyway schema through the parent module's Maven profiles: `transactional` sets `migration.schema=ticket_transactional`, and `analytical` sets `migration.schema=ticket_analytical`.
+- Root migration commands must select the matching Maven profile for each schema stream.
 - Use `ticket_transactional` for transactional schemas and `ticket_analytical` for analytical schemas.
+- Keep migration SQL schema-neutral; do not prefix object names with `ticket_transactional.`, `ticket_analytical.`, or `public.`.
 - Prefix transactional table names with `t_`.
 - Name CQRS views after the entity/table concept without a view prefix.
 - Keep transactional and analytical view definitions in repeatable Flyway migrations using `R__view_name.sql`.

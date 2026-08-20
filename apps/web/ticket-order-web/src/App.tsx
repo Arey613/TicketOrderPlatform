@@ -13,6 +13,12 @@ const AuthPanel = lazy(() =>
 
 type AuthMode = 'login' | 'register';
 
+const navItemsByRole = {
+  ADMIN: ['Users', 'Operations', 'Events'],
+  MANAGER: ['My events', 'Create event', 'Event orders'],
+  CUSTOMER: ['Events', 'My orders', 'My tickets'],
+} as const;
+
 function App() {
   const [authPanelMode, setAuthPanelMode] = useState<AuthMode | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(() => loadStoredUser());
@@ -57,15 +63,13 @@ function App() {
           </a>
 
           <nav className="hidden items-center gap-8 text-sm font-semibold text-slate-700 md:flex">
-            <a className="transition hover:text-teal-800" href="#events">
-              Events
-            </a>
-            <a className="transition hover:text-teal-800" href="#prices">
-              Prices
-            </a>
-            <a className="transition hover:text-teal-800" href="#help">
-              Help
-            </a>
+            {(currentUser ? navItemsByRole[currentUser.role] : ['Events', 'Prices', 'Help']).map(
+              (item) => (
+                <a className="transition hover:text-teal-800" href="#events" key={item}>
+                  {item}
+                </a>
+              ),
+            )}
           </nav>
 
           <div className="flex shrink-0 items-center gap-3">
@@ -108,6 +112,7 @@ function App() {
       )}
 
       <HomePage
+        currentUser={currentUser}
         onLogin={() => openAuthPanel('login')}
         onRegister={() => openAuthPanel('register')}
       />

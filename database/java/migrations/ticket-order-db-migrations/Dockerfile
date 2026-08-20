@@ -1,6 +1,8 @@
 FROM maven:3.9-eclipse-temurin-25
 
 ARG MIGRATION_MODULE_PATH
+ARG MIGRATION_PROFILE
+ENV MIGRATION_PROFILE=${MIGRATION_PROFILE}
 
 WORKDIR /workspace
 
@@ -13,4 +15,4 @@ COPY database/java/migrations/ticket-order-db-migrations/ticket-order-analytical
 
 WORKDIR /workspace/${MIGRATION_MODULE_PATH}
 
-CMD ["mvn", "process-resources", "flyway:migrate"]
+CMD ["sh", "-c", "mvn -P${MIGRATION_PROFILE} process-resources flyway:migrate"]

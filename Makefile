@@ -121,10 +121,10 @@ generate-web-contracts: check-npm
 	$(NPM) --prefix $(WEB_MODULE) run generate:api
 
 migrate-transactional: check-maven
-	$(MAVEN) -pl $(DB_TRANSACTIONAL_MIGRATIONS_MODULE) process-resources flyway:migrate
+	$(MAVEN) -pl $(DB_TRANSACTIONAL_MIGRATIONS_MODULE) -Ptransactional process-resources flyway:migrate
 
 migrate-analytical: check-maven
-	$(MAVEN) -pl $(DB_ANALYTICAL_MIGRATIONS_MODULE) process-resources flyway:migrate
+	$(MAVEN) -pl $(DB_ANALYTICAL_MIGRATIONS_MODULE) -Panalytical process-resources flyway:migrate
 
 docker-build: docker-build-api docker-build-web
 

@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW ticket_transactional.users AS
+CREATE OR REPLACE VIEW users AS
 SELECT
     id,
     email,
@@ -7,4 +7,4 @@ SELECT
     enabled,
     created_at,
     updated_at
-FROM ticket_transactional.t_users;
+FROM t_users;

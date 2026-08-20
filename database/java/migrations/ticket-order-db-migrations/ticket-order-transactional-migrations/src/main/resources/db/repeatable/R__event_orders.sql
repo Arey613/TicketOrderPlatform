@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW ticket_transactional.event_orders AS
+CREATE OR REPLACE VIEW event_orders AS
 SELECT
     event_order_id,
     event_id,
@@ -7,4 +7,4 @@ SELECT
     place_number,
     place_type,
     reservation_date
-FROM ticket_transactional.t_event_order;
+FROM t_event_order;

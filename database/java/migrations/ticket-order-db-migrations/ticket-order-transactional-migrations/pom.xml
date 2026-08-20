@@ -16,10 +16,6 @@
     <name>ticket-order-transactional-migrations</name>
     <description>Transactional Flyway migrations for TicketOrderPlatform Java services</description>
 
-    <properties>
-        <migration.schema>ticket_transactional</migration.schema>
-    </properties>
-
     <build>
         <plugins>
             <plugin>

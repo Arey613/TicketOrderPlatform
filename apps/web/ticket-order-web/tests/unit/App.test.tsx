@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../src/App';
 import { login, logout, register, toUserMessage } from '../../src/api/authClient';
 import { submitLoginForm, submitRegistrationForm } from '../support/appTestActions';
-import { buyerUser, newBuyerUser, storedUserKey } from '../support/authTestData';
+import {
+  adminUser,
+  buyerUser,
+  managerUser,
+  newBuyerUser,
+  storedUserKey,
+} from '../support/authTestData';
 
 vi.mock('../../src/api/authClient', () => ({
   login: vi.fn(),
@@ -43,6 +49,8 @@ describe('App', () => {
     expect(
       screen.getByText('Static event previews are temporary until event APIs are wired.'),
     ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Create account' })).toBeVisible();
+    expect(screen.getAllByRole('button', { name: 'Login' })[0]).toBeVisible();
   });
 
   it('opens and closes the lazy login panel', async () => {
@@ -102,6 +110,11 @@ describe('App', () => {
     expect(screen.getByText('CUSTOMER')).toBeVisible();
     expect(localStorage.getItem(storedUserKey)).toBe(JSON.stringify(buyerUser));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create account' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Login' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Browse events' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'My orders' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'My tickets' })).toBeVisible();
   });
 
   it('switches to registration and creates an account', async () => {
@@ -120,6 +133,8 @@ describe('App', () => {
     });
 
     expect(await screen.findByText('new-buyer@example.com')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Create account' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Login' })).not.toBeInTheDocument();
   });
 
   it('shows an auth error without closing the panel', async () => {
@@ -153,6 +168,7 @@ describe('App', () => {
     });
 
     expect(screen.queryByText('buyer@example.com')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create account' })).toBeVisible();
     expect(screen.getAllByRole('button', { name: 'Login' })[0]).toBeVisible();
     expect(localStorage.getItem(storedUserKey)).toBeNull();
   });
@@ -164,5 +180,32 @@ describe('App', () => {
 
     expect(screen.getByText('buyer@example.com')).toBeVisible();
     expect(screen.getByText('CUSTOMER')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Login' })).not.toBeInTheDocument();
+  });
+
+  it('shows manager-specific actions for manager users', () => {
+    localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+
+    render(<App />);
+
+    expect(screen.getByText('manager@example.com')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'My events' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Create event' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Event orders' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'User administration' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'My tickets' })).not.toBeInTheDocument();
+  });
+
+  it('shows admin-specific actions for admin users', () => {
+    localStorage.setItem(storedUserKey, JSON.stringify(adminUser));
+
+    render(<App />);
+
+    expect(screen.getByText('admin@example.com')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'User administration' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Platform operations' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Event oversight' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Create event' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'My tickets' })).not.toBeInTheDocument();
   });
 });

@@ -1,12 +1,11 @@
-CREATE OR REPLACE VIEW ticket_analytical.events AS
-SELECT
-    event_id,
-    owner_id,
-    date,
-    name,
-    place,
-    type,
-    status,
-    created_at,
-    updated_at
-FROM ticket_transactional.t_event;
+CREATE TABLE IF NOT EXISTS events (
+    event_id UUID PRIMARY KEY,
+    owner_id UUID NOT NULL,
+    date TIMESTAMP WITH TIME ZONE NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    place VARCHAR(200) NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);

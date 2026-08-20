@@ -22,6 +22,7 @@ services:
       dockerfile: database/java/migrations/ticket-order-db-migrations/Dockerfile
       args:
         MIGRATION_MODULE_PATH: database/java/migrations/ticket-order-db-migrations/ticket-order-transactional-migrations
+        MIGRATION_PROFILE: transactional
     environment:
       FLYWAY_URL: jdbc:postgresql://postgres:5432/ticket_order
       FLYWAY_USER: ticket_order
@@ -37,6 +38,7 @@ services:
       dockerfile: database/java/migrations/ticket-order-db-migrations/Dockerfile
       args:
         MIGRATION_MODULE_PATH: database/java/migrations/ticket-order-db-migrations/ticket-order-analytical-migrations
+        MIGRATION_PROFILE: analytical
     environment:
       FLYWAY_URL: jdbc:postgresql://postgres:5432/ticket_order
       FLYWAY_USER: ticket_order
@@ -54,9 +56,12 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ticket_order
-      SPRING_DATASOURCE_USERNAME: ticket_order
-      SPRING_DATASOURCE_PASSWORD: ticket_order
+      SPRING_DATASOURCE_PRIMARY_URL: jdbc:postgresql://postgres:5432/ticket_order
+      SPRING_DATASOURCE_PRIMARY_USERNAME: ticket_order
+      SPRING_DATASOURCE_PRIMARY_PASSWORD: ticket_order
+      SPRING_DATASOURCE_ANALYTICAL_URL: jdbc:postgresql://postgres:5432/ticket_order
+      SPRING_DATASOURCE_ANALYTICAL_USERNAME: ticket_order
+      SPRING_DATASOURCE_ANALYTICAL_PASSWORD: ticket_order
     depends_on:
       transactional-migrations:
         condition: service_completed_successfully
