@@ -1,12 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import App from './App';
-import { login, logout, register, toUserMessage } from './api/authClient';
-import { submitLoginForm, submitRegistrationForm } from './test/appTestActions';
-import { buyerUser, newBuyerUser, storedUserKey } from './test/authTestData';
+import App from '../../src/App';
+import { login, logout, register, toUserMessage } from '../../src/api/authClient';
+import { submitLoginForm, submitRegistrationForm } from '../support/appTestActions';
+import { buyerUser, newBuyerUser, storedUserKey } from '../support/authTestData';
 
-vi.mock('./api/authClient', () => ({
+vi.mock('../../src/api/authClient', () => ({
   login: vi.fn(),
   logout: vi.fn(),
   register: vi.fn(),

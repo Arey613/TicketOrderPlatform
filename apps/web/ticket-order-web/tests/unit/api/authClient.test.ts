@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { login, logout, register, toUserMessage } from './authClient';
-import { ResponseError } from '../generated/api';
+import { login, logout, register, toUserMessage } from '../../../src/api/authClient';
+import { ResponseError } from '../../../src/generated/api';
 import {
   buyerLoginResponse,
   buyerUser,
   newBuyerLoginResponse,
   newBuyerUser,
-} from '../test/authTestData';
+} from '../../support/authTestData';
 
 describe('authClient', () => {
   beforeEach(() => {

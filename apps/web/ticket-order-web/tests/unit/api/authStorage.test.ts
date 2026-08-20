@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clearStoredUser, loadStoredUser, storeUser } from './authStorage';
-import { buyerUser, storedUserKey } from '../test/authTestData';
+import { clearStoredUser, loadStoredUser, storeUser } from '../../../src/api/authStorage';
+import { buyerUser, storedUserKey } from '../../support/authTestData';
 
 describe('authStorage', () => {
   beforeEach(() => {

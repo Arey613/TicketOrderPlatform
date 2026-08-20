@@ -1,5 +1,5 @@
-import type { AuthenticatedUser } from '../api/authClient';
-import type { LoginResponse } from '../generated/api';
+import type { AuthenticatedUser } from '../../src/api/authClient';
+import type { LoginResponse } from '../../src/generated/api';
 
 export const buyerUser = {
   id: '4b804b8d-6a6f-44d3-9b98-a2ab33f8b8c2',
