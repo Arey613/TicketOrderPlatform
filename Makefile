@@ -129,16 +129,16 @@ migrate-analytical: check-maven
 
 docker-build: docker-build-api docker-build-web
 
-docker-build-api: check-docker
+docker-build-api: check-docker package-api
 	$(DOCKER) build -f $(API_MODULE)/Dockerfile -t $(API_IMAGE) .
 
 docker-build-web: check-docker
 	$(DOCKER) build -f $(WEB_MODULE)/Dockerfile -t $(WEB_IMAGE) .
 
-compose-build: check-docker
+compose-build: check-docker package-api
 	$(DOCKER) compose build
 
-compose-up: check-docker
+compose-up: check-docker package-api
 	$(DOCKER) compose up --build
 
 compose-down: check-docker
