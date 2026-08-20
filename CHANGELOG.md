@@ -79,3 +79,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders
 - TICKET_PORTAL#1 - add OpenAPI client generation
 - TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI, startup fixes, and review guidance
+
+### Changed
+
+- BUGFIX#1 - fix Docker image builds and Compose startup

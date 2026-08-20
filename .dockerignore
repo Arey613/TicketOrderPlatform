@@ -4,6 +4,9 @@
 **/target
 **/dist
 **/node_modules
+**/coverage
+**/playwright-report
+**/test-results
 
 *.log
 *.class
