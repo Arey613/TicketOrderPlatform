@@ -51,6 +51,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 ### Added
 
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract
+- TICKET_CONTRACTS#4 - add UI-facing event and auth contract fields
 - TICKET_CONTRACTS#3 - add event management contract
 
 ### Changed
@@ -77,3 +78,4 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders
 - TICKET_PORTAL#1 - add OpenAPI client generation
+- TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI, startup fixes, and review guidance

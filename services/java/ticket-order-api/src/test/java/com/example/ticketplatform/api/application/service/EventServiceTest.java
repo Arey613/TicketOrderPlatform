@@ -121,20 +121,20 @@ class EventServiceTest {
   }
 
   @Test
-  void returnsCreatedOrderCount() {
+  void returnsCreatedOrders() {
     TestEventRepositoryPort events = new TestEventRepositoryPort();
     events.events.add(event(EventStatus.PUBLISHED));
     EventService service =
         newService(events, List.of(user(CUSTOMER_ID, UserRole.CUSTOMER), user(MANAGER_ID, UserRole.MANAGER)));
 
-    int created =
+    List<EventOrder> created =
         service.createEventOrders(
             CUSTOMER_ID,
             List.of(
                 new CreateEventOrderCommand(EVENT_ID, null, 1, 1, "STANDARD"),
                 new CreateEventOrderCommand(EVENT_ID, null, 1, 2, "STANDARD")));
 
-    assertThat(created).isEqualTo(2);
+    assertThat(created).hasSize(2);
     assertThat(events.savedOrders).hasSize(2);
   }
 

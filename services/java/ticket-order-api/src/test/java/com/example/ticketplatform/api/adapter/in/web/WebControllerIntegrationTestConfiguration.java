@@ -158,10 +158,25 @@ class WebControllerIntegrationTestConfiguration {
     }
 
     @Override
-    public int createEventOrders(UUID userId, List<CreateEventOrderCommand> commands) {
+    public List<EventOrder> createEventOrders(UUID userId, List<CreateEventOrderCommand> commands) {
       lastCommandUserId = userId;
       createdOrderCount = commands.size();
-      return createdOrderCount;
+      List<EventOrder> createdOrders =
+          commands.stream()
+              .map(
+                  command ->
+                      EventOrder.builder()
+                          .id(UUID.randomUUID())
+                          .eventId(command.eventId())
+                          .customerReference(userId)
+                          .rowNumber(command.rowNumber())
+                          .placeNumber(command.placeNumber())
+                          .placeType(command.placeType())
+                          .reservationDate(TEST_TIME)
+                          .build())
+              .toList();
+      orders.addAll(createdOrders);
+      return createdOrders;
     }
 
     @Override

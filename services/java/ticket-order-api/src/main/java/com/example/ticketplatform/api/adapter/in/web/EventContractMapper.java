@@ -9,6 +9,8 @@ import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventOrderItem;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventRequest;
+import com.example.ticketplatform.api.generated.contract.model.CreatedEventOrderResponse;
+import com.example.ticketplatform.api.generated.contract.model.CreatedEventOrdersResponse;
 import com.example.ticketplatform.api.generated.contract.model.EventDetailsRequest;
 import com.example.ticketplatform.api.generated.contract.model.EventDetailsResponse;
 import com.example.ticketplatform.api.generated.contract.model.EventListResponse;
@@ -58,6 +60,11 @@ interface EventContractMapper {
   @Mapping(target = "eventOrderId", source = "id")
   @Mapping(target = "row", source = "rowNumber")
   @Mapping(target = "place", source = "placeNumber")
+  CreatedEventOrderResponse toCreatedOrderResponse(EventOrder order);
+
+  @Mapping(target = "eventOrderId", source = "id")
+  @Mapping(target = "row", source = "rowNumber")
+  @Mapping(target = "place", source = "placeNumber")
   MyEventOrderResponse toMyOrderResponse(EventOrder order);
 
   default EventListResponse toListResponse(List<Event> events) {
@@ -66,6 +73,11 @@ interface EventContractMapper {
 
   default MyEventOrdersResponse toMyOrdersResponse(List<EventOrder> orders) {
     return new MyEventOrdersResponse().orders(orders.stream().map(this::toMyOrderResponse).toList());
+  }
+
+  default CreatedEventOrdersResponse toCreatedOrdersResponse(List<EventOrder> orders) {
+    return new CreatedEventOrdersResponse()
+        .orders(orders.stream().map(this::toCreatedOrderResponse).toList());
   }
 
   default Instant toInstant(OffsetDateTime dateTime) {

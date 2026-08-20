@@ -2,10 +2,10 @@
 CreateEventOrderItem:
   type: object
   required:
-  - eventId
-  - row
-  - place
-  - placeType
+    - eventId
+    - row
+    - place
+    - placeType
   properties:
     eventId:
       type: string
@@ -26,17 +26,54 @@ CreateEventOrderItem:
 CreateEventOrdersRequest:
   type: object
   required:
-  - orders
+    - orders
   properties:
     orders:
       type: array
       minItems: 1
       items:
         "$ref": "#/components/schemas/CreateEventOrderItem"
+CreatedEventOrderResponse:
+  type: object
+  required:
+    - eventOrderId
+    - eventId
+    - row
+    - place
+    - placeType
+    - reservationDate
+  properties:
+    eventOrderId:
+      type: string
+      format: uuid
+    eventId:
+      type: string
+      format: uuid
+    row:
+      type: integer
+      minimum: 1
+    place:
+      type: integer
+      minimum: 1
+    placeType:
+      type: string
+      maxLength: 100
+    reservationDate:
+      type: string
+      format: date-time
+CreatedEventOrdersResponse:
+  type: object
+  required:
+    - orders
+  properties:
+    orders:
+      type: array
+      items:
+        "$ref": "#/components/schemas/CreatedEventOrderResponse"
 DeleteEventOrdersRequest:
   type: object
   required:
-  - eventOrderIds
+    - eventOrderIds
   properties:
     eventOrderIds:
       type: array
@@ -47,14 +84,14 @@ DeleteEventOrdersRequest:
 MyEventOrderResponse:
   type: object
   required:
-  - eventOrderId
-  - eventId
-  - eventName
-  - eventDate
-  - row
-  - place
-  - placeType
-  - reservationDate
+    - eventOrderId
+    - eventId
+    - eventName
+    - eventDate
+    - row
+    - place
+    - placeType
+    - reservationDate
   properties:
     eventOrderId:
       type: string
@@ -83,7 +120,7 @@ MyEventOrderResponse:
 MyEventOrdersResponse:
   type: object
   required:
-  - orders
+    - orders
   properties:
     orders:
       type: array

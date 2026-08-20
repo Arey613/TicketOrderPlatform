@@ -9,22 +9,22 @@ EventId:
 EventStatus:
   type: string
   enum:
-  - DRAFT
-  - PUBLISHED
-  - CANCELLED
+    - DRAFT
+    - PUBLISHED
+    - CANCELLED
 EventListScope:
   type: string
   default: published
   enum:
-  - published
-  - mine
+    - published
+    - mine
 EventDetailsRequest:
   type: object
   required:
-  - description
-  - numberOfPlaces
-  - numberOfRows
-  - seatsPerRow
+    - description
+    - numberOfPlaces
+    - numberOfRows
+    - seatsPerRow
   properties:
     description:
       type: string
@@ -38,17 +38,46 @@ EventDetailsRequest:
     seatsPerRow:
       type: integer
       minimum: 1
+    placeTypes:
+      type: array
+      items:
+        "$ref": "#/components/schemas/EventPlaceTypeRequest"
 EventDetailsResponse:
   allOf:
-  - "$ref": "#/components/schemas/EventDetailsRequest"
+    - "$ref": "#/components/schemas/EventDetailsRequest"
+    - type: object
+      required:
+        - availablePlaces
+      properties:
+        availablePlaces:
+          type: integer
+          minimum: 0
+EventPlaceTypeRequest:
+  type: object
+  required:
+    - name
+    - price
+    - currency
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 100
+    price:
+      type: string
+      pattern: "^\\d+(\\.\\d{1,2})?$"
+    currency:
+      type: string
+      minLength: 3
+      maxLength: 3
 CreateEventRequest:
   type: object
   required:
-  - name
-  - date
-  - place
-  - type
-  - details
+    - name
+    - date
+    - place
+    - type
+    - details
   properties:
     name:
       type: string
@@ -61,21 +90,37 @@ CreateEventRequest:
       type: string
       minLength: 1
       maxLength: 200
+    city:
+      type: string
+      maxLength: 120
     type:
       type: string
       minLength: 1
       maxLength: 100
+    summary:
+      type: string
+      maxLength: 500
+    imageUrl:
+      type: string
+      format: uri
+    price:
+      type: string
+      pattern: "^\\d+(\\.\\d{1,2})?$"
+    currency:
+      type: string
+      minLength: 3
+      maxLength: 3
     details:
       "$ref": "#/components/schemas/EventDetailsRequest"
   additionalProperties: false
 UpdateEventRequest:
   allOf:
-  - "$ref": "#/components/schemas/CreateEventRequest"
+    - "$ref": "#/components/schemas/CreateEventRequest"
 TakenPlaceResponse:
   type: object
   required:
-  - row
-  - place
+    - row
+    - place
   properties:
     row:
       type: integer
@@ -86,16 +131,17 @@ TakenPlaceResponse:
 EventResponse:
   type: object
   required:
-  - eventId
-  - ownerId
-  - name
-  - date
-  - place
-  - type
-  - status
-  - details
-  - ordersTaken
-  - takenPlaces
+    - eventId
+    - ownerId
+    - name
+    - date
+    - place
+    - type
+    - status
+    - details
+    - ordersTaken
+    - availablePlaces
+    - takenPlaces
   properties:
     eventId:
       type: string
@@ -112,14 +158,33 @@ EventResponse:
     place:
       type: string
       maxLength: 200
+    city:
+      type: string
+      maxLength: 120
     type:
       type: string
       maxLength: 100
+    summary:
+      type: string
+      maxLength: 500
+    imageUrl:
+      type: string
+      format: uri
+    price:
+      type: string
+      pattern: "^\\d+(\\.\\d{1,2})?$"
+    currency:
+      type: string
+      minLength: 3
+      maxLength: 3
     status:
       "$ref": "#/components/schemas/EventStatus"
     details:
       "$ref": "#/components/schemas/EventDetailsResponse"
     ordersTaken:
+      type: integer
+      minimum: 0
+    availablePlaces:
       type: integer
       minimum: 0
     takenPlaces:
@@ -129,7 +194,7 @@ EventResponse:
 EventListResponse:
   type: object
   required:
-  - events
+    - events
   properties:
     events:
       type: array

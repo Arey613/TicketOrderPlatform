@@ -7,6 +7,7 @@ import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.generated.contract.api.EventsApi;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventOrdersRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventRequest;
+import com.example.ticketplatform.api.generated.contract.model.CreatedEventOrdersResponse;
 import com.example.ticketplatform.api.generated.contract.model.DeleteEventOrdersRequest;
 import com.example.ticketplatform.api.generated.contract.model.EventListResponse;
 import com.example.ticketplatform.api.generated.contract.model.EventListScope;
@@ -39,11 +40,17 @@ class EventController implements EventsApi {
   }
 
   @Override
-  public ResponseEntity<Void> createEventOrders(CreateEventOrdersRequest createEventOrdersRequest) {
+  public ResponseEntity<CreatedEventOrdersResponse> createEventOrders(
+      CreateEventOrdersRequest createEventOrdersRequest) {
     User user = currentUserProvider.currentUser();
-    eventCommandUseCase.createEventOrders(
-        user.id(), createEventOrdersRequest.getOrders().stream().map(eventContractMapper::toCommand).toList());
-    return ResponseEntity.created(URI.create("/events/orders")).build();
+    return ResponseEntity.created(URI.create("/events/orders"))
+        .body(
+            eventContractMapper.toCreatedOrdersResponse(
+                eventCommandUseCase.createEventOrders(
+                    user.id(),
+                    createEventOrdersRequest.getOrders().stream()
+                        .map(eventContractMapper::toCommand)
+                        .toList())));
   }
 
   @Override
