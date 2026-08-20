@@ -25,7 +25,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#5 - organize changelog entries
 - TICKET_CONTRACTS#3 - add split OpenAPI contract bundling workflow
 - GLOBAL_CONFIG#7 - require latest main for new branches
-- BUGFIX#1 - fix Docker Compose startup with PostgreSQL 18 volume layout
+- BUGFIX#1 - fix Docker image builds and Compose startup
 
 ## ticket-order-api
 
@@ -46,7 +46,6 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#4 - replace hello smoke endpoint with actuator health
 - TICKET_SERVICE#6 - address event management review comments
 - TICKET_SERVICE#7 - address observability review comments
-- BUGFIX#1 - include required Maven module metadata in API image builds
 
 ## ticket-order-api-contract
 
@@ -81,7 +80,3 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders
 - TICKET_PORTAL#1 - add OpenAPI client generation
 - TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI, startup fixes, and review guidance
-
-### Changed
-
-- BUGFIX#1 - install Java for OpenAPI client generation in web image builds
