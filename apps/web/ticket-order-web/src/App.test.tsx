@@ -1,8 +1,10 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { login, logout, register, toUserMessage } from './api/authClient';
+import { submitLoginForm, submitRegistrationForm } from './test/appTestActions';
+import { buyerUser, newBuyerUser, storedUserKey } from './test/authTestData';
 
 vi.mock('./api/authClient', () => ({
   login: vi.fn(),
@@ -60,19 +62,11 @@ describe('App', () => {
 
   it('logs in through the auth panel and shows the current user', async () => {
     const user = userEvent.setup();
-    mockedLogin.mockResolvedValue({
-      id: '4b804b8d-6a6f-44d3-9b98-a2ab33f8b8c2',
-      email: 'buyer@example.com',
-      role: 'CUSTOMER',
-    });
+    mockedLogin.mockResolvedValue(buyerUser);
 
     render(<App />);
 
-    await user.click(screen.getAllByRole('button', { name: 'Login' })[0]);
-    const dialog = await screen.findByRole('dialog', { name: 'Login' });
-    await user.type(await screen.findByLabelText('Email'), 'buyer@example.com');
-    await user.type(screen.getByLabelText('Password'), 'correct-password');
-    await user.click(within(dialog).getByRole('button', { name: 'Login' }));
+    await submitLoginForm(user, 'buyer@example.com', 'correct-password');
 
     await waitFor(() => {
       expect(mockedLogin).toHaveBeenCalledWith({
@@ -83,31 +77,17 @@ describe('App', () => {
 
     expect(await screen.findByText('buyer@example.com')).toBeVisible();
     expect(screen.getByText('CUSTOMER')).toBeVisible();
-    expect(localStorage.getItem('ticketOrderPlatform.currentUser')).toBe(
-      JSON.stringify({
-        id: '4b804b8d-6a6f-44d3-9b98-a2ab33f8b8c2',
-        email: 'buyer@example.com',
-        role: 'CUSTOMER',
-      }),
-    );
+    expect(localStorage.getItem(storedUserKey)).toBe(JSON.stringify(buyerUser));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('switches to registration and creates an account', async () => {
     const user = userEvent.setup();
-    mockedRegister.mockResolvedValue({
-      id: '4f89e87e-9192-4a1a-9baa-7ad90a2ac5fd',
-      email: 'new-buyer@example.com',
-      role: 'CUSTOMER',
-    });
+    mockedRegister.mockResolvedValue(newBuyerUser);
 
     render(<App />);
 
-    await user.click(screen.getAllByRole('button', { name: 'Create account' })[0]);
-    const dialog = await screen.findByRole('dialog', { name: 'Create account' });
-    await user.type(await within(dialog).findByLabelText('Email'), 'new-buyer@example.com');
-    await user.type(screen.getByLabelText('Password'), 'new-password');
-    await user.click(within(dialog).getByRole('button', { name: 'Create account' }));
+    await submitRegistrationForm(user, 'new-buyer@example.com', 'new-password');
 
     await waitFor(() => {
       expect(mockedRegister).toHaveBeenCalledWith({
@@ -126,11 +106,7 @@ describe('App', () => {
 
     render(<App />);
 
-    await user.click(screen.getAllByRole('button', { name: 'Login' })[0]);
-    const dialog = await screen.findByRole('dialog', { name: 'Login' });
-    await user.type(await screen.findByLabelText('Email'), 'buyer@example.com');
-    await user.type(screen.getByLabelText('Password'), 'wrong-password');
-    await user.click(within(dialog).getByRole('button', { name: 'Login' }));
+    await submitLoginForm(user, 'buyer@example.com', 'wrong-password');
 
     expect(await screen.findByText('The email or password is not valid.')).toBeVisible();
     expect(screen.getByRole('dialog', { name: 'Login' })).toBeVisible();
@@ -139,20 +115,12 @@ describe('App', () => {
 
   it('logs out an authenticated user', async () => {
     const user = userEvent.setup();
-    mockedLogin.mockResolvedValue({
-      id: '4b804b8d-6a6f-44d3-9b98-a2ab33f8b8c2',
-      email: 'buyer@example.com',
-      role: 'CUSTOMER',
-    });
+    mockedLogin.mockResolvedValue(buyerUser);
     mockedLogout.mockResolvedValue();
 
     render(<App />);
 
-    await user.click(screen.getAllByRole('button', { name: 'Login' })[0]);
-    const dialog = await screen.findByRole('dialog', { name: 'Login' });
-    await user.type(await screen.findByLabelText('Email'), 'buyer@example.com');
-    await user.type(screen.getByLabelText('Password'), 'correct-password');
-    await user.click(within(dialog).getByRole('button', { name: 'Login' }));
+    await submitLoginForm(user, 'buyer@example.com', 'correct-password');
     expect(await screen.findByText('buyer@example.com')).toBeVisible();
 
     await user.click(screen.getByRole('button', { name: 'Logout' }));
@@ -163,18 +131,11 @@ describe('App', () => {
 
     expect(screen.queryByText('buyer@example.com')).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Login' })[0]).toBeVisible();
-    expect(localStorage.getItem('ticketOrderPlatform.currentUser')).toBeNull();
+    expect(localStorage.getItem(storedUserKey)).toBeNull();
   });
 
   it('restores an authenticated user from local storage', () => {
-    localStorage.setItem(
-      'ticketOrderPlatform.currentUser',
-      JSON.stringify({
-        id: '4b804b8d-6a6f-44d3-9b98-a2ab33f8b8c2',
-        email: 'buyer@example.com',
-        role: 'CUSTOMER',
-      }),
-    );
+    localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
 
     render(<App />);
 

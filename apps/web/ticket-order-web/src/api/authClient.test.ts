@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { login, logout, register, toUserMessage } from './authClient';
 import { ResponseError } from '../generated/api';
+import {
+  buyerLoginResponse,
+  buyerUser,
+  newBuyerLoginResponse,
+  newBuyerUser,
+} from '../test/authTestData';
 
 describe('authClient', () => {
   beforeEach(() => {
@@ -17,12 +23,7 @@ describe('authClient', () => {
         return new Response(null, { status: 204 });
       }
 
-      return Response.json({
-        id: '4b804b8d-6a6f-44d3-9b98-a2ab33f8b8c2',
-        email: 'buyer@example.com',
-        role: 'CUSTOMER',
-        enabled: true,
-      });
+      return Response.json(buyerLoginResponse);
     });
     vi.stubGlobal('fetch', fetchMock);
 
@@ -31,11 +32,7 @@ describe('authClient', () => {
       password: 'correct-password',
     });
 
-    expect(user).toEqual({
-      id: '4b804b8d-6a6f-44d3-9b98-a2ab33f8b8c2',
-      email: 'buyer@example.com',
-      role: 'CUSTOMER',
-    });
+    expect(user).toEqual(buyerUser);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock).toHaveBeenLastCalledWith(
       'http://localhost:8080/auth/login',
@@ -62,12 +59,7 @@ describe('authClient', () => {
         return new Response(null, { status: 204 });
       }
 
-      return Response.json({
-        id: '4f89e87e-9192-4a1a-9baa-7ad90a2ac5fd',
-        email: 'new-buyer@example.com',
-        role: 'CUSTOMER',
-        enabled: true,
-      });
+      return Response.json(newBuyerLoginResponse);
     });
     vi.stubGlobal('fetch', fetchMock);
 
@@ -76,11 +68,7 @@ describe('authClient', () => {
       password: 'new-password',
     });
 
-    expect(user).toEqual({
-      id: '4f89e87e-9192-4a1a-9baa-7ad90a2ac5fd',
-      email: 'new-buyer@example.com',
-      role: 'CUSTOMER',
-    });
+    expect(user).toEqual(newBuyerUser);
     expect(fetchMock).toHaveBeenLastCalledWith(
       'http://localhost:8080/auth/register',
       expect.objectContaining({

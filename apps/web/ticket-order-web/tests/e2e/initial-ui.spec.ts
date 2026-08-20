@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { mockSuccessfulLogin, setCsrfCookie } from './support/authRoutes';
 
 test('shows the public ticketing page and static event previews', async ({ page }) => {
   await page.goto('/');
@@ -23,36 +24,10 @@ test('opens and closes the separate login panel', async ({ page }) => {
 });
 
 test('logs in and logs out through mocked backend calls', async ({ page }) => {
-  await page.route('**/auth/csrf', async (route) => {
-    await route.fulfill({
-      status: 204,
-    });
-  });
-  await page.route('**/auth/login', async (route) => {
-    await expect(route.request().postDataJSON()).toEqual({
-      login: 'buyer@example.com',
-      password: 'correct-password',
-    });
-    await expect(route.request().headers()['x-xsrf-token']).toBe('e2e-token');
-
-    await route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify({
-        id: '4b804b8d-6a6f-44d3-9b98-a2ab33f8b8c2',
-        email: 'buyer@example.com',
-        role: 'CUSTOMER',
-        enabled: true,
-      }),
-    });
-  });
-  await page.route('**/auth/logout', async (route) => {
-    await route.fulfill({ status: 204 });
-  });
+  await mockSuccessfulLogin(page);
 
   await page.goto('/');
-  await page.evaluate(() => {
-    document.cookie = 'XSRF-TOKEN=e2e-token; Path=/';
-  });
+  await setCsrfCookie(page);
   await page.getByRole('button', { name: 'Login' }).first().click();
   const loginDialog = page.getByRole('dialog', { name: 'Login' });
   await page.getByLabel('Email').fill('buyer@example.com');
