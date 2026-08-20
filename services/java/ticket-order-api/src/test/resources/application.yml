@@ -2,17 +2,27 @@ spring:
   application:
     name: ticket-order-api
   datasource:
-    url: jdbc:h2:mem:ticket_order_api;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    primary:
+      url: jdbc:h2:mem:ticket_order_api;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+    analytical:
+      url: jdbc:h2:mem:ticket_order_api;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        hbm2ddl:
+          create_namespaces: true
     open-in-view: false
   sql:
     init:
-      mode: always
+      mode: never
 
 management:
   endpoints:

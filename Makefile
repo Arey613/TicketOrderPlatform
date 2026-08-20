@@ -1,4 +1,4 @@
-.PHONY: help build package package-api package-web package-migrations test test-api test-web verify format format-java format-web check-format check-format-java check-format-web run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web bundle-contracts validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
+.PHONY: help build package package-api package-web package-migrations test test-api test-web verify format format-java format-web check-format check-format-java check-format-web run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web bundle-contracts validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-reset-db compose-logs
 
 MAVEN ?= $(shell test -x ./mvnw && printf './mvnw' || printf 'mvn')
 NPM ?= npm
@@ -38,6 +38,7 @@ help:
 	@printf '  make docker-build Build API and web Docker images\n'
 	@printf '  make compose-up   Build and start the Docker Compose stack\n'
 	@printf '  make compose-down Stop the Docker Compose stack\n'
+	@printf '  make compose-reset-db Stop the Docker Compose stack and remove database volumes\n'
 	@printf '  make compose-logs Follow Docker Compose logs\n'
 	@printf '  make clean        Remove build output\n'
 
@@ -121,27 +122,30 @@ generate-web-contracts: check-npm
 	$(NPM) --prefix $(WEB_MODULE) run generate:api
 
 migrate-transactional: check-maven
-	$(MAVEN) -pl $(DB_TRANSACTIONAL_MIGRATIONS_MODULE) process-resources flyway:migrate
+	$(MAVEN) -pl $(DB_TRANSACTIONAL_MIGRATIONS_MODULE) -Ptransactional process-resources flyway:migrate
 
 migrate-analytical: check-maven
-	$(MAVEN) -pl $(DB_ANALYTICAL_MIGRATIONS_MODULE) process-resources flyway:migrate
+	$(MAVEN) -pl $(DB_ANALYTICAL_MIGRATIONS_MODULE) -Panalytical process-resources flyway:migrate
 
 docker-build: docker-build-api docker-build-web
 
-docker-build-api: check-docker
+docker-build-api: check-docker package-api
 	$(DOCKER) build -f $(API_MODULE)/Dockerfile -t $(API_IMAGE) .
 
 docker-build-web: check-docker
 	$(DOCKER) build -f $(WEB_MODULE)/Dockerfile -t $(WEB_IMAGE) .
 
-compose-build: check-docker
+compose-build: check-docker package-api
 	$(DOCKER) compose build
 
-compose-up: check-docker
+compose-up: check-docker package-api
 	$(DOCKER) compose up --build
 
 compose-down: check-docker
 	$(DOCKER) compose down
+
+compose-reset-db: check-docker
+	$(DOCKER) compose down -v --remove-orphans
 
 compose-logs: check-docker
 	$(DOCKER) compose logs -f

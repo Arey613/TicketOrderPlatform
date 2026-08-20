@@ -13,6 +13,18 @@ export const newBuyerUser = {
   role: 'CUSTOMER',
 } satisfies AuthenticatedUser;
 
+export const managerUser = {
+  id: '8bfbf6a4-1df2-4586-a874-3f88728f7695',
+  email: 'manager@example.com',
+  role: 'MANAGER',
+} satisfies AuthenticatedUser;
+
+export const adminUser = {
+  id: 'c00cc87b-d0d0-4211-a576-a0492028f917',
+  email: 'admin@example.com',
+  role: 'ADMIN',
+} satisfies AuthenticatedUser;
+
 export const buyerLoginResponse = {
   ...buyerUser,
   enabled: true,

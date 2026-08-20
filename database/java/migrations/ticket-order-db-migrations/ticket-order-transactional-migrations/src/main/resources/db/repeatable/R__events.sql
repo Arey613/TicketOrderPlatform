@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW ticket_transactional.events AS
+CREATE OR REPLACE VIEW events AS
 SELECT
     event_id,
     owner_id,
@@ -9,4 +9,4 @@ SELECT
     status,
     created_at,
     updated_at
-FROM ticket_transactional.t_event;
+FROM t_event;

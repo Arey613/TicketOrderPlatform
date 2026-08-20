@@ -2,6 +2,8 @@
 .DS_Store
 
 **/target
+!services/java/ticket-order-api/target
+!services/java/ticket-order-api/target/*.jar
 **/dist
 **/node_modules
 **/coverage

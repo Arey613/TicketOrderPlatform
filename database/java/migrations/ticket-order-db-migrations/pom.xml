@@ -28,4 +28,19 @@
         <module>ticket-order-transactional-migrations</module>
         <module>ticket-order-analytical-migrations</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>transactional</id>
+            <properties>
+                <migration.schema>ticket_transactional</migration.schema>
+            </properties>
+        </profile>
+        <profile>
+            <id>analytical</id>
+            <properties>
+                <migration.schema>ticket_analytical</migration.schema>
+            </properties>
+        </profile>
+    </profiles>
 </project>

@@ -111,13 +111,20 @@ PostgreSQL datasource defaults align with the root Docker Compose stack:
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/ticket_order
-    username: ticket_order
-    password: ticket_order
+    primary:
+      url: jdbc:postgresql://localhost:5432/ticket_order
+      username: ticket_order
+      password: ticket_order
+    analytical:
+      url: jdbc:postgresql://localhost:5432/ticket_order
+      username: ticket_order
+      password: ticket_order
 ```
 
-The user persistence adapter maps the domain `User` to the `t_users` table:
+The primary datasource is the default operational datasource. User, event, and order persistence use the `ticket_transactional` schema. The analytical datasource is reserved for read-side schema access.
+
+The user persistence adapter maps the domain `User` to the transactional table:
 
 ```text
-t_users
+ticket_transactional.t_users
 ```
