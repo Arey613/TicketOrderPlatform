@@ -1,4 +1,4 @@
-.PHONY: help build package package-api package-web package-migrations test test-api test-web verify format format-java format-web check-format check-format-java check-format-web run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web bundle-contracts validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-logs
+.PHONY: help build package package-api package-web package-migrations test test-api test-web verify format format-java format-web check-format check-format-java check-format-web run run-api run-web clean check-maven check-npm check-docker check-kubectl install-web bundle-contracts validate-contracts validate-k8s generate generate-api-contracts generate-web-contracts migrate-transactional migrate-analytical docker-build docker-build-api docker-build-web compose-build compose-up compose-down compose-reset-db compose-logs
 
 MAVEN ?= $(shell test -x ./mvnw && printf './mvnw' || printf 'mvn')
 NPM ?= npm
@@ -38,6 +38,7 @@ help:
 	@printf '  make docker-build Build API and web Docker images\n'
 	@printf '  make compose-up   Build and start the Docker Compose stack\n'
 	@printf '  make compose-down Stop the Docker Compose stack\n'
+	@printf '  make compose-reset-db Stop the Docker Compose stack and remove database volumes\n'
 	@printf '  make compose-logs Follow Docker Compose logs\n'
 	@printf '  make clean        Remove build output\n'
 
@@ -142,6 +143,9 @@ compose-up: check-docker
 
 compose-down: check-docker
 	$(DOCKER) compose down
+
+compose-reset-db: check-docker
+	$(DOCKER) compose down -v --remove-orphans
 
 compose-logs: check-docker
 	$(DOCKER) compose logs -f
