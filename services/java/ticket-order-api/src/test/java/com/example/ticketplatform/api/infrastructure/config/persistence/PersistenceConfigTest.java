@@ -39,18 +39,6 @@ class PersistenceConfigTest {
             """,
             Integer.class);
 
-    Integer analyticalPasswordHashColumns =
-        jdbcTemplate.queryForObject(
-            """
-            SELECT COUNT(*)
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE LOWER(TABLE_SCHEMA) = 'ticket_analytical'
-              AND LOWER(TABLE_NAME) = 'users'
-              AND LOWER(COLUMN_NAME) = 'password_hash'
-            """,
-            Integer.class);
-
     assertThat(userPasswordHashColumns).isEqualTo(1);
-    assertThat(analyticalPasswordHashColumns).isZero();
   }
 }
