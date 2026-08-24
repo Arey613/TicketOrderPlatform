@@ -4,6 +4,7 @@ import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
+import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -33,7 +34,7 @@ interface EventApplicationMapper {
       UUID eventId,
       EventDetails details,
       EventStatus status,
-      List<EventOrder> orders,
+      List<BookedPlace> orders,
       Instant now);
 
   @Mapping(target = "id", source = "existing.id")
@@ -57,12 +58,11 @@ interface EventApplicationMapper {
   Event toEventWithStatus(Event event, EventStatus status, Instant now);
 
   @Mapping(target = "id", source = "eventOrderId")
-  @Mapping(target = "customerReference", source = "customerReference")
+  @Mapping(target = "customerId", ignore = true)
   @Mapping(target = "rowNumber", source = "command.rowNumber")
   @Mapping(target = "placeNumber", source = "command.placeNumber")
   @Mapping(target = "reservationDate", source = "now")
   @Mapping(target = "eventName", ignore = true)
   @Mapping(target = "eventDate", ignore = true)
-  EventOrder toOrder(
-      CreateEventOrderCommand command, UUID eventOrderId, UUID customerReference, Instant now);
+  EventOrder toOrder(CreateEventOrderCommand command, UUID eventOrderId, Instant now);
 }

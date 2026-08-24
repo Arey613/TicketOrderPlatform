@@ -15,6 +15,6 @@ public record Event(
     String type,
     EventStatus status,
     EventDetails details,
-    List<EventOrder> orders,
+    List<BookedPlace> orders,
     Instant createdAt,
     Instant updatedAt) {}

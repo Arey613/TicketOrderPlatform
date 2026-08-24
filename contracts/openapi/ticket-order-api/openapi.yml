@@ -607,7 +607,7 @@ components:
     UpdateEventRequest:
       allOf:
         - "$ref": "#/components/schemas/CreateEventRequest"
-    TakenPlaceResponse:
+    BookedPlaceResponse:
       type: object
       required:
         - row
@@ -619,6 +619,9 @@ components:
         place:
           type: integer
           minimum: 1
+        isMine:
+          type: boolean
+          description: Present only when ownership is projected for an authenticated viewer.
     EventResponse:
       type: object
       required:
@@ -681,7 +684,7 @@ components:
         takenPlaces:
           type: array
           items:
-            "$ref": "#/components/schemas/TakenPlaceResponse"
+            "$ref": "#/components/schemas/BookedPlaceResponse"
     EventListResponse:
       type: object
       required:
@@ -700,9 +703,6 @@ components:
         - placeType
       properties:
         eventId:
-          type: string
-          format: uuid
-        customerReference:
           type: string
           format: uuid
         row:

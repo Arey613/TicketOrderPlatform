@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.ticketplatform.api.adapter.in.web.WebControllerIntegrationTestConfiguration.TestEvents;
 import com.example.ticketplatform.api.adapter.in.web.WebControllerIntegrationTestConfiguration.TestUsers;
+import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -64,7 +65,7 @@ class EventControllerIntegrationTest {
   @BeforeEach
   void setUp() {
     testUsers.reset(List.of(MANAGER, CUSTOMER));
-    Event event = event(EventStatus.PUBLISHED, List.of(order()));
+    Event event = event(EventStatus.PUBLISHED, List.of(bookedPlace()));
     testEvents.reset(List.of(event), List.of(order()));
   }
 
@@ -108,7 +109,39 @@ class EventControllerIntegrationTest {
         .andExpect(jsonPath("$.events[0].ordersTaken").value(1))
         .andExpect(jsonPath("$.events[0].takenPlaces[0].row").value(3))
         .andExpect(jsonPath("$.events[0].takenPlaces[0].place").value(7))
+        .andExpect(jsonPath("$.events[0].takenPlaces[0].isMine").value(true))
         .andExpect(jsonPath("$.events[0].takenPlaces[0].placeType").doesNotExist());
+  }
+
+  @Test
+  void returnsPublishedEventDetailsForAnonymousViewerWithoutOwnershipHints() throws Exception {
+    mockMvc
+        .perform(get("/events/{eventId}", EVENT_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.takenPlaces[0].row").value(3))
+        .andExpect(jsonPath("$.takenPlaces[0].place").value(7))
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist());
+  }
+
+  @Test
+  void returnsCustomerOwnedPlaceHintForAuthenticatedCustomerEventDetails() throws Exception {
+    mockMvc
+        .perform(
+            get("/events/{eventId}", EVENT_ID)
+                .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").value(true));
+  }
+
+  @Test
+  void omitsOwnershipHintsForManagerEventDetails() throws Exception {
+    mockMvc
+        .perform(
+            get("/events/{eventId}", EVENT_ID)
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist());
   }
 
   @Test
@@ -172,6 +205,33 @@ class EventControllerIntegrationTest {
   }
 
   @Test
+  void rejectsEventOrdersForAnonymousViewer() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                post("/events/orders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createEventOrdersJson(4, 8))))
+        .andExpect(status().isUnauthorized());
+
+    assertThat(testEvents.createdOrderCount()).isZero();
+  }
+
+  @Test
+  void rejectsEventOrdersForManagerRole() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                post("/events/orders")
+                    .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createEventOrdersJson(4, 8))))
+        .andExpect(status().isForbidden());
+
+    assertThat(testEvents.createdOrderCount()).isZero();
+  }
+
+  @Test
   void listsCurrentUserOrders() throws Exception {
     mockMvc
         .perform(
@@ -207,7 +267,7 @@ class EventControllerIntegrationTest {
     assertThat(testEvents.deletedOrderCount()).isEqualTo(1);
   }
 
-  private static Event event(EventStatus status, List<EventOrder> orders) {
+  private static Event event(EventStatus status, List<BookedPlace> orders) {
     return Event.builder()
         .id(EVENT_ID)
         .ownerId(MANAGER_ID)
@@ -230,11 +290,25 @@ class EventControllerIntegrationTest {
         .build();
   }
 
+  private static BookedPlace bookedPlace() {
+    return BookedPlace.builder()
+        .id(EVENT_ORDER_ID)
+        .eventId(EVENT_ID)
+        .customerId(CUSTOMER_ID)
+        .rowNumber(3)
+        .placeNumber(7)
+        .placeType("VIP")
+        .reservationDate(RESERVATION_TIME)
+        .eventName("Published concert")
+        .eventDate(EVENT_TIME)
+        .build();
+  }
+
   private static EventOrder order() {
     return EventOrder.builder()
         .id(EVENT_ORDER_ID)
         .eventId(EVENT_ID)
-        .customerReference(CUSTOMER_ID)
+        .customerId(CUSTOMER_ID)
         .rowNumber(3)
         .placeNumber(7)
         .placeType("VIP")
@@ -285,5 +359,21 @@ class EventControllerIntegrationTest {
           }
         }
         """;
+  }
+
+  private static String createEventOrdersJson(int row, int place) {
+    return """
+        {
+          "orders": [
+            {
+              "eventId": "00000000-0000-0000-0000-000000000603",
+              "row": %d,
+              "place": %d,
+              "placeType": "STANDARD"
+            }
+          ]
+        }
+        """
+        .formatted(row, place);
   }
 }

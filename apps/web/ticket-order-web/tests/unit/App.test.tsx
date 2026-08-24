@@ -3,6 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../src/App';
 import { login, logout, register, toUserMessage } from '../../src/api/authClient';
+import {
+  createEventOrders,
+  getEvent,
+  listEvents,
+  listMyEventOrders,
+} from '../../src/api/eventsClient';
 import { submitLoginForm, submitRegistrationForm } from '../support/appTestActions';
 import {
   adminUser,
@@ -19,10 +25,61 @@ vi.mock('../../src/api/authClient', () => ({
   toUserMessage: vi.fn(),
 }));
 
+vi.mock('../../src/api/eventsClient', () => ({
+  createEventOrders: vi.fn(),
+  getEvent: vi.fn(),
+  listEvents: vi.fn(),
+  listMyEventOrders: vi.fn(),
+  toEventUserMessage: vi.fn(),
+}));
+
 const mockedLogin = vi.mocked(login);
 const mockedLogout = vi.mocked(logout);
 const mockedRegister = vi.mocked(register);
 const mockedToUserMessage = vi.mocked(toUserMessage);
+const mockedCreateEventOrders = vi.mocked(createEventOrders);
+const mockedGetEvent = vi.mocked(getEvent);
+const mockedListEvents = vi.mocked(listEvents);
+const mockedListMyEventOrders = vi.mocked(listMyEventOrders);
+
+const publishedEvent = {
+  eventId: 'event-1',
+  ownerId: 'manager-1',
+  name: 'The Horizon Live',
+  date: new Date('2026-09-12T19:30:00.000Z'),
+  place: 'Riverside Arena',
+  city: 'Chisinau',
+  type: 'Rock concert',
+  status: 'PUBLISHED',
+  details: {
+    description: 'Live concert with reserved places.',
+    numberOfPlaces: 4,
+    numberOfRows: 2,
+    seatsPerRow: 2,
+    availablePlaces: 3,
+    placeTypes: [{ name: 'STANDARD', price: '59.00', currency: 'USD' }],
+  },
+  ordersTaken: 1,
+  availablePlaces: 3,
+  takenPlaces: [{ row: 1, place: 1 }],
+} as const;
+
+const bookedEvent = {
+  ...publishedEvent,
+  availablePlaces: 2,
+  takenPlaces: [...publishedEvent.takenPlaces, { row: 1, place: 2, isMine: true }],
+} as const;
+
+const myEventOrder = {
+  eventOrderId: 'order-1',
+  eventId: publishedEvent.eventId,
+  eventName: publishedEvent.name,
+  eventDate: publishedEvent.date,
+  row: 1,
+  place: 2,
+  placeType: 'STANDARD',
+  reservationDate: new Date('2026-08-24T10:00:00.000Z'),
+} as const;
 
 describe('App', () => {
   beforeEach(() => {
@@ -32,9 +89,17 @@ describe('App', () => {
     mockedRegister.mockReset();
     mockedToUserMessage.mockReset();
     mockedToUserMessage.mockResolvedValue('The email or password is not valid.');
+    mockedCreateEventOrders.mockReset();
+    mockedCreateEventOrders.mockResolvedValue();
+    mockedGetEvent.mockReset();
+    mockedGetEvent.mockResolvedValue(publishedEvent);
+    mockedListEvents.mockReset();
+    mockedListEvents.mockResolvedValue([publishedEvent]);
+    mockedListMyEventOrders.mockReset();
+    mockedListMyEventOrders.mockResolvedValue([]);
   });
 
-  it('renders the public ticketing page with static event previews', () => {
+  it('renders the public ticketing page with published events', async () => {
     render(<App />);
 
     expect(
@@ -43,14 +108,50 @@ describe('App', () => {
       }),
     ).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Upcoming events' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'The Horizon Live' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'City Hoops Finals' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: 'Laugh Out Loud' })).toBeVisible();
-    expect(
-      screen.getByText('Static event previews are temporary until event APIs are wired.'),
-    ).toBeVisible();
+    expect(await screen.findAllByRole('heading', { name: 'The Horizon Live' })).toHaveLength(2);
+    expect(screen.getByText('3 left')).toBeVisible();
+    expect(screen.getByText('Live concert with reserved places.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Row 1, place 1' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Row 1, place 2' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Create account' })).toBeVisible();
     expect(screen.getAllByRole('button', { name: 'Login' })[0]).toBeVisible();
+  });
+
+  it('opens login instead of booking for public users', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await screen.findAllByRole('heading', { name: 'The Horizon Live' });
+    await user.click(screen.getByRole('button', { name: 'Row 1, place 2' }));
+    await user.click(screen.getByRole('button', { name: 'Login to book' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Login' })).toBeVisible();
+    expect(mockedCreateEventOrders).not.toHaveBeenCalled();
+  });
+
+  it('books a selected place for an authenticated customer and refreshes owned orders', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
+    mockedGetEvent.mockResolvedValue(bookedEvent);
+    mockedListMyEventOrders.mockResolvedValue([myEventOrder]);
+
+    render(<App />);
+
+    await screen.findByText('buyer@example.com');
+    await user.click(screen.getByRole('button', { name: 'Row 1, place 2' }));
+    await user.click(screen.getByRole('button', { name: 'Book selected place' }));
+
+    await waitFor(() => {
+      expect(mockedCreateEventOrders).toHaveBeenCalledWith({
+        eventId: 'event-1',
+        row: 1,
+        place: 2,
+        placeType: 'STANDARD',
+      });
+    });
+    expect(await screen.findByText('Place booked.')).toBeVisible();
+    expect(screen.getByText('Row 1, place 2')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Row 1, place 2' })).toBeDisabled();
   });
 
   it('opens and closes the lazy login panel', async () => {

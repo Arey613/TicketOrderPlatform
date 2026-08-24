@@ -29,6 +29,8 @@ class EventController implements EventsApi {
   private final EventQueryUseCase eventQueryUseCase;
   private final CurrentUserProvider currentUserProvider;
   private final EventContractMapper eventContractMapper;
+  private final EventResponseAssembler eventResponseAssembler;
+  private final EventOrderRequestValidator eventOrderRequestValidator;
 
   @Override
   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
@@ -36,13 +38,15 @@ class EventController implements EventsApi {
     User user = currentUserProvider.currentUser();
     Event event = eventCommandUseCase.createEvent(eventContractMapper.toCommand(createEventRequest, user.id()));
     return ResponseEntity.created(URI.create("/events/" + event.id()))
-        .body(eventContractMapper.toResponse(event));
+        .body(eventResponseAssembler.toEventResponse(event));
   }
 
   @Override
+  @PreAuthorize("hasRole('CUSTOMER')")
   public ResponseEntity<CreatedEventOrdersResponse> createEventOrders(
       CreateEventOrdersRequest createEventOrdersRequest) {
     User user = currentUserProvider.currentUser();
+    eventOrderRequestValidator.validate(user.id(), createEventOrdersRequest);
     return ResponseEntity.created(URI.create("/events/orders"))
         .body(
             eventContractMapper.toCreatedOrdersResponse(
@@ -63,8 +67,9 @@ class EventController implements EventsApi {
   @Override
   public ResponseEntity<EventResponse> getEvent(UUID eventId) {
     return ResponseEntity.ok(
-        eventContractMapper.toResponse(
-            eventQueryUseCase.getEvent(eventId, currentUserProvider.currentUser().id())));
+        eventResponseAssembler.toEventResponse(
+            eventQueryUseCase.getEvent(
+                eventId, eventResponseAssembler.currentViewer().map(User::id).orElse(null))));
   }
 
   @Override
@@ -72,9 +77,10 @@ class EventController implements EventsApi {
   public ResponseEntity<EventListResponse> listEvents(EventListScope scope) {
     User user = currentUserProvider.currentUser();
     if (scope == EventListScope.MINE) {
-      return ResponseEntity.ok(eventContractMapper.toListResponse(eventQueryUseCase.listOwnerEvents(user.id())));
+      return ResponseEntity.ok(
+          eventResponseAssembler.toEventListResponse(eventQueryUseCase.listOwnerEvents(user.id())));
     }
-    return ResponseEntity.ok(eventContractMapper.toListResponse(eventQueryUseCase.listPublishedEvents()));
+    return ResponseEntity.ok(eventResponseAssembler.toEventListResponse(eventQueryUseCase.listPublishedEvents()));
   }
 
   @Override
@@ -88,7 +94,7 @@ class EventController implements EventsApi {
   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
   public ResponseEntity<EventResponse> publishEvent(UUID eventId) {
     return ResponseEntity.ok(
-        eventContractMapper.toResponse(
+        eventResponseAssembler.toEventResponse(
             eventCommandUseCase.markEventAsPublished(eventId, currentUserProvider.currentUser().id())));
   }
 
@@ -96,7 +102,7 @@ class EventController implements EventsApi {
   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
   public ResponseEntity<EventResponse> unpublishEvent(UUID eventId) {
     return ResponseEntity.ok(
-        eventContractMapper.toResponse(
+        eventResponseAssembler.toEventResponse(
             eventCommandUseCase.markEventAsDraft(eventId, currentUserProvider.currentUser().id())));
   }
 
@@ -104,7 +110,7 @@ class EventController implements EventsApi {
   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
   public ResponseEntity<EventResponse> updateEvent(UUID eventId, UpdateEventRequest updateEventRequest) {
     return ResponseEntity.ok(
-        eventContractMapper.toResponse(
+        eventResponseAssembler.toEventResponse(
             eventCommandUseCase.updateEvent(
                 eventId,
                 currentUserProvider.currentUser().id(),

@@ -5,7 +5,7 @@ import java.util.UUID;
 import lombok.Builder;
 
 @Builder
-public record EventOrder(
+public record BookedPlace(
     UUID id,
     UUID eventId,
     UUID customerId,

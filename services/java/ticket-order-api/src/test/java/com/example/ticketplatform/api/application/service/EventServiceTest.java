@@ -72,8 +72,8 @@ class EventServiceTest {
                 service.createEventOrders(
                     CUSTOMER_ID,
                     List.of(
-                        new CreateEventOrderCommand(EVENT_ID, null, 1, 1, "STANDARD"),
-                        new CreateEventOrderCommand(EVENT_ID, null, 1, 1, "STANDARD"))))
+                        new CreateEventOrderCommand(EVENT_ID, 1, 1, "STANDARD"),
+                        new CreateEventOrderCommand(EVENT_ID, 1, 1, "STANDARD"))))
         .isInstanceOf(IllegalStateException.class);
 
     assertThat(events.savedOrders).isEmpty();
@@ -94,8 +94,8 @@ class EventServiceTest {
                 service.createEventOrders(
                     CUSTOMER_ID,
                     List.of(
-                        new CreateEventOrderCommand(EVENT_ID, null, 2, 1, "STANDARD"),
-                        new CreateEventOrderCommand(EVENT_ID, null, 1, 1, "STANDARD"))))
+                        new CreateEventOrderCommand(EVENT_ID, 2, 1, "STANDARD"),
+                        new CreateEventOrderCommand(EVENT_ID, 1, 1, "STANDARD"))))
         .isInstanceOf(IllegalStateException.class);
 
     assertThat(events.savedOrders).hasSize(1);
@@ -114,7 +114,7 @@ class EventServiceTest {
             () ->
                 service.createEventOrders(
                     CUSTOMER_ID,
-                    List.of(new CreateEventOrderCommand(EVENT_ID, null, 1, 1, "STANDARD"))))
+                    List.of(new CreateEventOrderCommand(EVENT_ID, 1, 1, "STANDARD"))))
         .isInstanceOf(IllegalStateException.class);
 
     assertThat(events.savedOrders).isEmpty();
@@ -131,10 +131,11 @@ class EventServiceTest {
         service.createEventOrders(
             CUSTOMER_ID,
             List.of(
-                new CreateEventOrderCommand(EVENT_ID, null, 1, 1, "STANDARD"),
-                new CreateEventOrderCommand(EVENT_ID, null, 1, 2, "STANDARD")));
+                new CreateEventOrderCommand(EVENT_ID, 1, 1, "STANDARD"),
+                new CreateEventOrderCommand(EVENT_ID, 1, 2, "STANDARD")));
 
     assertThat(created).hasSize(2);
+    assertThat(created).extracting(EventOrder::customerId).containsOnly(CUSTOMER_ID);
     assertThat(events.savedOrders).hasSize(2);
   }
 
@@ -349,11 +350,11 @@ class EventServiceTest {
   }
 
   private static EventOrder eventOrder(
-      UUID id, UUID customerReference, Integer rowNumber, Integer placeNumber) {
+      UUID id, UUID customerId, Integer rowNumber, Integer placeNumber) {
     return EventOrder.builder()
         .id(id)
         .eventId(EVENT_ID)
-        .customerReference(customerReference)
+        .customerId(customerId)
         .rowNumber(rowNumber)
         .placeNumber(placeNumber)
         .placeType("STANDARD")
@@ -430,21 +431,45 @@ class EventServiceTest {
     }
 
     @Override
-    public List<EventOrder> saveOrders(List<EventOrder> orders) {
-      savedOrders.addAll(orders);
-      return orders;
+    public List<EventOrder> saveOrders(UUID customerId, List<EventOrder> orders) {
+      List<EventOrder> ownedOrders =
+          orders.stream()
+              .map(
+                  order ->
+                      EventOrder.builder()
+                          .id(order.id())
+                          .eventId(order.eventId())
+                          .customerId(customerId)
+                          .rowNumber(order.rowNumber())
+                          .placeNumber(order.placeNumber())
+                          .placeType(order.placeType())
+                          .reservationDate(order.reservationDate())
+                          .eventName(order.eventName())
+                          .eventDate(order.eventDate())
+                          .build())
+              .toList();
+      savedOrders.addAll(ownedOrders);
+      return ownedOrders;
     }
 
     @Override
-    public List<EventOrder> findOrdersByCustomerReference(UUID customerReference) {
+    public List<EventOrder> findOrdersByCustomerId(UUID customerId) {
       return savedOrders.stream()
-          .filter(order -> customerReference.equals(order.customerReference()))
+          .filter(order -> customerId.equals(order.customerId()))
           .toList();
     }
 
     @Override
     public List<EventOrder> findOrdersByIds(Collection<UUID> ids) {
       return savedOrders.stream().filter(order -> ids.contains(order.id())).toList();
+    }
+
+    @Override
+    public List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId) {
+      return savedOrders.stream()
+          .filter(order -> ids.contains(order.id()))
+          .filter(order -> customerId.equals(order.customerId()))
+          .toList();
     }
 
     @Override

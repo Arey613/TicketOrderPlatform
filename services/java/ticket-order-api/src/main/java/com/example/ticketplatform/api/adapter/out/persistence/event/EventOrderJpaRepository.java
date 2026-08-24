@@ -9,9 +9,11 @@ interface EventOrderJpaRepository extends JpaRepository<EventOrderEntity, UUID> 
 
   boolean existsByEventIdAndRowNumberAndPlaceNumber(UUID eventId, int rowNumber, int placeNumber);
 
-  List<EventOrderEntity> findByCustomerReference(UUID customerReference);
+  List<EventOrderEntity> findByCustomerId(UUID customerId);
 
   List<EventOrderEntity> findByIdIn(Collection<UUID> ids);
+
+  List<EventOrderEntity> findByIdInAndCustomerId(Collection<UUID> ids, UUID customerId);
 
   long deleteByIdIn(Collection<UUID> ids);
 }

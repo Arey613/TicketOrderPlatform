@@ -108,8 +108,8 @@ components:
       "$ref": "./schemas/event.yml#/CreateEventRequest"
     UpdateEventRequest:
       "$ref": "./schemas/event.yml#/UpdateEventRequest"
-    TakenPlaceResponse:
-      "$ref": "./schemas/event.yml#/TakenPlaceResponse"
+    BookedPlaceResponse:
+      "$ref": "./schemas/event.yml#/BookedPlaceResponse"
     EventResponse:
       "$ref": "./schemas/event.yml#/EventResponse"
     EventListResponse:

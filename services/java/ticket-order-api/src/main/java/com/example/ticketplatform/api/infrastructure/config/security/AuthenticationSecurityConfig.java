@@ -29,9 +29,9 @@ class AuthenticationSecurityConfig {
                     .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
         .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
         .authorizeHttpRequests(
-            authorize ->
+                authorize ->
                 authorize
-                    .requestMatchers("/actuator/health", "/auth/**")
+                    .requestMatchers("/actuator/health", "/auth/**", "/events/*")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

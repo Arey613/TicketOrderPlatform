@@ -4,9 +4,11 @@ import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
+import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
+import com.example.ticketplatform.api.generated.contract.model.BookedPlaceResponse;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventOrderItem;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreatedEventOrderResponse;
@@ -17,7 +19,6 @@ import com.example.ticketplatform.api.generated.contract.model.EventListResponse
 import com.example.ticketplatform.api.generated.contract.model.EventResponse;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrderResponse;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrdersResponse;
-import com.example.ticketplatform.api.generated.contract.model.TakenPlaceResponse;
 import com.example.ticketplatform.api.generated.contract.model.UpdateEventRequest;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 interface EventContractMapper {
@@ -48,14 +50,15 @@ interface EventContractMapper {
 
   @Mapping(target = "eventId", source = "id")
   @Mapping(target = "ordersTaken", expression = "java(event.orders().size())")
-  @Mapping(target = "takenPlaces", source = "orders")
+  @Mapping(target = "takenPlaces", source = "orders", qualifiedByName = "toPublicBookedPlaceResponses")
   EventResponse toResponse(Event event);
 
   EventDetailsResponse toResponse(EventDetails details);
 
   @Mapping(target = "row", source = "rowNumber")
   @Mapping(target = "place", source = "placeNumber")
-  TakenPlaceResponse toTakenPlaceResponse(EventOrder order);
+  @Mapping(target = "isMine", ignore = true)
+  BookedPlaceResponse toBookedPlaceResponse(BookedPlace place);
 
   @Mapping(target = "eventOrderId", source = "id")
   @Mapping(target = "row", source = "rowNumber")
@@ -78,6 +81,11 @@ interface EventContractMapper {
   default CreatedEventOrdersResponse toCreatedOrdersResponse(List<EventOrder> orders) {
     return new CreatedEventOrdersResponse()
         .orders(orders.stream().map(this::toCreatedOrderResponse).toList());
+  }
+
+  @Named("toPublicBookedPlaceResponses")
+  default List<BookedPlaceResponse> toPublicBookedPlaceResponses(List<BookedPlace> orders) {
+    return orders.stream().map(this::toBookedPlaceResponse).toList();
   }
 
   default Instant toInstant(OffsetDateTime dateTime) {

@@ -125,7 +125,7 @@ export function HomePage({ currentUser, onLogin, onRegister }: HomePageProps) {
         </div>
       </section>
 
-      <EventPreviewList />
+      <EventPreviewList currentUser={currentUser} onLogin={onLogin} />
     </main>
   );
 }

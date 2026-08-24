@@ -10,9 +10,6 @@ CreateEventOrderItem:
     eventId:
       type: string
       format: uuid
-    customerReference:
-      type: string
-      format: uuid
     row:
       type: integer
       minimum: 1

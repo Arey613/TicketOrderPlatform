@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS t_event_order (
     event_order_id UUID PRIMARY KEY,
     event_id UUID NOT NULL,
-    customer_reference UUID NULL,
+    customer_id UUID NOT NULL,
     row_number INTEGER NOT NULL,
     place_number INTEGER NOT NULL,
     place_type VARCHAR(100) NOT NULL,
@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS t_event_order (
 ALTER TABLE t_event_order
     ADD CONSTRAINT t_event_order_event_id_fk
         FOREIGN KEY (event_id) REFERENCES t_event(event_id);
+
+ALTER TABLE t_event_order
+    ADD CONSTRAINT t_event_order_customer_id_fk
+        FOREIGN KEY (customer_id) REFERENCES t_users(id);
 
 ALTER TABLE t_event_order
     ADD CONSTRAINT t_event_order_row_number_check

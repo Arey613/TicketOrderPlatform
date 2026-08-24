@@ -48,6 +48,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#6 - address event management review comments
 - TICKET_SERVICE#7 - address observability review comments
 - BUGFIX#2 - keep operational persistence on the primary transactional datasource
+- TICKET_PORTAL#3 - add customer-owned event-order backend behavior
 
 ## ticket-order-api-contract
 
@@ -62,6 +63,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_CONTRACTS#2 - align contract with login authentication
 - TICKET_SERVICE#5 - add registration authentication flow
 - TICKET_SERVICE#6 - address event management review comments
+- TICKET_PORTAL#3 - add booked-place ownership hints to event contract
 
 ## ticket-order-db-migrations
 
@@ -75,6 +77,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - DATABASE_MIGRATIONS#2 - rename application user migrations
 - TICKET_SERVICE#6 - address event management review comments
 - BUGFIX#2 - move migration schema selection to Maven profiles
+- TICKET_PORTAL#3 - add transactional event-order customer ownership
 
 ## ticket-order-web
 
@@ -88,3 +91,4 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - BUGFIX#1 - fix Docker image builds and Compose startup
 - BUGFIX#2 - hide auth actions after login and add role-aware home actions
+- TICKET_PORTAL#3 - connect customer event browsing and booking UI to API

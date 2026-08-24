@@ -31,8 +31,8 @@ class EventOrderEntity {
   @JoinColumn(name = "event_id", nullable = false)
   private EventEntity event;
 
-  @Column(name = "customer_reference")
-  private UUID customerReference;
+  @Column(name = "customer_id", nullable = false)
+  private UUID customerId;
 
   @Column(name = "row_number", nullable = false)
   private Integer rowNumber;
