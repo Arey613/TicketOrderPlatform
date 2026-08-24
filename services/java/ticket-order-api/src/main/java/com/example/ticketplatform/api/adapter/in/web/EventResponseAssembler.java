@@ -1,7 +1,7 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
+import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
-import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
 import com.example.ticketplatform.api.generated.contract.model.BookedPlaceResponse;
@@ -35,17 +35,17 @@ class EventResponseAssembler {
   }
 
   private List<BookedPlaceResponse> toBookedPlaceResponses(
-      List<EventOrder> orders, Optional<User> viewer) {
+      List<BookedPlace> orders, Optional<User> viewer) {
     return orders.stream().map(order -> toBookedPlaceResponse(order, viewer)).toList();
   }
 
-  private BookedPlaceResponse toBookedPlaceResponse(EventOrder order, Optional<User> viewer) {
+  private BookedPlaceResponse toBookedPlaceResponse(BookedPlace order, Optional<User> viewer) {
     BookedPlaceResponse response = eventContractMapper.toBookedPlaceResponse(order);
     viewer.ifPresent(user -> decorateForViewer(response, order, user));
     return response;
   }
 
-  private void decorateForViewer(BookedPlaceResponse response, EventOrder order, User viewer) {
+  private void decorateForViewer(BookedPlaceResponse response, BookedPlace order, User viewer) {
     if (viewer.role() == UserRole.CUSTOMER) {
       response.setIsMine(viewer.id().equals(order.customerId()));
       return;

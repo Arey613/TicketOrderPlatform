@@ -136,7 +136,6 @@ class EventServiceTest {
 
     assertThat(created).hasSize(2);
     assertThat(created).extracting(EventOrder::customerId).containsOnly(CUSTOMER_ID);
-    assertThat(created).extracting(EventOrder::customerReference).containsOnlyNulls();
     assertThat(events.savedOrders).hasSize(2);
   }
 
@@ -441,7 +440,6 @@ class EventServiceTest {
                           .id(order.id())
                           .eventId(order.eventId())
                           .customerId(customerId)
-                          .customerReference(order.customerReference())
                           .rowNumber(order.rowNumber())
                           .placeNumber(order.placeNumber())
                           .placeType(order.placeType())

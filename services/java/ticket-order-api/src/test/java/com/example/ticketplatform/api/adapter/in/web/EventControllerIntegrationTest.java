@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.ticketplatform.api.adapter.in.web.WebControllerIntegrationTestConfiguration.TestEvents;
 import com.example.ticketplatform.api.adapter.in.web.WebControllerIntegrationTestConfiguration.TestUsers;
+import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -64,7 +65,7 @@ class EventControllerIntegrationTest {
   @BeforeEach
   void setUp() {
     testUsers.reset(List.of(MANAGER, CUSTOMER));
-    Event event = event(EventStatus.PUBLISHED, List.of(order()));
+    Event event = event(EventStatus.PUBLISHED, List.of(bookedPlace()));
     testEvents.reset(List.of(event), List.of(order()));
   }
 
@@ -270,7 +271,7 @@ class EventControllerIntegrationTest {
     assertThat(testEvents.deletedOrderCount()).isEqualTo(1);
   }
 
-  private static Event event(EventStatus status, List<EventOrder> orders) {
+  private static Event event(EventStatus status, List<BookedPlace> orders) {
     return Event.builder()
         .id(EVENT_ID)
         .ownerId(MANAGER_ID)
@@ -293,12 +294,26 @@ class EventControllerIntegrationTest {
         .build();
   }
 
+  private static BookedPlace bookedPlace() {
+    return BookedPlace.builder()
+        .id(EVENT_ORDER_ID)
+        .eventId(EVENT_ID)
+        .customerId(CUSTOMER_ID)
+        .customerReference(CUSTOMER_ID)
+        .rowNumber(3)
+        .placeNumber(7)
+        .placeType("VIP")
+        .reservationDate(RESERVATION_TIME)
+        .eventName("Published concert")
+        .eventDate(EVENT_TIME)
+        .build();
+  }
+
   private static EventOrder order() {
     return EventOrder.builder()
         .id(EVENT_ORDER_ID)
         .eventId(EVENT_ID)
         .customerId(CUSTOMER_ID)
-        .customerReference(CUSTOMER_ID)
         .rowNumber(3)
         .placeNumber(7)
         .placeType("VIP")

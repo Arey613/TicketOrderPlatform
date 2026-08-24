@@ -1,5 +1,6 @@
 package com.example.ticketplatform.api.adapter.out.persistence.event;
 
+import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -28,7 +29,7 @@ interface EventMapper {
 
   @Mapping(target = "id", source = "order.id")
   @Mapping(target = "customerId", source = "customerId")
-  @Mapping(target = "customerReference", source = "order.customerReference")
+  @Mapping(target = "customerReference", ignore = true)
   @Mapping(target = "rowNumber", source = "order.rowNumber")
   @Mapping(target = "placeNumber", source = "order.placeNumber")
   @Mapping(target = "placeType", source = "order.placeType")
@@ -37,7 +38,7 @@ interface EventMapper {
   EventOrderEntity toEntity(EventOrder order, EventEntity event, java.util.UUID customerId);
 
   @Mapping(target = "status", expression = "java(toDomainStatus(entity.getStatus()))")
-  @Mapping(target = "orders", expression = "java(toDomainOrders(entity.getOrders()))")
+  @Mapping(target = "orders", expression = "java(toBookedPlaces(entity.getOrders()))")
   Event toDomain(EventEntity entity);
 
   EventDetails toDomain(EventDetailsEntity entity);
@@ -47,14 +48,19 @@ interface EventMapper {
   @Mapping(target = "eventDate", source = "event.date")
   EventOrder toDomain(EventOrderEntity entity);
 
+  @Mapping(target = "eventId", source = "event.id")
+  @Mapping(target = "eventName", source = "event.name")
+  @Mapping(target = "eventDate", source = "event.date")
+  BookedPlace toBookedPlace(EventOrderEntity entity);
+
   default EventEntity toEntity(Event event) {
     EventEntity entity = toEventEntity(event);
     entity.attachDetails(toEventDetailsEntity(event.details(), entity));
     return entity;
   }
 
-  default List<EventOrder> toDomainOrders(List<EventOrderEntity> entities) {
-    return entities.stream().map(this::toDomain).toList();
+  default List<BookedPlace> toBookedPlaces(List<EventOrderEntity> entities) {
+    return entities.stream().map(this::toBookedPlace).toList();
   }
 
   default EventStatusEntity toEntityStatus(EventStatus status) {

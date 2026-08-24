@@ -4,6 +4,7 @@ import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
+import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -58,7 +59,7 @@ interface EventContractMapper {
   @Mapping(target = "place", source = "placeNumber")
   @Mapping(target = "isMine", ignore = true)
   @Mapping(target = "customerReference", ignore = true)
-  BookedPlaceResponse toBookedPlaceResponse(EventOrder order);
+  BookedPlaceResponse toBookedPlaceResponse(BookedPlace place);
 
   @Mapping(target = "eventOrderId", source = "id")
   @Mapping(target = "row", source = "rowNumber")
@@ -84,7 +85,7 @@ interface EventContractMapper {
   }
 
   @Named("toPublicBookedPlaceResponses")
-  default List<BookedPlaceResponse> toPublicBookedPlaceResponses(List<EventOrder> orders) {
+  default List<BookedPlaceResponse> toPublicBookedPlaceResponses(List<BookedPlace> orders) {
     return orders.stream().map(this::toBookedPlaceResponse).toList();
   }
 
