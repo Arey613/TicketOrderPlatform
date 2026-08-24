@@ -85,11 +85,11 @@ export async function toUserMessage(error: unknown): Promise<string> {
   return 'The server is unavailable. Try again in a moment.';
 }
 
-async function prepareCsrfToken(): Promise<void> {
+export async function prepareCsrfToken(): Promise<void> {
   await authApi.getCsrfToken();
 }
 
-const withCsrfHeader: InitOverrideFunction = async ({ init }) => {
+export const withCsrfHeader: InitOverrideFunction = async ({ init }) => {
   const csrfToken = getCookieValue('XSRF-TOKEN');
 
   if (!csrfToken) {

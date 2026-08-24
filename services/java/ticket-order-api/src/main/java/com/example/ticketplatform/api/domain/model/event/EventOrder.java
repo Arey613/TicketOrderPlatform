@@ -8,6 +8,7 @@ import lombok.Builder;
 public record EventOrder(
     UUID id,
     UUID eventId,
+    UUID customerId,
     UUID customerReference,
     Integer rowNumber,
     Integer placeNumber,

@@ -57,12 +57,12 @@ interface EventApplicationMapper {
   Event toEventWithStatus(Event event, EventStatus status, Instant now);
 
   @Mapping(target = "id", source = "eventOrderId")
-  @Mapping(target = "customerReference", source = "customerReference")
+  @Mapping(target = "customerId", ignore = true)
+  @Mapping(target = "customerReference", ignore = true)
   @Mapping(target = "rowNumber", source = "command.rowNumber")
   @Mapping(target = "placeNumber", source = "command.placeNumber")
   @Mapping(target = "reservationDate", source = "now")
   @Mapping(target = "eventName", ignore = true)
   @Mapping(target = "eventDate", ignore = true)
-  EventOrder toOrder(
-      CreateEventOrderCommand command, UUID eventOrderId, UUID customerReference, Instant now);
+  EventOrder toOrder(CreateEventOrderCommand command, UUID eventOrderId, Instant now);
 }

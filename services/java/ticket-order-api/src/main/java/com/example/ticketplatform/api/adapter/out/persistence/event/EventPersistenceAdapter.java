@@ -47,17 +47,17 @@ class EventPersistenceAdapter implements EventRepositoryPort {
   }
 
   @Override
-  public List<EventOrder> saveOrders(List<EventOrder> orders) {
+  public List<EventOrder> saveOrders(UUID customerId, List<EventOrder> orders) {
     return eventOrderRepository
-        .saveAll(orders.stream().map(this::toOrderEntity).toList())
+        .saveAll(orders.stream().map(order -> toOrderEntity(customerId, order)).toList())
         .stream()
         .map(eventMapper::toDomain)
         .toList();
   }
 
   @Override
-  public List<EventOrder> findOrdersByCustomerReference(UUID customerReference) {
-    return eventOrderRepository.findByCustomerReference(customerReference).stream()
+  public List<EventOrder> findOrdersByCustomerId(UUID customerId) {
+    return eventOrderRepository.findByCustomerId(customerId).stream()
         .map(eventMapper::toDomain)
         .toList();
   }
@@ -68,12 +68,19 @@ class EventPersistenceAdapter implements EventRepositoryPort {
   }
 
   @Override
+  public List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId) {
+    return eventOrderRepository.findByIdInAndCustomerId(ids, customerId).stream()
+        .map(eventMapper::toDomain)
+        .toList();
+  }
+
+  @Override
   public long deleteOrders(Collection<UUID> ids) {
     return eventOrderRepository.deleteByIdIn(ids);
   }
 
-  private EventOrderEntity toOrderEntity(EventOrder order) {
+  private EventOrderEntity toOrderEntity(UUID customerId, EventOrder order) {
     EventEntity event = eventRepository.getReferenceById(order.eventId());
-    return eventMapper.toEntity(order, event);
+    return eventMapper.toEntity(order, event, customerId);
   }
 }

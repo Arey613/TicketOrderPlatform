@@ -168,7 +168,7 @@ class WebControllerIntegrationTestConfiguration {
                       EventOrder.builder()
                           .id(UUID.randomUUID())
                           .eventId(command.eventId())
-                          .customerReference(userId)
+                          .customerId(userId)
                           .rowNumber(command.rowNumber())
                           .placeNumber(command.placeNumber())
                           .placeType(command.placeType())
@@ -205,7 +205,7 @@ class WebControllerIntegrationTestConfiguration {
 
     @Override
     public List<EventOrder> listUserOrders(UUID userId) {
-      return orders.stream().filter(order -> userId.equals(order.customerReference())).toList();
+      return orders.stream().filter(order -> userId.equals(order.customerId())).toList();
     }
 
     void reset(List<Event> events, List<EventOrder> orders) {

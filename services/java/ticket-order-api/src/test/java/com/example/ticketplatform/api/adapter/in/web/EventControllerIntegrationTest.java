@@ -108,7 +108,43 @@ class EventControllerIntegrationTest {
         .andExpect(jsonPath("$.events[0].ordersTaken").value(1))
         .andExpect(jsonPath("$.events[0].takenPlaces[0].row").value(3))
         .andExpect(jsonPath("$.events[0].takenPlaces[0].place").value(7))
+        .andExpect(jsonPath("$.events[0].takenPlaces[0].isMine").value(true))
+        .andExpect(jsonPath("$.events[0].takenPlaces[0].customerReference").doesNotExist())
         .andExpect(jsonPath("$.events[0].takenPlaces[0].placeType").doesNotExist());
+  }
+
+  @Test
+  void returnsPublishedEventDetailsForAnonymousViewerWithoutOwnershipHints() throws Exception {
+    mockMvc
+        .perform(get("/events/{eventId}", EVENT_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.takenPlaces[0].row").value(3))
+        .andExpect(jsonPath("$.takenPlaces[0].place").value(7))
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist())
+        .andExpect(jsonPath("$.takenPlaces[0].customerReference").doesNotExist());
+  }
+
+  @Test
+  void returnsCustomerOwnedPlaceHintForAuthenticatedCustomerEventDetails() throws Exception {
+    mockMvc
+        .perform(
+            get("/events/{eventId}", EVENT_ID)
+                .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").value(true))
+        .andExpect(jsonPath("$.takenPlaces[0].customerReference").doesNotExist());
+  }
+
+  @Test
+  void returnsCustomerReferenceForManagerEventDetails() throws Exception {
+    mockMvc
+        .perform(
+            get("/events/{eventId}", EVENT_ID)
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist())
+        .andExpect(jsonPath("$.takenPlaces[0].customerReference").value(CUSTOMER_ID.toString()));
   }
 
   @Test
@@ -169,6 +205,33 @@ class EventControllerIntegrationTest {
 
     assertThat(testEvents.lastCommandUserId()).isEqualTo(CUSTOMER_ID);
     assertThat(testEvents.createdOrderCount()).isEqualTo(2);
+  }
+
+  @Test
+  void rejectsEventOrdersForAnonymousViewer() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                post("/events/orders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createEventOrdersJson(4, 8))))
+        .andExpect(status().isUnauthorized());
+
+    assertThat(testEvents.createdOrderCount()).isZero();
+  }
+
+  @Test
+  void rejectsEventOrdersForManagerRole() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                post("/events/orders")
+                    .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(createEventOrdersJson(4, 8))))
+        .andExpect(status().isForbidden());
+
+    assertThat(testEvents.createdOrderCount()).isZero();
   }
 
   @Test
@@ -234,6 +297,7 @@ class EventControllerIntegrationTest {
     return EventOrder.builder()
         .id(EVENT_ORDER_ID)
         .eventId(EVENT_ID)
+        .customerId(CUSTOMER_ID)
         .customerReference(CUSTOMER_ID)
         .rowNumber(3)
         .placeNumber(7)
@@ -285,5 +349,21 @@ class EventControllerIntegrationTest {
           }
         }
         """;
+  }
+
+  private static String createEventOrdersJson(int row, int place) {
+    return """
+        {
+          "orders": [
+            {
+              "eventId": "00000000-0000-0000-0000-000000000603",
+              "row": %d,
+              "place": %d,
+              "placeType": "STANDARD"
+            }
+          ]
+        }
+        """
+        .formatted(row, place);
   }
 }

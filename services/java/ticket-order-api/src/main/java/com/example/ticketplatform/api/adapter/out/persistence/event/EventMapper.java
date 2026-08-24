@@ -27,13 +27,14 @@ interface EventMapper {
   EventDetailsEntity toEventDetailsEntity(EventDetails details, EventEntity event);
 
   @Mapping(target = "id", source = "order.id")
+  @Mapping(target = "customerId", source = "customerId")
   @Mapping(target = "customerReference", source = "order.customerReference")
   @Mapping(target = "rowNumber", source = "order.rowNumber")
   @Mapping(target = "placeNumber", source = "order.placeNumber")
   @Mapping(target = "placeType", source = "order.placeType")
   @Mapping(target = "reservationDate", source = "order.reservationDate")
   @Mapping(target = "event", source = "event")
-  EventOrderEntity toEntity(EventOrder order, EventEntity event);
+  EventOrderEntity toEntity(EventOrder order, EventEntity event, java.util.UUID customerId);
 
   @Mapping(target = "status", expression = "java(toDomainStatus(entity.getStatus()))")
   @Mapping(target = "orders", expression = "java(toDomainOrders(entity.getOrders()))")

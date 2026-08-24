@@ -20,3 +20,4 @@ DATABASE_MIGRATIONS#123 - short description
 - DATABASE_MIGRATIONS#2 - rename application user migrations
 - TICKET_SERVICE#6 - address event management review comments
 - BUGFIX#2 - move migration schema selection to Maven profiles
+- TICKET_PORTAL#3 - add transactional event-order customer ownership

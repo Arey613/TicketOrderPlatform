@@ -80,21 +80,23 @@ class EventPersistenceAdapterTest {
   @Test
   void savesOrdersAndFindsReservedPositionsAndCustomerOrders() {
     adapter.save(event(EVENT_ID, OWNER_ID, EventStatus.PUBLISHED));
-    EventOrder order = eventOrder(EVENT_ORDER_ID, EVENT_ID, CUSTOMER_ID, 3, 7);
+    EventOrder order = eventOrder(EVENT_ORDER_ID, EVENT_ID, null, 3, 7);
 
-    List<EventOrder> saved = adapter.saveOrders(List.of(order));
+    List<EventOrder> saved = adapter.saveOrders(CUSTOMER_ID, List.of(order));
     entityManager.flush();
     entityManager.clear();
 
     assertThat(saved).hasSize(1);
     assertThat(adapter.existsOrderPosition(EVENT_ID, 3, 7)).isTrue();
     assertThat(adapter.existsOrderPosition(EVENT_ID, 3, 8)).isFalse();
-    assertThat(adapter.findOrdersByCustomerReference(CUSTOMER_ID))
+    assertThat(adapter.findOrdersByCustomerId(CUSTOMER_ID))
         .singleElement()
         .satisfies(
             found -> {
               assertThat(found.id()).isEqualTo(EVENT_ORDER_ID);
               assertThat(found.eventId()).isEqualTo(EVENT_ID);
+              assertThat(found.customerId()).isEqualTo(CUSTOMER_ID);
+              assertThat(found.customerReference()).isNull();
               assertThat(found.eventName()).isEqualTo("Event 704");
               assertThat(found.eventDate()).isEqualTo(EVENT_DATE);
               assertThat(found.placeType()).isEqualTo("VIP");
@@ -104,7 +106,7 @@ class EventPersistenceAdapterTest {
   @Test
   void findsAndDeletesOrdersByIds() {
     adapter.save(event(EVENT_ID, OWNER_ID, EventStatus.PUBLISHED));
-    adapter.saveOrders(List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID, CUSTOMER_ID, 3, 7)));
+    adapter.saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID, null, 3, 7)));
     entityManager.flush();
     entityManager.clear();
 

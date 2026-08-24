@@ -116,7 +116,7 @@ CreateEventRequest:
 UpdateEventRequest:
   allOf:
     - "$ref": "#/components/schemas/CreateEventRequest"
-TakenPlaceResponse:
+BookedPlaceResponse:
   type: object
   required:
     - row
@@ -128,6 +128,13 @@ TakenPlaceResponse:
     place:
       type: integer
       minimum: 1
+    isMine:
+      type: boolean
+      description: Present only when ownership is projected for an authenticated viewer.
+    customerReference:
+      type: string
+      format: uuid
+      description: Present only for manager or admin event-detail views when customer reference checking is allowed.
 EventResponse:
   type: object
   required:
@@ -190,7 +197,7 @@ EventResponse:
     takenPlaces:
       type: array
       items:
-        "$ref": "#/components/schemas/TakenPlaceResponse"
+        "$ref": "#/components/schemas/BookedPlaceResponse"
 EventListResponse:
   type: object
   required:

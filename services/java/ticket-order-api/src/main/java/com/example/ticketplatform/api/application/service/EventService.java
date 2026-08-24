@@ -105,10 +105,11 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
 
     Instant now = currentTimeSupplier.get();
     return eventRepositoryPort.saveOrders(
+        userId,
         commands.stream()
             .map(
                 command ->
-                    eventApplicationMapper.toOrder(command, UUID.randomUUID(), userId, now))
+                    eventApplicationMapper.toOrder(command, UUID.randomUUID(), now))
             .toList());
   }
 
@@ -119,7 +120,8 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
     if (orders.size() != eventOrderIds.size()) {
       throw new NoSuchElementException("At least one event order was not found");
     }
-    if (orders.stream().anyMatch(order -> !userId.equals(order.customerReference()))) {
+    if (eventRepositoryPort.findOrdersByIdsAndCustomerId(eventOrderIds, userId).size()
+        != eventOrderIds.size()) {
       throw new SecurityException("User cannot delete at least one event order");
     }
     return Math.toIntExact(eventRepositoryPort.deleteOrders(eventOrderIds));
@@ -132,7 +134,8 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
         eventRepositoryPort
             .findById(eventId)
             .orElseThrow(() -> new NoSuchElementException("Event not found: " + eventId));
-    if (event.status() == EventStatus.PUBLISHED || event.ownerId().equals(userId)) {
+    if (event.status() == EventStatus.PUBLISHED
+        || (userId != null && event.ownerId().equals(userId))) {
       return event;
     }
     throw new SecurityException("User cannot read event: " + eventId);
@@ -153,7 +156,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   @Override
   @Transactional(readOnly = true)
   public List<EventOrder> listUserOrders(UUID userId) {
-    return eventRepositoryPort.findOrdersByCustomerReference(userId);
+    return eventRepositoryPort.findOrdersByCustomerId(userId);
   }
 
   private Event updateStatus(Event event, EventStatus status) {

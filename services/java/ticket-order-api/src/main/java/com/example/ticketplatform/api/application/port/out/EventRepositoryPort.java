@@ -19,11 +19,15 @@ public interface EventRepositoryPort {
 
   boolean existsOrderPosition(UUID eventId, int rowNumber, int placeNumber);
 
-  List<EventOrder> saveOrders(List<EventOrder> orders);
+  List<EventOrder> saveOrders(UUID customerId, List<EventOrder> orders);
 
-  List<EventOrder> findOrdersByCustomerReference(UUID customerReference);
+  List<EventOrder> findOrdersByCustomerId(UUID customerId);
 
   List<EventOrder> findOrdersByIds(Collection<UUID> ids);
+
+  // TODO TICKET_PORTAL#3: Review whether this port method stays required once order deletion
+  // can be expressed as one ownership-scoped repository operation.
+  List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId);
 
   long deleteOrders(Collection<UUID> ids);
 }
