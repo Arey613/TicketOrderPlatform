@@ -171,26 +171,22 @@ The relevant aggregates are:
 User
 Event
 EventOrder
+BookedPlace
 ```
 
 Rules:
 
 1. `User` represents the authenticated account.
 2. `Event` owns event definition, publication status, and place layout metadata.
-3. `EventOrder` owns the reservation data exposed to the domain.
-4. Authenticated ownership is attached by the application/persistence boundary.
-5. `EventOrder` must not embed the full `User` aggregate.
-6. `EventOrder` must not use client-supplied identity for ownership.
+3. `EventOrder` owns customer reservation data used by booking and owned-order flows.
+4. `BookedPlace` is an internal event-detail read model used to project booked-seat visibility.
+5. Authenticated ownership is attached by the application/persistence boundary.
+6. `EventOrder` must not embed the full `User` aggregate.
+7. `EventOrder` must not use client-supplied identity for ownership.
 
 ### EventOrder Ownership
 
-Keep manager-facing reference metadata:
-
-```text
-customerReference
-```
-
-Add real authenticated ownership in persistence/application operations:
+Use real authenticated ownership in persistence/application operations:
 
 ```text
 customerId
@@ -202,9 +198,10 @@ Rules:
 2. `customer_id` is assigned from the authenticated session by the backend.
 3. `customerId` is not accepted in the create-order request.
 4. `customerId` is not exposed in public event details.
-5. `customerId` may exist in persistence/internal read models, but is not required on the domain `EventOrder`.
-6. `customerReference` may be exposed in event details for manager or admin checking workflows.
-7. `customerReference` must not be used for authorization, ownership filtering, or "my tickets" access.
+5. `customerId` may exist in domain order results and internal read models, but is not exposed by event-detail responses.
+6. `customerReference` is not part of `EventOrder`.
+7. `customerReference` may exist only in persistence and event-detail read models for manager or admin checking workflows.
+8. `customerReference` must not be used for authorization, ownership filtering, or "my tickets" access.
 
 ## Database
 
@@ -373,10 +370,11 @@ Rules:
 Event details may load booked places with owner identity internally when a dedicated read model is introduced:
 
 ```text
-BookedPlaceReadModel
+BookedPlace
 - row
 - place
 - customerId
+- customerReference
 ```
 
 Rules:
@@ -389,6 +387,7 @@ Rules:
 6. Public viewer context omits `isMine`.
 7. Authenticated viewer context compares internal ownership data with the current user ID.
 8. `customerId` is never serialized to public or authenticated event-detail responses.
+9. `customerReference` is serialized only for manager/admin event-detail responses.
 
 Recommended SQL shape for booked places:
 
@@ -396,7 +395,8 @@ Recommended SQL shape for booked places:
 SELECT
     event_order.row_number,
     event_order.place_number,
-    event_order.customer_id
+    event_order.customer_id,
+    event_order.customer_reference
 FROM ticket_transactional.t_event_order event_order
 WHERE event_order.event_id = :event_id
 ORDER BY
@@ -564,9 +564,10 @@ Strengths:
 
 1. The design keeps identity at the backend boundary and avoids trusting frontend-supplied customer IDs.
 2. `EventOrder` owns reservation behavior while referencing `User` by identity only.
-3. Public event details expose availability without leaking ownership.
-4. The optional `isMine` flag is a read-model projection, not a domain rule.
-5. Contract-first changes fit the repository workflow.
+3. `BookedPlace` carries event-detail read data, including manager-only customer reference metadata.
+4. Public event details expose availability without leaking ownership.
+5. The optional `isMine` flag is a read-model projection, not a domain rule.
+6. Contract-first changes fit the repository workflow.
 
 Constraints to preserve during implementation:
 
