@@ -131,10 +131,6 @@ BookedPlaceResponse:
     isMine:
       type: boolean
       description: Present only when ownership is projected for an authenticated viewer.
-    customerReference:
-      type: string
-      format: uuid
-      description: Present only for manager or admin event-detail views when customer reference checking is allowed.
 EventResponse:
   type: object
   required:

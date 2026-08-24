@@ -34,9 +34,6 @@ class EventOrderEntity {
   @Column(name = "customer_id", nullable = false)
   private UUID customerId;
 
-  @Column(name = "customer_reference")
-  private UUID customerReference;
-
   @Column(name = "row_number", nullable = false)
   private Integer rowNumber;
 

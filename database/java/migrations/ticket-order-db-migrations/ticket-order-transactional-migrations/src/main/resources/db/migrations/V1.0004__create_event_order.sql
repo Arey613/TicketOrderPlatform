@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS t_event_order (
     event_order_id UUID PRIMARY KEY,
     event_id UUID NOT NULL,
     customer_id UUID NOT NULL,
-    customer_reference UUID NULL,
     row_number INTEGER NOT NULL,
     place_number INTEGER NOT NULL,
     place_type VARCHAR(100) NOT NULL,

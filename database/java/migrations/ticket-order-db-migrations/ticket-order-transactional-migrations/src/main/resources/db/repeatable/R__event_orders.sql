@@ -3,7 +3,6 @@ SELECT
     event_order_id,
     event_id,
     customer_id,
-    customer_reference,
     row_number,
     place_number,
     place_type,

@@ -58,7 +58,6 @@ interface EventContractMapper {
   @Mapping(target = "row", source = "rowNumber")
   @Mapping(target = "place", source = "placeNumber")
   @Mapping(target = "isMine", ignore = true)
-  @Mapping(target = "customerReference", ignore = true)
   BookedPlaceResponse toBookedPlaceResponse(BookedPlace place);
 
   @Mapping(target = "eventOrderId", source = "id")

@@ -69,7 +69,7 @@ An event order has:
 
 - `eventOrderId`
 - `eventId`
-- `customerReference`
+- `customerId`
 - `row`
 - `place`
 - `placeType`
@@ -114,7 +114,7 @@ Rules:
 16. Event orders represent actual reservations.
 17. Event orders do not require seat-map behavior in this ticket.
 18. A row in `t_event_order` means the row/place is reserved.
-19. `customerReference` is a placeholder for future authenticated viewer/customer ownership.
+19. Event orders belong to the authenticated customer who created them.
 20. `placeType` is required and classifies the concrete place, for example `STANDARD`, `VIP`, or `ACCESSIBLE`.
 21. An event cannot have two event orders with the same row and place number.
 22. Event creation does not create event orders.
@@ -156,7 +156,7 @@ Required columns:
 ```text
 event_order_id UUID PRIMARY KEY
 event_id UUID NOT NULL
-customer_reference UUID NULL
+customer_id UUID NOT NULL
 row_number INTEGER NOT NULL
 place_number INTEGER NOT NULL
 place_type VARCHAR(100) NOT NULL
@@ -307,7 +307,7 @@ Behavior:
 - `DRAFT` events are readable only by their owning manager.
 - The response includes the event's `t_event_details` data.
 - The response includes event-order availability data from `t_event_order`.
-- The response does not expose event-order customer references, reservation dates, ids, or place types.
+- The response does not expose event-order customer identifiers, reservation dates, ids, or place types.
 
 Response shape:
 
@@ -430,7 +430,6 @@ Request body:
   "orders": [
     {
       "eventId": "00000000-0000-0000-0000-000000000001",
-      "customerReference": "00000000-0000-0000-0000-000000000020",
       "row": 1,
       "place": 1,
       "placeType": "STANDARD"
@@ -450,8 +449,7 @@ Behavior:
 - Rejects the request when any item conflicts with an already reserved row and place.
 - Rejects the request when the payload contains duplicate `(eventId, row, place)` values.
 - Defaults `reservationDate` to the insert date for each created order when the request does not provide one.
-- Treats `customerReference` as an optional placeholder until viewer/customer ownership is introduced.
-- When `customerReference` is omitted, the created order is treated as an unowned placeholder until customer ownership is introduced.
+- Uses the authenticated customer as the event-order owner.
 - Persists the order list atomically: either all valid orders are created, or none are created.
 
 Successful response:
@@ -474,10 +472,7 @@ Authorization:
 
 Behavior:
 
-- Uses `customerReference` as the temporary ownership marker until viewer/customer ownership is introduced.
-- Event orders with null `customerReference` are treated as unowned placeholders.
 - Returns the authenticated user's event orders.
-- Does not return unowned placeholder event orders.
 - Includes enough event summary data for the user to recognize the order.
 - Does not return event orders owned by other users.
 
@@ -529,9 +524,6 @@ Behavior:
 - A single event-order deletion must be sent as a singleton `eventOrderIds` list.
 - Loads each event order by id.
 - Confirms every event order belongs to the authenticated user.
-- Uses `customerReference` as the temporary ownership marker until viewer/customer ownership is introduced.
-- Event orders with null `customerReference` are treated as unowned placeholders.
-- Unowned placeholder event orders cannot be deleted through user-owned deletion.
 - Deletes the event-order records atomically.
 - After deletion, the row/place is no longer reserved because reservation is represented by the presence of a row in `t_event_order`.
 
@@ -625,7 +617,7 @@ Responsibilities:
 - Allow draft reads only for the owning manager.
 - Build event details responses from `t_event` and `t_event_details`.
 - Build event order availability responses from aggregated `t_event_order` data.
-- Expose `ordersTaken` and `takenPlaces` without customer references, reservation dates, order ids, or place types.
+- Expose `ordersTaken` and `takenPlaces` without customer identifiers, reservation dates, order ids, or place types.
 
 Event-order use case:
 
@@ -649,18 +641,14 @@ Responsibilities:
 - Check duplicate row/place reservations before insert.
 - Reject duplicate `(eventId, row, place)` values inside the same request.
 - Persist the event-order list atomically.
-- Treat `customerReference` as optional until viewer/customer ownership is introduced.
-- Treat orders with null `customerReference` as unowned placeholders.
+- Use the authenticated customer id as the event-order owner.
 - List only event orders owned by the authenticated user.
-- Exclude unowned placeholder event orders from the authenticated user's order list.
 - Join or compose minimal event summary data for the user's order list.
 - Read event-order ids from the delete command payload.
 - Require at least one event-order id.
 - Treat single-order deletion as a singleton list.
 - Delete only event orders owned by the authenticated user.
-- Reject deletion for unowned placeholder event orders.
 - Delete the event-order list atomically.
-- Use `customerReference` as the temporary ownership marker for deletion until viewer/customer ownership is introduced.
 
 Outbound ports:
 
@@ -679,7 +667,7 @@ EventOrderRepositoryPort
 - saveAll(orders)
 - findById(eventOrderId)
 - findAllByIds(eventOrderIds)
-- findByCustomerReference(customerReference)
+- findByCustomerId(customerId)
 - deleteAll(orders)
 - existsByEventIdAndRowAndPlace(eventId, row, place)
 - countByEventId(eventId)
@@ -732,7 +720,7 @@ The event-management test suite should verify:
 29. `GET /events/{eventId}` includes event details.
 30. `GET /events/{eventId}` includes `ordersTaken` from existing event orders.
 31. `GET /events/{eventId}` includes `takenPlaces` with only `row` and `place`.
-32. `GET /events/{eventId}` does not expose event-order customer references, reservation dates, ids, or place types.
+32. `GET /events/{eventId}` does not expose event-order customer identifiers, reservation dates, ids, or place types.
 
 The event-ordering test suite should verify:
 
@@ -749,13 +737,10 @@ The event-ordering test suite should verify:
 11. Event-order creation rejects missing or blank `placeType`.
 12. Event-order creation rejects duplicate `(eventId, row, place)` values inside the same request.
 13. Event-order creation rejects duplicate `(row, place)` values already reserved for the same event.
-14. Event-order creation accepts omitted `customerReference`.
-15. Event-order creation treats omitted `customerReference` as an unowned placeholder.
-16. Event-order creation defaults `reservationDate` when the request omits it.
-17. Event-order creation is atomic when one item in the list is invalid.
-18. An unauthenticated request cannot list my event orders.
-19. Listing my event orders returns only records owned by the authenticated user.
-20. Listing my event orders excludes unowned placeholder orders.
+14. Event-order creation defaults `reservationDate` when the request omits it.
+15. Event-order creation is atomic when one item in the list is invalid.
+16. An unauthenticated request cannot list my event orders.
+17. Listing my event orders returns only records owned by the authenticated user.
 21. Listing my event orders includes event summary data.
 22. An unauthenticated request cannot delete event orders.
 23. Event-order deletion requires a non-empty `eventOrderIds` list.

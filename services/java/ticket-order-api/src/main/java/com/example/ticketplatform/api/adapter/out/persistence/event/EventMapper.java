@@ -29,7 +29,6 @@ interface EventMapper {
 
   @Mapping(target = "id", source = "order.id")
   @Mapping(target = "customerId", source = "customerId")
-  @Mapping(target = "customerReference", ignore = true)
   @Mapping(target = "rowNumber", source = "order.rowNumber")
   @Mapping(target = "placeNumber", source = "order.placeNumber")
   @Mapping(target = "placeType", source = "order.placeType")

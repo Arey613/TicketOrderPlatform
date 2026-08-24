@@ -13,7 +13,7 @@ This iteration focuses only on the regular `CUSTOMER` user journey:
 
 ## Context
 
-The platform already supports authentication, event management, published event browsing, and event-order persistence. The current event-order model exposes `customerReference`. That value should remain available in event details only when manager or admin checking is allowed, but it is not strong enough for "my tickets" behavior because ownership must come from the authenticated user, not from client-supplied data.
+The platform already supports authentication, event management, published event browsing, and event-order persistence. Event-order ownership must come from the authenticated user, not from client-supplied data.
 
 Public browsing remains allowed. A public viewer may inspect published events and see which places are already booked, but must not see booking ownership or customer data.
 
@@ -112,7 +112,7 @@ Rules:
 
 1. Only authenticated `CUSTOMER` users can book in this iteration.
 2. The booking request must not include `customerId`.
-3. The booking request must not include `customerReference`.
+3. The booking request must not include client-supplied customer identity.
 4. The backend derives customer ownership from the authenticated session.
 5. A user can submit one or more places for the same published event.
 6. The backend validates every requested place.
@@ -199,13 +199,11 @@ Rules:
 3. `customerId` is not accepted in the create-order request.
 4. `customerId` is not exposed in public event details.
 5. `customerId` may exist in domain order results and internal read models, but is not exposed by event-detail responses.
-6. `customerReference` is not part of `EventOrder`.
-7. `customerReference` may exist only in persistence and event-detail read models for manager or admin checking workflows.
-8. `customerReference` must not be used for authorization, ownership filtering, or "my tickets" access.
+6. Only authenticated ownership is modeled for this ticket.
 
 ## Database
 
-The transactional event-order table should add user ownership while preserving manager-facing customer reference metadata.
+The transactional event-order table should store authenticated user ownership.
 
 Target column:
 
@@ -216,10 +214,7 @@ t_event_order.customer_id UUID NOT NULL
 Rules:
 
 1. `customer_id` references `ticket_transactional.t_users(id)`.
-2. `customer_reference` remains in place.
-3. `customer_reference` must not define authenticated ownership.
-4. `password_hash` remains only in `ticket_transactional.t_users`.
-5. Analytical schema changes are out of scope for this ticket.
+2. `password_hash` remains only in `ticket_transactional.t_users`.
 
 Required constraints:
 
@@ -277,10 +272,6 @@ BookedPlaceResponse:
     isMine:
       type: boolean
       description: Present only when ownership is projected for an authenticated viewer.
-    customerReference:
-      type: string
-      format: uuid
-      description: Present only for manager or admin event-detail views when customer reference checking is allowed.
 ```
 
 `isMine` is optional because it is not listed under `required`.
@@ -291,9 +282,7 @@ Rules:
 2. Authenticated responses may include `isMine`.
 3. `isMine=true` means the place belongs to the current authenticated user.
 4. `isMine=false` means the authenticated viewer has ownership context, but the place belongs to another user.
-5. `customerReference` is omitted for public and regular customer event-detail responses.
-6. `customerReference` may be present for manager or admin event-detail responses when checking booked places.
-7. The response must not expose `customerId`.
+5. The response must not expose `customerId`.
 
 ### Booking Request
 
@@ -327,7 +316,7 @@ CreateEventOrderItem:
 
 Rules:
 
-1. Remove `customerReference` from the request.
+1. Remove client-supplied customer identity from the request.
 2. Do not add `customerId` to the request.
 3. Keep list payload semantics.
 4. Preserve atomic all-or-none behavior.
@@ -374,7 +363,6 @@ BookedPlace
 - row
 - place
 - customerId
-- customerReference
 ```
 
 Rules:
@@ -387,7 +375,6 @@ Rules:
 6. Public viewer context omits `isMine`.
 7. Authenticated viewer context compares internal ownership data with the current user ID.
 8. `customerId` is never serialized to public or authenticated event-detail responses.
-9. `customerReference` is serialized only for manager/admin event-detail responses.
 
 Recommended SQL shape for booked places:
 
@@ -395,8 +382,7 @@ Recommended SQL shape for booked places:
 SELECT
     event_order.row_number,
     event_order.place_number,
-    event_order.customer_id,
-    event_order.customer_reference
+    event_order.customer_id
 FROM ticket_transactional.t_event_order event_order
 WHERE event_order.event_id = :event_id
 ORDER BY
@@ -427,10 +413,8 @@ Rules:
 Validate:
 
 1. `BookedPlaceResponse.isMine` is optional.
-2. `BookedPlaceResponse.customerReference` is optional and only for manager/admin event-detail views.
-3. Create-order request does not contain `customerId`.
-4. Create-order request does not contain `customerReference`.
-5. Owned-order endpoint requires session authentication.
+2. Create-order request does not contain `customerId`.
+3. Owned-order endpoint requires session authentication.
 
 ### Backend Tests
 
@@ -443,13 +427,12 @@ Validate:
 5. Booking requires authentication.
 6. Booking rejects non-customer roles for this iteration.
 7. Booking derives `customerId` from the session.
-8. Booking does not use `customerReference` for ownership.
-9. Booking rejects unpublished events.
-10. Booking rejects duplicate requested places.
-11. Booking rejects places outside capacity bounds.
-12. Booking rejects already-booked places.
-13. Booking is atomic when one requested place fails.
-14. `GET /events/orders/mine` returns only the current user's orders.
+8. Booking rejects unpublished events.
+9. Booking rejects duplicate requested places.
+10. Booking rejects places outside capacity bounds.
+11. Booking rejects already-booked places.
+12. Booking is atomic when one requested place fails.
+13. `GET /events/orders/mine` returns only the current user's orders.
 
 ### Frontend Tests
 
@@ -477,8 +460,7 @@ Validate:
 7. Create-order requests do not contain client-supplied ownership identity.
 8. Owned orders are returned only for the current user.
 9. Event-order ownership uses `customer_id` in the database and backend ownership filters.
-10. `customerReference` remains available only as optional manager/admin event-detail metadata.
-11. Contract, backend, and frontend tests cover the user flow.
+10. Contract, backend, and frontend tests cover the user flow.
 
 ## Implementation Plan
 
@@ -496,12 +478,10 @@ Update the OpenAPI contract first:
 
 1. Rename `TakenPlaceResponse` to `BookedPlaceResponse`.
 2. Add optional `isMine` to booked places by leaving it out of the schema `required` list.
-3. Add optional `customerReference` to booked-place responses for manager/admin event-detail views.
-4. Remove `customerReference` from create-order requests.
-5. Do not add `customerId` to create-order requests.
-6. Keep `eventId` on each create-order item.
-7. Keep `placeType` unchanged for this ticket.
-8. Keep `GET /events/orders/mine` as the owned-order endpoint.
+3. Do not add `customerId` to create-order requests.
+4. Keep `eventId` on each create-order item.
+5. Keep `placeType` unchanged for this ticket.
+6. Keep `GET /events/orders/mine` as the owned-order endpoint.
 7. Validate and regenerate consumers:
 
 ```text
@@ -515,11 +495,8 @@ Update transactional ownership storage:
 
 1. Add `t_event_order.customer_id`.
 2. Reference `ticket_transactional.t_users(id)`.
-3. Preserve `customer_reference`.
-4. Replace authenticated ownership usage with `customer_id`.
-5. Decide the exact migration strategy before making `customer_id NOT NULL`.
-6. Keep the existing unique row/place reservation constraint.
-7. Do not add analytical schema work in this ticket.
+3. Replace authenticated ownership usage with `customer_id`.
+4. Keep the existing unique row/place reservation constraint.
 
 ### 3. Backend
 
@@ -564,7 +541,7 @@ Strengths:
 
 1. The design keeps identity at the backend boundary and avoids trusting frontend-supplied customer IDs.
 2. `EventOrder` owns reservation behavior while referencing `User` by identity only.
-3. `BookedPlace` carries event-detail read data, including manager-only customer reference metadata.
+3. `BookedPlace` carries event-detail read data needed for booked-place projection.
 4. Public event details expose availability without leaking ownership.
 5. The optional `isMine` flag is a read-model projection, not a domain rule.
 6. Contract-first changes fit the repository workflow.
@@ -587,7 +564,7 @@ Decisions:
 3. Do not revisit `placeType` in this ticket. Keep the current contract/domain requirement for now.
 4. Event details should be served by one endpoint. Anonymous and authenticated viewers use the same endpoint and same base read model; the only response difference is optional `isMine` projection when viewer context exists.
 5. Booking role policy is explicit: only `CUSTOMER` can book in this iteration.
-6. `customer_reference` remains for manager/admin event-detail checking, while `customer_id` is added for authenticated ownership.
+6. `customer_id` is added for authenticated ownership.
 
 Accepted event-detail design:
 

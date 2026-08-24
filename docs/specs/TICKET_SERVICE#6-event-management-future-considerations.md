@@ -16,12 +16,11 @@ Open questions:
 
 ## Customer Ownership
 
-The current ticket uses `customer_reference` only as a placeholder.
+Event orders should use authenticated customer ownership.
 
 A future viewer/customer permission model should decide:
 
 - Whether `t_event_order` should reference `t_users(id)` through `customer_id`.
-- Whether `customer_reference` remains as a snapshot or is replaced.
 - How customers view their own orders.
 - Which roles can view customer-level order details.
 

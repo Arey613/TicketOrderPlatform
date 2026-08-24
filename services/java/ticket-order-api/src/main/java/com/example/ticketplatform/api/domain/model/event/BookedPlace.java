@@ -9,7 +9,6 @@ public record BookedPlace(
     UUID id,
     UUID eventId,
     UUID customerId,
-    UUID customerReference,
     Integer rowNumber,
     Integer placeNumber,
     String placeType,

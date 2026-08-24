@@ -110,7 +110,6 @@ class EventControllerIntegrationTest {
         .andExpect(jsonPath("$.events[0].takenPlaces[0].row").value(3))
         .andExpect(jsonPath("$.events[0].takenPlaces[0].place").value(7))
         .andExpect(jsonPath("$.events[0].takenPlaces[0].isMine").value(true))
-        .andExpect(jsonPath("$.events[0].takenPlaces[0].customerReference").doesNotExist())
         .andExpect(jsonPath("$.events[0].takenPlaces[0].placeType").doesNotExist());
   }
 
@@ -122,8 +121,7 @@ class EventControllerIntegrationTest {
         .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()))
         .andExpect(jsonPath("$.takenPlaces[0].row").value(3))
         .andExpect(jsonPath("$.takenPlaces[0].place").value(7))
-        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist())
-        .andExpect(jsonPath("$.takenPlaces[0].customerReference").doesNotExist());
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist());
   }
 
   @Test
@@ -133,19 +131,17 @@ class EventControllerIntegrationTest {
             get("/events/{eventId}", EVENT_ID)
                 .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.takenPlaces[0].isMine").value(true))
-        .andExpect(jsonPath("$.takenPlaces[0].customerReference").doesNotExist());
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").value(true));
   }
 
   @Test
-  void returnsCustomerReferenceForManagerEventDetails() throws Exception {
+  void omitsOwnershipHintsForManagerEventDetails() throws Exception {
     mockMvc
         .perform(
             get("/events/{eventId}", EVENT_ID)
                 .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist())
-        .andExpect(jsonPath("$.takenPlaces[0].customerReference").value(CUSTOMER_ID.toString()));
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist());
   }
 
   @Test
@@ -299,7 +295,6 @@ class EventControllerIntegrationTest {
         .id(EVENT_ORDER_ID)
         .eventId(EVENT_ID)
         .customerId(CUSTOMER_ID)
-        .customerReference(CUSTOMER_ID)
         .rowNumber(3)
         .placeNumber(7)
         .placeType("VIP")

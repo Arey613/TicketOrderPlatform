@@ -48,10 +48,6 @@ class EventResponseAssembler {
   private void decorateForViewer(BookedPlaceResponse response, BookedPlace order, User viewer) {
     if (viewer.role() == UserRole.CUSTOMER) {
       response.setIsMine(viewer.id().equals(order.customerId()));
-      return;
-    }
-    if (viewer.role() == UserRole.MANAGER || viewer.role() == UserRole.ADMIN) {
-      response.setCustomerReference(order.customerReference());
     }
   }
 }
