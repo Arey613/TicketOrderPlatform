@@ -31,8 +31,14 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   @Override
   public List<Event> findPublished() {
     return readQueryExecutor.execute(
-        () -> readReplicaEventRepository.findPublished().stream().map(eventMapper::toDomain).toList(),
-        () -> primaryEventRepository.findPublished().stream().map(eventMapper::toDomain).toList());
+        () ->
+            readReplicaEventRepository.findByStatus(EventStatusEntity.PUBLISHED).stream()
+                .map(eventMapper::toDomain)
+                .toList(),
+        () ->
+            primaryEventRepository.findByStatus(EventStatusEntity.PUBLISHED).stream()
+                .map(eventMapper::toDomain)
+                .toList());
   }
 
   @Override

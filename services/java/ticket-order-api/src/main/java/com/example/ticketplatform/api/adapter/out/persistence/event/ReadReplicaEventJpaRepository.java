@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 @ReadReplicaRepository
 interface ReadReplicaEventJpaRepository extends JpaRepository<EventEntity, UUID> {
 
-  List<EventEntity> findPublished();
+  List<EventEntity> findByStatus(EventStatusEntity status);
 
   List<EventEntity> findByOwnerId(UUID ownerId);
 }
