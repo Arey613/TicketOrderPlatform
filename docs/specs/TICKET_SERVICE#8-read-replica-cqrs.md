@@ -227,6 +227,8 @@ The application service should call a query port and should not decide whether t
 
 The fallback implementation must not call both databases during normal successful reads. The primary read operation is executed only after the read-replica operation fails with a fallback-eligible connection/resource problem.
 
+TODO: Revisit whether a separate read-replica datasource availability check is needed after the first production-like deployment. The current implementation should not add a pre-query availability call because the actual replica read already validates availability and falls back to primary on connection/resource failure.
+
 Avoid broad factory methods that return a mutable current repository to application code. A factory that leaks datasource choice upward makes command/query routing harder to reason about and easier to misuse. If a factory is used, keep it private to the persistence adapter and expose only intent-based methods such as `findPublishedEvents`.
 
 The fallback component should classify exceptions narrowly:
