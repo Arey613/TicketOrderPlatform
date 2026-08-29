@@ -1,8 +1,7 @@
 spring:
   config:
     import:
-      - classpath:persistence/jpa-queries/event-queries.yml
-      - classpath:persistence/jpa-queries/user-queries.yml
+      - classpath:persistence/jpa-named-queries.properties
   application:
     name: ticket-order-api
   datasource:
