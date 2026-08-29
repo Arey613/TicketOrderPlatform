@@ -47,7 +47,13 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
         () ->
             readReplicaEntityManager
                 .createQuery(
-                    "SELECT event FROM EventEntity event WHERE event.ownerId = :ownerId",
+                    """
+                    SELECT DISTINCT event
+                    FROM EventEntity event
+                    LEFT JOIN FETCH event.details
+                    LEFT JOIN FETCH event.orders
+                    WHERE event.ownerId = :ownerId
+                    """,
                     EventEntity.class)
                 .setParameter("ownerId", ownerId)
                 .getResultStream()
@@ -62,7 +68,12 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
         () ->
             readReplicaEntityManager
                 .createQuery(
-                    "SELECT eventOrder FROM EventOrderEntity eventOrder WHERE eventOrder.customerId = :customerId",
+                    """
+                    SELECT eventOrder
+                    FROM EventOrderEntity eventOrder
+                    JOIN FETCH eventOrder.event
+                    WHERE eventOrder.customerId = :customerId
+                    """,
                     EventOrderEntity.class)
                 .setParameter("customerId", customerId)
                 .getResultStream()
@@ -75,13 +86,31 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   }
 
   private Optional<EventEntity> findReplicaEventById(UUID id) {
-    return Optional.ofNullable(readReplicaEntityManager.find(EventEntity.class, id));
+    return readReplicaEntityManager
+        .createQuery(
+            """
+            SELECT DISTINCT event
+            FROM EventEntity event
+            LEFT JOIN FETCH event.details
+            LEFT JOIN FETCH event.orders
+            WHERE event.id = :id
+            """,
+            EventEntity.class)
+        .setParameter("id", id)
+        .getResultStream()
+        .findFirst();
   }
 
   private List<Event> findReplicaEventsByStatus(EventStatusEntity status) {
     return readReplicaEntityManager
         .createQuery(
-            "SELECT event FROM EventEntity event WHERE event.status = :status",
+            """
+            SELECT DISTINCT event
+            FROM EventEntity event
+            LEFT JOIN FETCH event.details
+            LEFT JOIN FETCH event.orders
+            WHERE event.status = :status
+            """,
             EventEntity.class)
         .setParameter("status", status)
         .getResultStream()
