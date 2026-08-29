@@ -40,6 +40,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#6 - add event management specification
 - TICKET_SERVICE#6 - add event management API implementation
 - TICKET_SERVICE#7 - add backend observability
+- TICKET_SERVICE#8 - add read-replica CQRS datasource split
 
 ### Changed
 

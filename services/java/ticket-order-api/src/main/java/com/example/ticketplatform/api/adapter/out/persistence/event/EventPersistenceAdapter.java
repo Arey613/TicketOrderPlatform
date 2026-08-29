@@ -1,6 +1,6 @@
 package com.example.ticketplatform.api.adapter.out.persistence.event;
 
-import com.example.ticketplatform.api.application.port.out.EventRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import java.util.Collection;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-class EventPersistenceAdapter implements EventRepositoryPort {
+class EventPersistenceAdapter implements EventCommandRepositoryPort {
 
   private final EventJpaRepository eventRepository;
   private final EventOrderJpaRepository eventOrderRepository;
@@ -29,18 +29,6 @@ class EventPersistenceAdapter implements EventRepositoryPort {
   }
 
   @Override
-  public List<Event> findPublished() {
-    return eventRepository.findByStatus(EventStatusEntity.PUBLISHED).stream()
-        .map(eventMapper::toDomain)
-        .toList();
-  }
-
-  @Override
-  public List<Event> findByOwnerId(UUID ownerId) {
-    return eventRepository.findByOwnerId(ownerId).stream().map(eventMapper::toDomain).toList();
-  }
-
-  @Override
   public boolean existsOrderPosition(UUID eventId, int rowNumber, int placeNumber) {
     return eventOrderRepository.existsByEventIdAndRowNumberAndPlaceNumber(
         eventId, rowNumber, placeNumber);
@@ -51,13 +39,6 @@ class EventPersistenceAdapter implements EventRepositoryPort {
     return eventOrderRepository
         .saveAll(orders.stream().map(order -> toOrderEntity(customerId, order)).toList())
         .stream()
-        .map(eventMapper::toDomain)
-        .toList();
-  }
-
-  @Override
-  public List<EventOrder> findOrdersByCustomerId(UUID customerId) {
-    return eventOrderRepository.findByCustomerId(customerId).stream()
         .map(eventMapper::toDomain)
         .toList();
   }

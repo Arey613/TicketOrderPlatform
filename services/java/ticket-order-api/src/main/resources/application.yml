@@ -11,10 +11,10 @@ spring:
       url: ${SPRING_DATASOURCE_PRIMARY_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ticket_order}}
       username: ${SPRING_DATASOURCE_PRIMARY_USERNAME:${SPRING_DATASOURCE_USERNAME:ticket_order}}
       password: ${SPRING_DATASOURCE_PRIMARY_PASSWORD:${SPRING_DATASOURCE_PASSWORD:ticket_order}}
-    analytical:
-      url: ${SPRING_DATASOURCE_ANALYTICAL_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ticket_order}}
-      username: ${SPRING_DATASOURCE_ANALYTICAL_USERNAME:${SPRING_DATASOURCE_USERNAME:ticket_order}}
-      password: ${SPRING_DATASOURCE_ANALYTICAL_PASSWORD:${SPRING_DATASOURCE_PASSWORD:ticket_order}}
+    read-replica:
+      url: ${SPRING_DATASOURCE_READ_REPLICA_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ticket_order}}
+      username: ${SPRING_DATASOURCE_READ_REPLICA_USERNAME:${SPRING_DATASOURCE_USERNAME:ticket_order}}
+      password: ${SPRING_DATASOURCE_READ_REPLICA_PASSWORD:${SPRING_DATASOURCE_PASSWORD:ticket_order}}
   jpa:
     hibernate:
       ddl-auto: none

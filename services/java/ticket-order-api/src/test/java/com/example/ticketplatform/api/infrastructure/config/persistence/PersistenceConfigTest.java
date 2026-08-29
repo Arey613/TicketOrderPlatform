@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @SpringBootTest
 class PersistenceConfigTest {
@@ -16,12 +18,33 @@ class PersistenceConfigTest {
   private DataSource primaryDataSource;
 
   @Autowired
-  @Qualifier("analyticalDataSource")
-  private DataSource analyticalDataSource;
+  @Qualifier("readReplicaDataSource")
+  private DataSource readReplicaDataSource;
+
+  @Autowired
+  @Qualifier("primaryTransactionManager")
+  private PlatformTransactionManager primaryTransactionManager;
+
+  @Autowired
+  @Qualifier("readReplicaTransactionManager")
+  private PlatformTransactionManager readReplicaTransactionManager;
+
+  @Autowired
+  private ApplicationContext applicationContext;
 
   @Test
-  void exposesPrimaryAndAnalyticalDatasources() {
-    assertThat(primaryDataSource).isNotSameAs(analyticalDataSource);
+  void exposesPrimaryAndReadReplicaDatasources() {
+    assertThat(primaryDataSource).isNotSameAs(readReplicaDataSource);
+  }
+
+  @Test
+  void exposesSeparatePrimaryAndReadReplicaTransactionManagers() {
+    assertThat(primaryTransactionManager).isNotSameAs(readReplicaTransactionManager);
+  }
+
+  @Test
+  void doesNotExposeAnalyticalDatasourceBean() {
+    assertThat(applicationContext.containsBean("analyticalDataSource")).isFalse();
   }
 
   @Test

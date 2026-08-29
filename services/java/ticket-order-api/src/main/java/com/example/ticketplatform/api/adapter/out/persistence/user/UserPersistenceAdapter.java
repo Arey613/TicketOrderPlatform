@@ -1,6 +1,7 @@
 package com.example.ticketplatform.api.adapter.out.persistence.user;
 
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserAuthRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import java.util.Optional;
 import java.util.UUID;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-class UserPersistenceAdapter implements UserRepositoryPort {
+class UserPersistenceAdapter implements UserCommandRepositoryPort, UserAuthRepositoryPort {
 
   private final UserJpaRepository repository;
   private final UserMapper mapper;
@@ -29,8 +30,4 @@ class UserPersistenceAdapter implements UserRepositoryPort {
     return repository.findByEmail(email).map(mapper::toDomain);
   }
 
-  @Override
-  public boolean existsByEmail(String email) {
-    return repository.existsByEmail(email);
-  }
 }

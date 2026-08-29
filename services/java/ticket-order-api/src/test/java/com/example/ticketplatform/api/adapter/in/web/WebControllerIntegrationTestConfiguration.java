@@ -4,7 +4,9 @@ import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventCommandUseCase;
 import com.example.ticketplatform.api.application.port.in.EventQueryUseCase;
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserAuthRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserQueryRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.domain.model.event.EventStatus;
@@ -28,11 +30,6 @@ class WebControllerIntegrationTestConfiguration {
 
   @Bean
   @Primary
-  UserRepositoryPort userRepositoryPort(TestUsers testUsers) {
-    return testUsers;
-  }
-
-  @Bean
   TestUsers testUsers() {
     return new TestUsers();
   }
@@ -51,7 +48,8 @@ class WebControllerIntegrationTestConfiguration {
     return new User(id, email, passwordHash, role, enabled, TEST_TIME, TEST_TIME);
   }
 
-  static class TestUsers implements UserRepositoryPort {
+  static class TestUsers
+      implements UserCommandRepositoryPort, UserAuthRepositoryPort, UserQueryRepositoryPort {
 
     private final Map<UUID, User> usersById = new HashMap<>();
     private final Map<String, User> usersByEmail = new HashMap<>();
@@ -71,11 +69,6 @@ class WebControllerIntegrationTestConfiguration {
     @Override
     public Optional<User> findByEmail(String email) {
       return Optional.ofNullable(usersByEmail.get(email));
-    }
-
-    @Override
-    public boolean existsByEmail(String email) {
-      return usersByEmail.containsKey(email);
     }
 
     void reset(List<User> users) {

@@ -64,17 +64,14 @@ class EventPersistenceAdapterTest {
   }
 
   @Test
-  void filtersEventsByPublishedStatusAndOwner() {
+  void savesPublishedAndDraftEvents() {
     adapter.save(event(EVENT_ID, OWNER_ID, EventStatus.PUBLISHED));
     adapter.save(event(DRAFT_EVENT_ID, OTHER_OWNER_ID, EventStatus.DRAFT));
     entityManager.flush();
     entityManager.clear();
 
-    assertThat(adapter.findPublished()).extracting(Event::id).containsExactly(EVENT_ID);
-    assertThat(adapter.findByOwnerId(OWNER_ID)).extracting(Event::id).containsExactly(EVENT_ID);
-    assertThat(adapter.findByOwnerId(OTHER_OWNER_ID))
-        .extracting(Event::id)
-        .containsExactly(DRAFT_EVENT_ID);
+    assertThat(adapter.findById(EVENT_ID)).isPresent();
+    assertThat(adapter.findById(DRAFT_EVENT_ID)).isPresent();
   }
 
   @Test
@@ -89,7 +86,7 @@ class EventPersistenceAdapterTest {
     assertThat(saved).hasSize(1);
     assertThat(adapter.existsOrderPosition(EVENT_ID, 3, 7)).isTrue();
     assertThat(adapter.existsOrderPosition(EVENT_ID, 3, 8)).isFalse();
-    assertThat(adapter.findOrdersByCustomerId(CUSTOMER_ID))
+    assertThat(adapter.findOrdersByIdsAndCustomerId(List.of(EVENT_ORDER_ID), CUSTOMER_ID))
         .singleElement()
         .satisfies(
             found -> {

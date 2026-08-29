@@ -115,13 +115,13 @@ spring:
       url: jdbc:postgresql://localhost:5432/ticket_order
       username: ticket_order
       password: ticket_order
-    analytical:
+    read-replica:
       url: jdbc:postgresql://localhost:5432/ticket_order
       username: ticket_order
       password: ticket_order
 ```
 
-The primary datasource is the default operational datasource. User, event, and order persistence use the `ticket_transactional` schema. The analytical datasource is reserved for read-side schema access.
+The primary datasource is the default operational datasource. Command persistence and authentication use the `ticket_transactional` schema through primary. Query persistence uses the read-replica datasource and falls back to primary only for connection or datasource resource failures.
 
 The user persistence adapter maps the domain `User` to the transactional table:
 

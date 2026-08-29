@@ -3,7 +3,7 @@ package com.example.ticketplatform.api.adapter.in.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserAuthRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
 import java.time.Instant;
@@ -15,7 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 class DomainUserDetailsServiceTest {
 
   @Test
-  void loadsUserDetailsFromUserRepositoryPort() {
+  void loadsUserDetailsFromUserAuthRepositoryPort() {
     User user =
         new User(
             UUID.randomUUID(),
@@ -45,26 +45,11 @@ class DomainUserDetailsServiceTest {
         .isInstanceOf(UsernameNotFoundException.class);
   }
 
-  private record StubUserRepositoryPort(User user) implements UserRepositoryPort {
-
-    @Override
-    public User save(User user) {
-      return user;
-    }
-
-    @Override
-    public Optional<User> findById(UUID id) {
-      return Optional.ofNullable(user);
-    }
+  private record StubUserRepositoryPort(User user) implements UserAuthRepositoryPort {
 
     @Override
     public Optional<User> findByEmail(String email) {
       return Optional.ofNullable(user).filter(value -> value.email().equals(email));
-    }
-
-    @Override
-    public boolean existsByEmail(String email) {
-      return findByEmail(email).isPresent();
     }
   }
 }

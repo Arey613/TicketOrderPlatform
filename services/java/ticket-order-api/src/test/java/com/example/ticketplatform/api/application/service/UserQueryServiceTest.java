@@ -3,7 +3,7 @@ package com.example.ticketplatform.api.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserQueryRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
 import java.time.Instant;
@@ -45,7 +45,7 @@ class UserQueryServiceTest {
     assertThatThrownBy(() -> service.getUser(USER_ID)).isInstanceOf(NoSuchElementException.class);
   }
 
-  private static class TestUserRepositoryPort implements UserRepositoryPort {
+  private static class TestUserRepositoryPort implements UserQueryRepositoryPort {
 
     private final Map<UUID, User> usersById = new HashMap<>();
 
@@ -64,12 +64,6 @@ class UserQueryServiceTest {
     }
 
     @Override
-    public User save(User user) {
-      usersById.put(user.id(), user);
-      return user;
-    }
-
-    @Override
     public Optional<User> findById(UUID id) {
       return Optional.ofNullable(usersById.get(id));
     }
@@ -79,9 +73,5 @@ class UserQueryServiceTest {
       return usersById.values().stream().filter(user -> user.email().equals(email)).findFirst();
     }
 
-    @Override
-    public boolean existsByEmail(String email) {
-      return findByEmail(email).isPresent();
-    }
   }
 }

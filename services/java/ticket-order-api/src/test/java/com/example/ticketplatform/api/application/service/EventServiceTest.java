@@ -7,8 +7,9 @@ import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
-import com.example.ticketplatform.api.application.port.out.EventRepositoryPort;
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -317,6 +318,7 @@ class EventServiceTest {
   private EventService newService(TestEventRepositoryPort events, List<User> users) {
     return new EventService(
         events,
+        events,
         new TestUserRepositoryPort(users),
         Mappers.getMapper(EventApplicationMapper.class),
         Clock.fixed(TEST_TIME, ZoneOffset.UTC)::instant);
@@ -362,7 +364,7 @@ class EventServiceTest {
         .build();
   }
 
-  private static class TestUserRepositoryPort implements UserRepositoryPort {
+  private static class TestUserRepositoryPort implements UserCommandRepositoryPort {
 
     private final List<User> users;
 
@@ -380,18 +382,10 @@ class EventServiceTest {
       return users.stream().filter(user -> user.id().equals(id)).findFirst();
     }
 
-    @Override
-    public Optional<User> findByEmail(String email) {
-      return users.stream().filter(user -> user.email().equals(email)).findFirst();
-    }
-
-    @Override
-    public boolean existsByEmail(String email) {
-      return users.stream().anyMatch(user -> user.email().equals(email));
-    }
   }
 
-  private static class TestEventRepositoryPort implements EventRepositoryPort {
+  private static class TestEventRepositoryPort
+      implements EventCommandRepositoryPort, EventQueryRepositoryPort {
 
     private final List<Event> events = new ArrayList<>();
     private final List<Event> savedEvents = new ArrayList<>();

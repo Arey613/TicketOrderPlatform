@@ -1,6 +1,6 @@
 package com.example.ticketplatform.api.adapter.in.security;
 
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserAuthRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,11 +14,11 @@ import static java.lang.Boolean.TRUE;
 @RequiredArgsConstructor
 class DomainUserDetailsService implements UserDetailsService {
 
-  private final UserRepositoryPort userRepositoryPort;
+  private final UserAuthRepositoryPort userAuthRepositoryPort;
 
   @Override
   public UserDetails loadUserByUsername(String username) {
-    return userRepositoryPort
+    return userAuthRepositoryPort
         .findByEmail(username)
         .map(this::toUserDetails)
         .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
