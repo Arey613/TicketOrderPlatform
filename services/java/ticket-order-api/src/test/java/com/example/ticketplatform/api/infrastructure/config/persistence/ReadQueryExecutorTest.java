@@ -32,6 +32,23 @@ class ReadQueryExecutorTest {
   }
 
   @Test
+  void exposesReadOnlyTransactionStatusToCallbacks() {
+    CountingTransactionManager readReplicaTransactionManager = new CountingTransactionManager();
+    CountingTransactionManager primaryTransactionManager = new CountingTransactionManager();
+    ReadQueryExecutor executor =
+        new ReadQueryExecutor(
+            readReplicaTransactionManager,
+            primaryTransactionManager,
+            new SimpleMeterRegistry());
+
+    Boolean result = executor.execute(status -> status.isNewTransaction(), status -> false);
+
+    assertThat(result).isTrue();
+    assertThat(readReplicaTransactionManager.beginCount).isEqualTo(1);
+    assertThat(primaryTransactionManager.beginCount).isZero();
+  }
+
+  @Test
   void fallsBackToPrimaryWhenReadReplicaConnectionFails() {
     SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
     CountingTransactionManager readReplicaTransactionManager = new CountingTransactionManager();

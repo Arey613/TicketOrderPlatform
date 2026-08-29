@@ -13,6 +13,7 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
@@ -37,15 +38,23 @@ public class ReadQueryExecutor {
   }
 
   public <T> T execute(Supplier<T> readReplicaOperation, Supplier<T> primaryOperation) {
+    return execute(
+        status -> readReplicaOperation.get(),
+        status -> primaryOperation.get());
+  }
+
+  public <T> T execute(
+      java.util.function.Function<TransactionStatus, T> readReplicaOperation,
+      java.util.function.Function<TransactionStatus, T> primaryOperation) {
     try {
-      return readReplicaTransactionTemplate.execute(status -> readReplicaOperation.get());
+      return readReplicaTransactionTemplate.execute(readReplicaOperation::apply);
     } catch (RuntimeException exception) {
       if (!isFallbackEligible(exception)) {
         throw exception;
       }
       fallbackCounter.increment();
       log.warn("read-replica.fallback");
-      return primaryTransactionTemplate.execute(status -> primaryOperation.get());
+      return primaryTransactionTemplate.execute(primaryOperation::apply);
     }
   }
 
