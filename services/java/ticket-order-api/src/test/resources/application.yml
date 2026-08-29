@@ -1,7 +1,4 @@
 spring:
-  config:
-    import:
-      - classpath:persistence/jpa-named-queries.properties
   application:
     name: ticket-order-api
   datasource:

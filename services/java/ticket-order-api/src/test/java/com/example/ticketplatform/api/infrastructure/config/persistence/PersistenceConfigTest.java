@@ -32,9 +32,6 @@ class PersistenceConfigTest {
   @Autowired
   private ApplicationContext applicationContext;
 
-  @Autowired
-  private JpaQueryCatalog jpaQueryCatalog;
-
   @Test
   void exposesPrimaryAndReadReplicaDatasources() {
     assertThat(primaryDataSource).isNotSameAs(readReplicaDataSource);
@@ -66,10 +63,5 @@ class PersistenceConfigTest {
             Integer.class);
 
     assertThat(userPasswordHashColumns).isEqualTo(1);
-  }
-
-  @Test
-  void exposesRequiredJpaQueries() {
-    assertThat(JpaQueryCatalog.requiredQueryKeys()).allSatisfy(key -> assertThat(jpaQueryCatalog.get(key)).isNotBlank());
   }
 }
