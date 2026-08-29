@@ -3,7 +3,10 @@ server:
 
 spring:
   config:
-    import: classpath:observability-logging.yml
+    import:
+      - classpath:observability-logging.yml
+      - classpath:persistence/jpa-queries/event-queries.yml
+      - classpath:persistence/jpa-queries/user-queries.yml
   application:
     name: ticket-order-api
   datasource:
@@ -51,29 +54,6 @@ otel:
   propagators: ${OTEL_PROPAGATORS:tracecontext,baggage}
 
 ticket-order-platform:
-  jpa:
-    queries:
-      "[com.example.ticketplatform.api.adapter.out.persistence.event.EventQueryPersistenceAdapter.findPublished]": |
-        SELECT DISTINCT event
-        FROM EventEntity event
-        LEFT JOIN FETCH event.details
-        LEFT JOIN FETCH event.orders
-        WHERE event.status = :status
-      "[com.example.ticketplatform.api.adapter.out.persistence.event.EventQueryPersistenceAdapter.findByOwnerId]": |
-        SELECT DISTINCT event
-        FROM EventEntity event
-        LEFT JOIN FETCH event.details
-        LEFT JOIN FETCH event.orders
-        WHERE event.ownerId = :ownerId
-      "[com.example.ticketplatform.api.adapter.out.persistence.event.EventQueryPersistenceAdapter.findOrdersByCustomerId]": |
-        SELECT eventOrder
-        FROM EventOrderEntity eventOrder
-        JOIN FETCH eventOrder.event
-        WHERE eventOrder.customerId = :customerId
-      "[com.example.ticketplatform.api.adapter.out.persistence.user.UserQueryPersistenceAdapter.findByEmail]": |
-        SELECT u
-        FROM UserEntity u
-        WHERE u.email = :email
   observability:
     correlation:
       header-name: X-Correlation-ID

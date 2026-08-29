@@ -1,0 +1,7 @@
+ticket-order-platform:
+  jpa:
+    queries:
+      "[com.example.ticketplatform.api.adapter.out.persistence.user.UserQueryPersistenceAdapter.findByEmail]": |
+        SELECT u
+        FROM UserEntity u
+        WHERE u.email = :email
