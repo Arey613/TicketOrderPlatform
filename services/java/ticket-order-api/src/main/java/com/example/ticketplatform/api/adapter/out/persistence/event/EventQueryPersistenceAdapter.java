@@ -3,6 +3,7 @@ package com.example.ticketplatform.api.adapter.out.persistence.event;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
+import com.example.ticketplatform.api.infrastructure.config.persistence.JpaQueryCatalog;
 import com.example.ticketplatform.api.infrastructure.config.persistence.ReadQueryExecutor;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -19,9 +20,12 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   @PersistenceContext(unitName = "readReplica")
   private EntityManager readReplicaEntityManager;
 
+  @PersistenceContext(unitName = "primary")
+  private EntityManager primaryEntityManager;
+
   private final EventJpaRepository primaryEventRepository;
-  private final EventOrderJpaRepository primaryEventOrderRepository;
   private final EventMapper eventMapper;
+  private final JpaQueryCatalog jpaQueryCatalog;
   private final ReadQueryExecutor readQueryExecutor;
 
   @Override
@@ -35,10 +39,7 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   public List<Event> findPublished() {
     return readQueryExecutor.execute(
         () -> findReplicaEventsByStatus(EventStatusEntity.PUBLISHED),
-        () ->
-            primaryEventRepository.findByStatus(EventStatusEntity.PUBLISHED).stream()
-                .map(eventMapper::toDomain)
-                .toList());
+        () -> findPrimaryEventsByStatus(EventStatusEntity.PUBLISHED));
   }
 
   @Override
@@ -47,19 +48,21 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
         () ->
             readReplicaEntityManager
                 .createQuery(
-                    """
-                    SELECT DISTINCT event
-                    FROM EventEntity event
-                    LEFT JOIN FETCH event.details
-                    LEFT JOIN FETCH event.orders
-                    WHERE event.ownerId = :ownerId
-                    """,
+                    jpaQueryCatalog.get(EventQueryPersistenceAdapter.class, "findByOwnerId"),
                     EventEntity.class)
                 .setParameter("ownerId", ownerId)
                 .getResultStream()
                 .map(eventMapper::toDomain)
                 .toList(),
-        () -> primaryEventRepository.findByOwnerId(ownerId).stream().map(eventMapper::toDomain).toList());
+        () ->
+            primaryEntityManager
+                .createQuery(
+                    jpaQueryCatalog.get(EventQueryPersistenceAdapter.class, "findByOwnerId"),
+                    EventEntity.class)
+                .setParameter("ownerId", ownerId)
+                .getResultStream()
+                .map(eventMapper::toDomain)
+                .toList());
   }
 
   @Override
@@ -68,49 +71,42 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
         () ->
             readReplicaEntityManager
                 .createQuery(
-                    """
-                    SELECT eventOrder
-                    FROM EventOrderEntity eventOrder
-                    JOIN FETCH eventOrder.event
-                    WHERE eventOrder.customerId = :customerId
-                    """,
+                    jpaQueryCatalog.get(EventQueryPersistenceAdapter.class, "findOrdersByCustomerId"),
                     EventOrderEntity.class)
                 .setParameter("customerId", customerId)
                 .getResultStream()
                 .map(eventMapper::toDomain)
                 .toList(),
         () ->
-            primaryEventOrderRepository.findByCustomerId(customerId).stream()
+            primaryEntityManager
+                .createQuery(
+                    jpaQueryCatalog.get(EventQueryPersistenceAdapter.class, "findOrdersByCustomerId"),
+                    EventOrderEntity.class)
+                .setParameter("customerId", customerId)
+                .getResultStream()
                 .map(eventMapper::toDomain)
                 .toList());
   }
 
   private Optional<EventEntity> findReplicaEventById(UUID id) {
-    return readReplicaEntityManager
-        .createQuery(
-            """
-            SELECT DISTINCT event
-            FROM EventEntity event
-            LEFT JOIN FETCH event.details
-            LEFT JOIN FETCH event.orders
-            WHERE event.id = :id
-            """,
-            EventEntity.class)
-        .setParameter("id", id)
-        .getResultStream()
-        .findFirst();
+    return Optional.ofNullable(readReplicaEntityManager.find(EventEntity.class, id));
   }
 
   private List<Event> findReplicaEventsByStatus(EventStatusEntity status) {
     return readReplicaEntityManager
         .createQuery(
-            """
-            SELECT DISTINCT event
-            FROM EventEntity event
-            LEFT JOIN FETCH event.details
-            LEFT JOIN FETCH event.orders
-            WHERE event.status = :status
-            """,
+            jpaQueryCatalog.get(EventQueryPersistenceAdapter.class, "findPublished"),
+            EventEntity.class)
+        .setParameter("status", status)
+        .getResultStream()
+        .map(eventMapper::toDomain)
+        .toList();
+  }
+
+  private List<Event> findPrimaryEventsByStatus(EventStatusEntity status) {
+    return primaryEntityManager
+        .createQuery(
+            jpaQueryCatalog.get(EventQueryPersistenceAdapter.class, "findPublished"),
             EventEntity.class)
         .setParameter("status", status)
         .getResultStream()

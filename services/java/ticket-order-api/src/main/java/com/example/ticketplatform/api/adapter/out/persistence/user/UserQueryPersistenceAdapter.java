@@ -2,6 +2,7 @@ package com.example.ticketplatform.api.adapter.out.persistence.user;
 
 import com.example.ticketplatform.api.application.port.out.UserQueryRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
+import com.example.ticketplatform.api.infrastructure.config.persistence.JpaQueryCatalog;
 import com.example.ticketplatform.api.infrastructure.config.persistence.ReadQueryExecutor;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -17,8 +18,12 @@ class UserQueryPersistenceAdapter implements UserQueryRepositoryPort {
   @PersistenceContext(unitName = "readReplica")
   private EntityManager readReplicaEntityManager;
 
+  @PersistenceContext(unitName = "primary")
+  private EntityManager primaryEntityManager;
+
   private final UserJpaRepository primaryUserRepository;
   private final UserMapper userMapper;
+  private final JpaQueryCatalog jpaQueryCatalog;
   private final ReadQueryExecutor readQueryExecutor;
 
   @Override
@@ -34,12 +39,20 @@ class UserQueryPersistenceAdapter implements UserQueryRepositoryPort {
         () ->
             readReplicaEntityManager
                 .createQuery(
-                    "SELECT u FROM UserEntity u WHERE u.email = :email",
+                    jpaQueryCatalog.get(UserQueryPersistenceAdapter.class, "findByEmail"),
                     UserEntity.class)
                 .setParameter("email", email)
                 .getResultStream()
                 .findFirst()
                 .map(userMapper::toDomain),
-        () -> primaryUserRepository.findByEmail(email).map(userMapper::toDomain));
+        () ->
+            primaryEntityManager
+                .createQuery(
+                    jpaQueryCatalog.get(UserQueryPersistenceAdapter.class, "findByEmail"),
+                    UserEntity.class)
+                .setParameter("email", email)
+                .getResultStream()
+                .findFirst()
+                .map(userMapper::toDomain));
   }
 }

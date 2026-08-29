@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.hibernate.autoconfigure.HibernateProperties;
 import org.springframework.boot.hibernate.autoconfigure.HibernateSettings;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
@@ -19,6 +20,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
+@EnableConfigurationProperties(JpaQueryProperties.class)
 @EnableJpaRepositories(
     basePackages = "com.example.ticketplatform.api.adapter.out.persistence",
     entityManagerFactoryRef = "primaryEntityManagerFactory",

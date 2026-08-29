@@ -52,6 +52,29 @@ otel:
   propagators: tracecontext,baggage
 
 ticket-order-platform:
+  jpa:
+    queries:
+      "[com.example.ticketplatform.api.adapter.out.persistence.event.EventQueryPersistenceAdapter.findPublished]": |
+        SELECT DISTINCT event
+        FROM EventEntity event
+        LEFT JOIN FETCH event.details
+        LEFT JOIN FETCH event.orders
+        WHERE event.status = :status
+      "[com.example.ticketplatform.api.adapter.out.persistence.event.EventQueryPersistenceAdapter.findByOwnerId]": |
+        SELECT DISTINCT event
+        FROM EventEntity event
+        LEFT JOIN FETCH event.details
+        LEFT JOIN FETCH event.orders
+        WHERE event.ownerId = :ownerId
+      "[com.example.ticketplatform.api.adapter.out.persistence.event.EventQueryPersistenceAdapter.findOrdersByCustomerId]": |
+        SELECT eventOrder
+        FROM EventOrderEntity eventOrder
+        JOIN FETCH eventOrder.event
+        WHERE eventOrder.customerId = :customerId
+      "[com.example.ticketplatform.api.adapter.out.persistence.user.UserQueryPersistenceAdapter.findByEmail]": |
+        SELECT u
+        FROM UserEntity u
+        WHERE u.email = :email
   observability:
     correlation:
       header-name: X-Correlation-ID
