@@ -19,7 +19,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#5 - add Minikube local Kubernetes deployment
 - GLOBAL_CONFIG#6 - add formatter validation
 - BUGFIX#2 - add auth schema and role-aware UI correction spec
-- GLOBAL_CONFIG#8 - add CLAUDE.md importing AGENTS.md
+- GLOBAL_CONFIG#8 - add CLAUDE.md and module-scoped rules importing AGENTS.md files
 
 ### Changed
 
