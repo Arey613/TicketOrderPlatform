@@ -1,5 +1,8 @@
 package com.example.ticketplatform.api.adapter.out.persistence.event;
 
+import com.example.ticketplatform.api.application.port.in.PageMetadata;
+import com.example.ticketplatform.api.application.port.in.PageRequest;
+import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -9,6 +12,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -30,27 +36,26 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   }
 
   @Override
-  public List<Event> findPublished() {
+  public PageResult<Event> findPublished(PageRequest pageRequest) {
     return readQueryExecutor.execute(
         () ->
-            readReplicaEventRepository.findByStatus(EventStatusEntity.PUBLISHED).stream()
-                .map(eventMapper::toDomain)
-                .toList(),
+            toPageResult(
+                readReplicaEventRepository.findByStatus(
+                    EventStatusEntity.PUBLISHED, toPageable(pageRequest))),
         () ->
-            primaryEventRepository.findByStatus(EventStatusEntity.PUBLISHED).stream()
-                .map(eventMapper::toDomain)
-                .toList());
+            toPageResult(
+                primaryEventRepository.findByStatus(
+                    EventStatusEntity.PUBLISHED, toPageable(pageRequest))));
   }
 
   @Override
-  public List<Event> findByOwnerId(UUID ownerId) {
+  public PageResult<Event> findByOwnerId(UUID ownerId, PageRequest pageRequest) {
     return readQueryExecutor.execute(
         () ->
-            readReplicaEventRepository.findByOwnerId(ownerId).stream()
-                .map(eventMapper::toDomain)
-                .toList(),
+            toPageResult(
+                readReplicaEventRepository.findByOwnerId(ownerId, toPageable(pageRequest))),
         () ->
-            primaryEventRepository.findByOwnerId(ownerId).stream().map(eventMapper::toDomain).toList());
+            toPageResult(primaryEventRepository.findByOwnerId(ownerId, toPageable(pageRequest))));
   }
 
   @Override
@@ -87,15 +92,45 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   }
 
   @Override
-  public List<EventOrder> findOrdersByCustomerId(UUID customerId) {
+  public PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest) {
     return readQueryExecutor.execute(
         () ->
-            readReplicaEventOrderRepository.findByCustomerId(customerId).stream()
-                .map(eventMapper::toDomain)
-                .toList(),
+            toOrderPageResult(
+                readReplicaEventOrderRepository.findByCustomerId(
+                    customerId, toPageable(pageRequest))),
         () ->
-            primaryEventOrderRepository.findByCustomerId(customerId).stream()
-                .map(eventMapper::toDomain)
-                .toList());
+            toOrderPageResult(
+                primaryEventOrderRepository.findByCustomerId(customerId, toPageable(pageRequest))));
+  }
+
+  private PageResult<Event> toPageResult(Page<EventEntity> page) {
+    return new PageResult<>(
+        page.getContent().stream().map(eventMapper::toDomain).toList(),
+        PageMetadata.of(page.getNumber(), page.getSize(), page.getTotalElements()));
+  }
+
+  private PageResult<EventOrder> toOrderPageResult(Page<EventOrderEntity> page) {
+    return new PageResult<>(
+        page.getContent().stream().map(eventMapper::toDomain).toList(),
+        PageMetadata.of(page.getNumber(), page.getSize(), page.getTotalElements()));
+  }
+
+  private Pageable toPageable(PageRequest pageRequest) {
+    return org.springframework.data.domain.PageRequest.of(
+        pageRequest.page(), pageRequest.size(), toSort(pageRequest.sort()));
+  }
+
+  private Sort toSort(String sort) {
+    String[] parts = sort.split(",", 2);
+    Sort.Direction direction =
+        parts.length == 2 ? Sort.Direction.fromString(parts[1]) : Sort.Direction.ASC;
+    return Sort.by(direction, toPersistenceSortField(parts[0])).and(Sort.by(Sort.Direction.ASC, "id"));
+  }
+
+  private String toPersistenceSortField(String apiSortField) {
+    return switch (apiSortField) {
+      case "eventDate" -> "event.date";
+      default -> apiSortField;
+    };
   }
 }

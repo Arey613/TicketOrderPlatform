@@ -60,6 +60,18 @@
     summary: List event orders for the current user
     security:
       - sessionAuth: []
+    parameters:
+      - "$ref": "#/components/parameters/PageParameter"
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          default: 20
+      - "$ref": "#/components/parameters/SortParameter"
     responses:
       "200":
         description: Event orders response

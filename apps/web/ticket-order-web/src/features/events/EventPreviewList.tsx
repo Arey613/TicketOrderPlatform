@@ -9,7 +9,7 @@ import {
   listMyEventOrders,
   toEventUserMessage,
 } from '../../api/eventsClient';
-import type { EventResponse, MyEventOrderResponse } from '../../generated/api';
+import type { EventResponse, MyEventOrderResponse, PageMetadata } from '../../generated/api';
 
 type EventPreviewListProps = {
   currentUser: AuthenticatedUser | null;
@@ -21,12 +21,37 @@ type SelectedSeat = {
   place: number;
 };
 
+const EVENT_PAGE_SIZES = [5, 10, 20, 50];
+const ORDER_PAGE_SIZES = [10, 20, 50, 100];
+const DEFAULT_EVENT_PAGE: PageMetadata = {
+  number: 0,
+  size: 10,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+};
+const DEFAULT_ORDER_PAGE: PageMetadata = {
+  number: 0,
+  size: 20,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+};
+
 export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps) {
   const [events, setEvents] = useState<EventResponse[]>([]);
+  const [eventsPage, setEventsPage] = useState(DEFAULT_EVENT_PAGE);
+  const [eventPageSize, setEventPageSize] = useState(DEFAULT_EVENT_PAGE.size);
+  const [eventPageNumber, setEventPageNumber] = useState(DEFAULT_EVENT_PAGE.number);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventDetails, setEventDetails] = useState<EventResponse | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<SelectedSeat | null>(null);
   const [myOrders, setMyOrders] = useState<MyEventOrderResponse[]>([]);
+  const [ordersPage, setOrdersPage] = useState(DEFAULT_ORDER_PAGE);
+  const [ordersPageSize, setOrdersPageSize] = useState(DEFAULT_ORDER_PAGE.size);
+  const [ordersPageNumber, setOrdersPageNumber] = useState(DEFAULT_ORDER_PAGE.number);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
@@ -44,8 +69,8 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
   const defaultPlaceType = selectedEvent?.details.placeTypes?.[0]?.name ?? 'STANDARD';
 
   useEffect(() => {
-    void loadEvents();
-  }, []);
+    void loadEvents(eventPageNumber, eventPageSize);
+  }, [eventPageNumber, eventPageSize]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -53,17 +78,28 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
       return;
     }
 
-    void loadMyOrders();
-  }, [currentUser]);
+    void loadMyOrders(ordersPageNumber, ordersPageSize);
+  }, [currentUser, ordersPageNumber, ordersPageSize]);
 
-  async function loadEvents() {
+  async function loadEvents(page: number = eventPageNumber, size: number = eventPageSize) {
     setIsLoadingEvents(true);
     setMessage('');
 
     try {
-      const loadedEvents = await listEvents();
-      setEvents(loadedEvents);
-      setSelectedEventId((current) => current ?? loadedEvents[0]?.eventId ?? null);
+      const response = await listEvents({ page, size });
+      setEvents(response.items);
+      setEventsPage(response.page);
+      setSelectedEventId((current) =>
+        response.items.some((event) => event.eventId === current)
+          ? current
+          : (response.items[0]?.eventId ?? null),
+      );
+      setEventDetails((current) =>
+        current && response.items.some((event) => event.eventId === current.eventId)
+          ? current
+          : null,
+      );
+      setSelectedSeat(null);
     } catch (error) {
       setMessage(await toEventUserMessage(error));
     } finally {
@@ -87,13 +123,16 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
     }
   }
 
-  async function loadMyOrders() {
+  async function loadMyOrders(page: number = ordersPageNumber, size: number = ordersPageSize) {
     setIsLoadingOrders(true);
 
     try {
-      setMyOrders(await listMyEventOrders());
+      const response = await listMyEventOrders({ page, size });
+      setMyOrders(response.items);
+      setOrdersPage(response.page);
     } catch {
       setMyOrders([]);
+      setOrdersPage(DEFAULT_ORDER_PAGE);
     } finally {
       setIsLoadingOrders(false);
     }
@@ -121,7 +160,8 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
       });
       setSelectedSeat(null);
       await loadEventDetails(selectedEvent.eventId);
-      await loadMyOrders();
+      setOrdersPageNumber(0);
+      await loadMyOrders(0, ordersPageSize);
       setMessage('Place booked.');
     } catch (error) {
       setMessage(await toEventUserMessage(error));
@@ -150,7 +190,7 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
         </div>
         <button
           className="flex w-fit items-center gap-2 rounded-md border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-800 transition hover:bg-teal-50 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
-          onClick={loadEvents}
+          onClick={() => loadEvents()}
           type="button"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -166,6 +206,19 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <PaginationToolbar
+            label="Events per page"
+            page={eventsPage}
+            pageSize={eventPageSize}
+            pageSizes={EVENT_PAGE_SIZES}
+            onPageSizeChange={(size) => {
+              setEventPageSize(size);
+              setEventPageNumber(0);
+            }}
+            onPrevious={() => setEventPageNumber((page) => Math.max(0, page - 1))}
+            onNext={() => setEventPageNumber((page) => page + 1)}
+          />
+
           {isLoadingEvents && (
             <p className="p-5 text-sm font-semibold text-slate-600">Loading events...</p>
           )}
@@ -331,11 +384,25 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
             <h3 className="text-lg font-black text-slate-950">My orders</h3>
             <button
               className="rounded-md border border-slate-300 px-3 py-2 text-sm font-bold text-slate-800 transition hover:border-teal-700 hover:text-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
-              onClick={loadMyOrders}
+              onClick={() => loadMyOrders()}
               type="button"
             >
               Refresh
             </button>
+          </div>
+          <div className="mt-4">
+            <PaginationToolbar
+              label="Orders per page"
+              page={ordersPage}
+              pageSize={ordersPageSize}
+              pageSizes={ORDER_PAGE_SIZES}
+              onPageSizeChange={(size) => {
+                setOrdersPageSize(size);
+                setOrdersPageNumber(0);
+              }}
+              onPrevious={() => setOrdersPageNumber((page) => Math.max(0, page - 1))}
+              onNext={() => setOrdersPageNumber((page) => page + 1)}
+            />
           </div>
 
           {isLoadingOrders ? (
@@ -370,6 +437,75 @@ function Legend({ color, text }: { color: string; text: string }) {
       <span className={clsx('h-3 w-3 rounded-sm border', color)} aria-hidden="true" />
       {text}
     </span>
+  );
+}
+
+type PaginationToolbarProps = {
+  label: string;
+  page: PageMetadata;
+  pageSize: number;
+  pageSizes: number[];
+  onPageSizeChange: (size: number) => void;
+  onPrevious: () => void;
+  onNext: () => void;
+};
+
+function PaginationToolbar({
+  label,
+  page,
+  pageSize,
+  pageSizes,
+  onPageSizeChange,
+  onPrevious,
+  onNext,
+}: PaginationToolbarProps) {
+  const pageCount = Math.max(page.totalPages, 1);
+  const currentPage = Math.min(page.number + 1, pageCount);
+  const hasMultiplePages = page.totalPages > 1;
+
+  return (
+    <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <label className="flex items-center gap-2 font-semibold text-slate-700">
+        <span>{label}</span>
+        <select
+          className="rounded-md border border-slate-300 bg-white px-2 py-1 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700"
+          value={pageSize}
+          onChange={(event) => onPageSizeChange(Number(event.target.value))}
+        >
+          {pageSizes.map((size) => (
+            <option value={size} key={size}>
+              {size}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {hasMultiplePages && (
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-slate-600">
+            Page {currentPage} of {pageCount}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-bold text-slate-800 transition hover:border-teal-700 hover:text-teal-800 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
+              disabled={page.first}
+              onClick={onPrevious}
+              type="button"
+            >
+              Previous
+            </button>
+            <button
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-bold text-slate-800 transition hover:border-teal-700 hover:text-teal-800 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2"
+              disabled={page.last}
+              onClick={onNext}
+              type="button"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

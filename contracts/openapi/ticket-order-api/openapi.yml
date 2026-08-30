@@ -145,6 +145,17 @@ paths:
           required: false
           schema:
             "$ref": "#/components/schemas/EventListScope"
+        - "$ref": "#/components/parameters/PageParameter"
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 10
+        - "$ref": "#/components/parameters/SortParameter"
       responses:
         "200":
           description: Events response
@@ -217,6 +228,18 @@ paths:
       tags:
         - Events
       summary: List published events for public browsing
+      parameters:
+        - "$ref": "#/components/parameters/PageParameter"
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 10
+        - "$ref": "#/components/parameters/SortParameter"
       responses:
         "200":
           description: Published events response
@@ -354,6 +377,18 @@ paths:
       summary: List event orders for the current user
       security:
         - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/PageParameter"
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+        - "$ref": "#/components/parameters/SortParameter"
       responses:
         "200":
           description: Event orders response
@@ -372,6 +407,22 @@ components:
       schema:
         type: string
         format: uuid
+    PageParameter:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    SortParameter:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        pattern: "^[A-Za-z][A-Za-z0-9]*(,(asc|desc))?$"
   responses:
     BadRequest:
       description: Request was invalid
@@ -509,6 +560,37 @@ components:
       enum:
         - published
         - mine
+    PageMetadata:
+      type: object
+      required:
+        - number
+        - size
+        - totalElements
+        - totalPages
+        - first
+        - last
+      properties:
+        number:
+          type: integer
+          format: int32
+          minimum: 0
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+        totalPages:
+          type: integer
+          format: int32
+          minimum: 0
+        first:
+          type: boolean
+        last:
+          type: boolean
     EventDetailsRequest:
       type: object
       required:
@@ -688,12 +770,15 @@ components:
     EventListResponse:
       type: object
       required:
-        - events
+        - items
+        - page
       properties:
-        events:
+        items:
           type: array
           items:
             "$ref": "#/components/schemas/EventResponse"
+        page:
+          "$ref": "#/components/schemas/PageMetadata"
     CreateEventOrderItem:
       type: object
       required:
@@ -812,12 +897,15 @@ components:
     MyEventOrdersResponse:
       type: object
       required:
-        - orders
+        - items
+        - page
       properties:
-        orders:
+        items:
           type: array
           items:
             "$ref": "#/components/schemas/MyEventOrderResponse"
+        page:
+          "$ref": "#/components/schemas/PageMetadata"
     UserResponse:
       type: object
       required:

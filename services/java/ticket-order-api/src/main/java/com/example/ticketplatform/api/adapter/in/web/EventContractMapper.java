@@ -3,6 +3,7 @@ package com.example.ticketplatform.api.adapter.in.web;
 import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
+import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
@@ -19,6 +20,7 @@ import com.example.ticketplatform.api.generated.contract.model.EventListResponse
 import com.example.ticketplatform.api.generated.contract.model.EventResponse;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrderResponse;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrdersResponse;
+import com.example.ticketplatform.api.generated.contract.model.PageMetadata;
 import com.example.ticketplatform.api.generated.contract.model.UpdateEventRequest;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -70,17 +72,36 @@ interface EventContractMapper {
   @Mapping(target = "place", source = "placeNumber")
   MyEventOrderResponse toMyOrderResponse(EventOrder order);
 
-  default EventListResponse toListResponse(List<Event> events) {
-    return new EventListResponse().events(events.stream().map(this::toResponse).toList());
+  @Named("toListResponse")
+  default EventListResponse toListResponse(PageResult<Event> events) {
+    return new EventListResponse()
+        .items(events.items().stream().map(this::toResponse).toList())
+        .page(toPageMetadata(events.page()));
   }
 
-  default MyEventOrdersResponse toMyOrdersResponse(List<EventOrder> orders) {
-    return new MyEventOrdersResponse().orders(orders.stream().map(this::toMyOrderResponse).toList());
+  @Named("toMyOrdersResponse")
+  default MyEventOrdersResponse toMyOrdersResponse(PageResult<EventOrder> orders) {
+    return new MyEventOrdersResponse()
+        .items(orders.items().stream().map(this::toMyOrderResponse).toList())
+        .page(toPageMetadata(orders.page()));
   }
 
+  @Named("toCreatedOrdersResponse")
   default CreatedEventOrdersResponse toCreatedOrdersResponse(List<EventOrder> orders) {
     return new CreatedEventOrdersResponse()
         .orders(orders.stream().map(this::toCreatedOrderResponse).toList());
+  }
+
+  @Named("toPageMetadata")
+  default PageMetadata toPageMetadata(
+      com.example.ticketplatform.api.application.port.in.PageMetadata page) {
+    return new PageMetadata()
+        .number(page.number())
+        .size(page.size())
+        .totalElements(page.totalElements())
+        .totalPages(page.totalPages())
+        .first(page.first())
+        .last(page.last());
   }
 
   @Named("toPublicBookedPlaceResponses")

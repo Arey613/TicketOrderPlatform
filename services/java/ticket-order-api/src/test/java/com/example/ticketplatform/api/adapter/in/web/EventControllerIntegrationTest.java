@@ -105,12 +105,16 @@ class EventControllerIntegrationTest {
     mockMvc
         .perform(get("/events").session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.events[0].eventId").value(EVENT_ID.toString()))
-        .andExpect(jsonPath("$.events[0].ordersTaken").value(1))
-        .andExpect(jsonPath("$.events[0].takenPlaces[0].row").value(3))
-        .andExpect(jsonPath("$.events[0].takenPlaces[0].place").value(7))
-        .andExpect(jsonPath("$.events[0].takenPlaces[0].isMine").value(true))
-        .andExpect(jsonPath("$.events[0].takenPlaces[0].placeType").doesNotExist());
+        .andExpect(jsonPath("$.items[0].eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.items[0].ordersTaken").value(1))
+        .andExpect(jsonPath("$.items[0].takenPlaces[0].row").value(3))
+        .andExpect(jsonPath("$.items[0].takenPlaces[0].place").value(7))
+        .andExpect(jsonPath("$.items[0].takenPlaces[0].isMine").value(true))
+        .andExpect(jsonPath("$.items[0].takenPlaces[0].placeType").doesNotExist())
+        .andExpect(jsonPath("$.page.number").value(0))
+        .andExpect(jsonPath("$.page.size").value(10))
+        .andExpect(jsonPath("$.page.totalElements").value(1))
+        .andExpect(jsonPath("$.page.totalPages").value(1));
   }
 
   @Test
@@ -152,7 +156,17 @@ class EventControllerIntegrationTest {
                 .queryParam("scope", "PUBLISHED")
                 .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.events[0].eventId").value(EVENT_ID.toString()));
+        .andExpect(jsonPath("$.items[0].eventId").value(EVENT_ID.toString()));
+  }
+
+  @Test
+  void rejectsUnsupportedEventSort() throws Exception {
+    mockMvc
+        .perform(
+            get("/events")
+                .queryParam("sort", "reservationDate,desc")
+                .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -238,11 +252,15 @@ class EventControllerIntegrationTest {
             get("/events/orders/mine")
                 .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.orders[0].eventOrderId").value(EVENT_ORDER_ID.toString()))
-        .andExpect(jsonPath("$.orders[0].eventName").value("Published concert"))
-        .andExpect(jsonPath("$.orders[0].row").value(3))
-        .andExpect(jsonPath("$.orders[0].place").value(7))
-        .andExpect(jsonPath("$.orders[0].placeType").value("VIP"));
+        .andExpect(jsonPath("$.items[0].eventOrderId").value(EVENT_ORDER_ID.toString()))
+        .andExpect(jsonPath("$.items[0].eventName").value("Published concert"))
+        .andExpect(jsonPath("$.items[0].row").value(3))
+        .andExpect(jsonPath("$.items[0].place").value(7))
+        .andExpect(jsonPath("$.items[0].placeType").value("VIP"))
+        .andExpect(jsonPath("$.page.number").value(0))
+        .andExpect(jsonPath("$.page.size").value(20))
+        .andExpect(jsonPath("$.page.totalElements").value(1))
+        .andExpect(jsonPath("$.page.totalPages").value(1));
   }
 
   @Test

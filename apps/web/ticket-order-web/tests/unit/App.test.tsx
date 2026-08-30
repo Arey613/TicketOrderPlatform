@@ -81,6 +81,15 @@ const myEventOrder = {
   reservationDate: new Date('2026-08-24T10:00:00.000Z'),
 } as const;
 
+const pageMetadata = (size: number, totalElements: number) => ({
+  number: 0,
+  size,
+  totalElements,
+  totalPages: totalElements === 0 ? 0 : 1,
+  first: true,
+  last: true,
+});
+
 describe('App', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -94,9 +103,15 @@ describe('App', () => {
     mockedGetEvent.mockReset();
     mockedGetEvent.mockResolvedValue(publishedEvent);
     mockedListEvents.mockReset();
-    mockedListEvents.mockResolvedValue([publishedEvent]);
+    mockedListEvents.mockResolvedValue({
+      items: [publishedEvent],
+      page: pageMetadata(10, 1),
+    });
     mockedListMyEventOrders.mockReset();
-    mockedListMyEventOrders.mockResolvedValue([]);
+    mockedListMyEventOrders.mockResolvedValue({
+      items: [],
+      page: pageMetadata(20, 0),
+    });
   });
 
   it('renders the public ticketing page with published events', async () => {
@@ -133,7 +148,10 @@ describe('App', () => {
     const user = userEvent.setup();
     localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
     mockedGetEvent.mockResolvedValue(bookedEvent);
-    mockedListMyEventOrders.mockResolvedValue([myEventOrder]);
+    mockedListMyEventOrders.mockResolvedValue({
+      items: [myEventOrder],
+      page: pageMetadata(20, 1),
+    });
 
     render(<App />);
 
