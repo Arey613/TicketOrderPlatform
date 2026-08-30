@@ -2,7 +2,7 @@ package com.example.ticketplatform.api.application.service;
 
 import com.example.ticketplatform.api.application.port.in.RegisterUserCommand;
 import com.example.ticketplatform.api.application.port.in.UserCommandUseCase;
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
 import java.time.Instant;
@@ -17,7 +17,7 @@ import static java.util.UUID.randomUUID;
 @RequiredArgsConstructor
 public class RegistrationUserService implements UserCommandUseCase {
 
-  private final UserRepositoryPort userRepositoryPort;
+  private final UserCommandRepositoryPort userCommandRepositoryPort;
   private final UserApplicationMapper userApplicationMapper;
   private final Supplier<Instant> currentTimeSupplier;
 
@@ -26,6 +26,6 @@ public class RegistrationUserService implements UserCommandUseCase {
     Instant createdAt = currentTimeSupplier.get();
     User newUser =
         userApplicationMapper.toUser(command, randomUUID(), UserRole.CUSTOMER, TRUE, createdAt);
-    return userRepositoryPort.save(newUser);
+    return userCommandRepositoryPort.save(newUser);
   }
 }

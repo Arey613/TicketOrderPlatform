@@ -5,8 +5,9 @@ import com.example.ticketplatform.api.application.port.in.CreateEventOrderComman
 import com.example.ticketplatform.api.application.port.in.EventCommandUseCase;
 import com.example.ticketplatform.api.application.port.in.EventQueryUseCase;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
-import com.example.ticketplatform.api.application.port.out.EventRepositoryPort;
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.domain.model.event.EventStatus;
@@ -26,8 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 class EventService implements EventCommandUseCase, EventQueryUseCase {
 
-  private final EventRepositoryPort eventRepositoryPort;
-  private final UserRepositoryPort userRepositoryPort;
+  private final EventCommandRepositoryPort eventCommandRepositoryPort;
+  private final EventQueryRepositoryPort eventQueryRepositoryPort;
+  private final UserCommandRepositoryPort userCommandRepositoryPort;
   private final EventApplicationMapper eventApplicationMapper;
   private final Supplier<Instant> currentTimeSupplier;
 
@@ -46,7 +48,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
             List.of(),
             now);
 
-    return eventRepositoryPort.save(event);
+    return eventCommandRepositoryPort.save(event);
   }
 
   @Override
@@ -58,7 +60,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
     }
     Instant now = currentTimeSupplier.get();
 
-    return eventRepositoryPort.save(
+    return eventCommandRepositoryPort.save(
         eventApplicationMapper.toUpdatedEvent(
             event,
             command,
@@ -97,14 +99,14 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
       String positionKey = command.eventId() + ":" + command.rowNumber() + ":" + command.placeNumber();
 
       if (!positions.add(positionKey)
-          || eventRepositoryPort.existsOrderPosition(
+          || eventQueryRepositoryPort.existsOrderPosition(
               event.id(), command.rowNumber(), command.placeNumber())) {
         throw new IllegalStateException("Event place is already reserved");
       }
     }
 
     Instant now = currentTimeSupplier.get();
-    return eventRepositoryPort.saveOrders(
+    return eventCommandRepositoryPort.saveOrders(
         userId,
         commands.stream()
             .map(
@@ -116,22 +118,21 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   @Override
   @Transactional
   public int deleteEventOrders(UUID userId, List<UUID> eventOrderIds) {
-    List<EventOrder> orders = eventRepositoryPort.findOrdersByIds(eventOrderIds);
+    List<EventOrder> orders = eventQueryRepositoryPort.findOrdersByIds(eventOrderIds);
     if (orders.size() != eventOrderIds.size()) {
       throw new NoSuchElementException("At least one event order was not found");
     }
-    if (eventRepositoryPort.findOrdersByIdsAndCustomerId(eventOrderIds, userId).size()
+    if (eventQueryRepositoryPort.findOrdersByIdsAndCustomerId(eventOrderIds, userId).size()
         != eventOrderIds.size()) {
       throw new SecurityException("User cannot delete at least one event order");
     }
-    return Math.toIntExact(eventRepositoryPort.deleteOrders(eventOrderIds));
+    return Math.toIntExact(eventCommandRepositoryPort.deleteOrders(eventOrderIds));
   }
 
   @Override
-  @Transactional(readOnly = true)
   public Event getEvent(UUID eventId, UUID userId) {
     Event event =
-        eventRepositoryPort
+        eventQueryRepositoryPort
             .findById(eventId)
             .orElseThrow(() -> new NoSuchElementException("Event not found: " + eventId));
     if (event.status() == EventStatus.PUBLISHED
@@ -142,32 +143,29 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   }
 
   @Override
-  @Transactional(readOnly = true)
   public List<Event> listPublishedEvents() {
-    return eventRepositoryPort.findPublished();
+    return eventQueryRepositoryPort.findPublished();
   }
 
   @Override
-  @Transactional(readOnly = true)
   public List<Event> listOwnerEvents(UUID ownerId) {
-    return eventRepositoryPort.findByOwnerId(ownerId);
+    return eventQueryRepositoryPort.findByOwnerId(ownerId);
   }
 
   @Override
-  @Transactional(readOnly = true)
   public List<EventOrder> listUserOrders(UUID userId) {
-    return eventRepositoryPort.findOrdersByCustomerId(userId);
+    return eventQueryRepositoryPort.findOrdersByCustomerId(userId);
   }
 
   private Event updateStatus(Event event, EventStatus status) {
-    return eventRepositoryPort.save(
+    return eventCommandRepositoryPort.save(
         eventApplicationMapper.toEventWithStatus(event, status, currentTimeSupplier.get()));
   }
 
   private Event getOwnedEvent(UUID eventId, UUID userId) {
     User user = getUser(userId);
     Event event =
-        eventRepositoryPort
+        eventCommandRepositoryPort
             .findById(eventId)
             .orElseThrow(() -> new NoSuchElementException("Event not found: " + eventId));
     if (!event.ownerId().equals(user.id())) {
@@ -178,7 +176,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
 
   private Event getEventForOrdering(UUID eventId) {
     Event event =
-        eventRepositoryPort
+        eventCommandRepositoryPort
             .findById(eventId)
             .orElseThrow(() -> new NoSuchElementException("Event not found: " + eventId));
     if (event.status() != EventStatus.PUBLISHED) {
@@ -188,7 +186,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   }
 
   private User getUser(UUID userId) {
-    return userRepositoryPort
+    return userCommandRepositoryPort
         .findById(userId)
         .orElseThrow(() -> new NoSuchElementException("User not found: " + userId));
   }

@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.ticketplatform.api.application.port.in.LoginCommand;
 import com.example.ticketplatform.api.application.port.out.PasswordMatcherPort;
-import com.example.ticketplatform.api.application.port.out.UserRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.UserAuthRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
 import java.time.Instant;
@@ -73,7 +73,7 @@ class LoginServiceTest {
         USER_ID, email, "{noop}secret", UserRole.CUSTOMER, enabled, TEST_TIME, TEST_TIME);
   }
 
-  private static class TestUserRepositoryPort implements UserRepositoryPort {
+  private static class TestUserRepositoryPort implements UserAuthRepositoryPort {
 
     private final Map<String, User> usersByEmail = new HashMap<>();
 
@@ -92,25 +92,10 @@ class LoginServiceTest {
     }
 
     @Override
-    public User save(User user) {
-      usersByEmail.put(user.email(), user);
-      return user;
-    }
-
-    @Override
-    public Optional<User> findById(UUID id) {
-      return usersByEmail.values().stream().filter(user -> user.id().equals(id)).findFirst();
-    }
-
-    @Override
     public Optional<User> findByEmail(String email) {
       return Optional.ofNullable(usersByEmail.get(email));
     }
 
-    @Override
-    public boolean existsByEmail(String email) {
-      return usersByEmail.containsKey(email);
-    }
   }
 
   private static class TestPasswordMatcherPort implements PasswordMatcherPort {

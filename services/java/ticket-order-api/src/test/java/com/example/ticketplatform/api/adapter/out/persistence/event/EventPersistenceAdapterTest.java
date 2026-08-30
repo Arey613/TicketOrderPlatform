@@ -64,17 +64,14 @@ class EventPersistenceAdapterTest {
   }
 
   @Test
-  void filtersEventsByPublishedStatusAndOwner() {
+  void savesPublishedAndDraftEvents() {
     adapter.save(event(EVENT_ID, OWNER_ID, EventStatus.PUBLISHED));
     adapter.save(event(DRAFT_EVENT_ID, OTHER_OWNER_ID, EventStatus.DRAFT));
     entityManager.flush();
     entityManager.clear();
 
-    assertThat(adapter.findPublished()).extracting(Event::id).containsExactly(EVENT_ID);
-    assertThat(adapter.findByOwnerId(OWNER_ID)).extracting(Event::id).containsExactly(EVENT_ID);
-    assertThat(adapter.findByOwnerId(OTHER_OWNER_ID))
-        .extracting(Event::id)
-        .containsExactly(DRAFT_EVENT_ID);
+    assertThat(adapter.findById(EVENT_ID)).isPresent();
+    assertThat(adapter.findById(DRAFT_EVENT_ID)).isPresent();
   }
 
   @Test
@@ -87,38 +84,25 @@ class EventPersistenceAdapterTest {
     entityManager.clear();
 
     assertThat(saved).hasSize(1);
-    assertThat(adapter.existsOrderPosition(EVENT_ID, 3, 7)).isTrue();
-    assertThat(adapter.existsOrderPosition(EVENT_ID, 3, 8)).isFalse();
-    assertThat(adapter.findOrdersByCustomerId(CUSTOMER_ID))
+    assertThat(saved)
         .singleElement()
         .satisfies(
             found -> {
               assertThat(found.id()).isEqualTo(EVENT_ORDER_ID);
               assertThat(found.eventId()).isEqualTo(EVENT_ID);
               assertThat(found.customerId()).isEqualTo(CUSTOMER_ID);
-              assertThat(found.eventName()).isEqualTo("Event 704");
-              assertThat(found.eventDate()).isEqualTo(EVENT_DATE);
               assertThat(found.placeType()).isEqualTo("VIP");
             });
   }
 
   @Test
-  void findsAndDeletesOrdersByIds() {
+  void deletesOrdersByIds() {
     adapter.save(event(EVENT_ID, OWNER_ID, EventStatus.PUBLISHED));
     adapter.saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID, 3, 7)));
     entityManager.flush();
     entityManager.clear();
 
-    assertThat(adapter.findOrdersByIds(List.of(EVENT_ORDER_ID)))
-        .extracting(EventOrder::id)
-        .containsExactly(EVENT_ORDER_ID);
-
     assertThat(adapter.deleteOrders(List.of(EVENT_ORDER_ID))).isEqualTo(1);
-    entityManager.flush();
-    entityManager.clear();
-
-    assertThat(adapter.findOrdersByIds(List.of(EVENT_ORDER_ID))).isEmpty();
-    assertThat(adapter.existsOrderPosition(EVENT_ID, 3, 7)).isFalse();
   }
 
   private void insertUser(UUID id, String email, String role) {

@@ -13,6 +13,7 @@ import org.springframework.boot.jpa.autoconfigure.JpaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -21,6 +22,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Configuration
 @EnableJpaRepositories(
     basePackages = "com.example.ticketplatform.api.adapter.out.persistence",
+    excludeFilters = @Filter(ReadReplicaRepository.class),
     entityManagerFactoryRef = "primaryEntityManagerFactory",
     transactionManagerRef = "primaryTransactionManager")
 class PersistenceConfig {
@@ -41,15 +43,15 @@ class PersistenceConfig {
   }
 
   @Bean
-  @ConfigurationProperties("spring.datasource.analytical")
-  DataSourceProperties analyticalDataSourceProperties() {
+  @ConfigurationProperties("spring.datasource.read-replica")
+  DataSourceProperties readReplicaDataSourceProperties() {
     return new DataSourceProperties();
   }
 
   @Bean
-  @ConfigurationProperties("spring.datasource.analytical.hikari")
-  HikariDataSource analyticalDataSource(
-      @Qualifier("analyticalDataSourceProperties") DataSourceProperties properties) {
+  @ConfigurationProperties("spring.datasource.read-replica.hikari")
+  HikariDataSource readReplicaDataSource(
+      @Qualifier("readReplicaDataSourceProperties") DataSourceProperties properties) {
     return properties.initializeDataSourceBuilder().type(HikariDataSource.class).build();
   }
 
@@ -74,6 +76,28 @@ class PersistenceConfig {
   @Primary
   PlatformTransactionManager primaryTransactionManager(
       @Qualifier("primaryEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+    return new JpaTransactionManager(entityManagerFactory);
+  }
+
+  @Bean
+  LocalContainerEntityManagerFactoryBean readReplicaEntityManagerFactory(
+      EntityManagerFactoryBuilder builder,
+      @Qualifier("readReplicaDataSource") DataSource dataSource,
+      JpaProperties jpaProperties,
+      HibernateProperties hibernateProperties) {
+    return builder
+        .dataSource(dataSource)
+        .packages("com.example.ticketplatform.api.adapter.out.persistence")
+        .persistenceUnit("readReplica")
+        .properties(
+            hibernateProperties.determineHibernateProperties(
+                jpaProperties.getProperties(), new HibernateSettings()))
+        .build();
+  }
+
+  @Bean
+  PlatformTransactionManager readReplicaTransactionManager(
+      @Qualifier("readReplicaEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
     return new JpaTransactionManager(entityManagerFactory);
   }
 }

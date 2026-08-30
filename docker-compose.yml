@@ -61,9 +61,9 @@ services:
       SPRING_DATASOURCE_PRIMARY_URL: jdbc:postgresql://postgres:5432/ticket_order
       SPRING_DATASOURCE_PRIMARY_USERNAME: ticket_order
       SPRING_DATASOURCE_PRIMARY_PASSWORD: ticket_order
-      SPRING_DATASOURCE_ANALYTICAL_URL: jdbc:postgresql://postgres:5432/ticket_order
-      SPRING_DATASOURCE_ANALYTICAL_USERNAME: ticket_order
-      SPRING_DATASOURCE_ANALYTICAL_PASSWORD: ticket_order
+      SPRING_DATASOURCE_READ_REPLICA_URL: jdbc:postgresql://postgres:5432/ticket_order
+      SPRING_DATASOURCE_READ_REPLICA_USERNAME: ticket_order
+      SPRING_DATASOURCE_READ_REPLICA_PASSWORD: ticket_order
     depends_on:
       transactional-migrations:
         condition: service_completed_successfully
