@@ -11,9 +11,9 @@ interface EventOrderJpaRepository extends JpaRepository<EventOrderEntity, UUID> 
 
   List<EventOrderEntity> findByCustomerId(UUID customerId);
 
-  List<EventOrderEntity> findByIdIn(Collection<UUID> ids);
+  long countByIdIn(Collection<UUID> ids);
 
-  List<EventOrderEntity> findByIdInAndCustomerId(Collection<UUID> ids, UUID customerId);
+  long countByIdInAndCustomerId(Collection<UUID> ids, UUID customerId);
 
   long deleteByIdIn(Collection<UUID> ids);
 }

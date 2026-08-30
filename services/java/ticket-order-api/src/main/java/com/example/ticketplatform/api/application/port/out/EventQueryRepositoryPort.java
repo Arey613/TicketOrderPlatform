@@ -17,9 +17,9 @@ public interface EventQueryRepositoryPort {
 
   boolean existsOrderPosition(UUID eventId, int rowNumber, int placeNumber);
 
-  List<EventOrder> findOrdersByIds(Collection<UUID> ids);
+  long countOrdersByIds(Collection<UUID> ids);
 
-  List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId);
+  long countOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId);
 
   List<EventOrder> findOrdersByCustomerId(UUID customerId);
 }

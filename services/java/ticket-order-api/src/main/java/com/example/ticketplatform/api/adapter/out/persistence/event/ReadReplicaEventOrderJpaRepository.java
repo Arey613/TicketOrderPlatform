@@ -13,7 +13,7 @@ interface ReadReplicaEventOrderJpaRepository extends JpaRepository<EventOrderEnt
 
   boolean existsByEventIdAndRowNumberAndPlaceNumber(UUID eventId, int rowNumber, int placeNumber);
 
-  List<EventOrderEntity> findByIdIn(Collection<UUID> ids);
+  long countByIdIn(Collection<UUID> ids);
 
-  List<EventOrderEntity> findByIdInAndCustomerId(Collection<UUID> ids, UUID customerId);
+  long countByIdInAndCustomerId(Collection<UUID> ids, UUID customerId);
 }
