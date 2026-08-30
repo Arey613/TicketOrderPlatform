@@ -29,28 +29,10 @@ class EventPersistenceAdapter implements EventCommandRepositoryPort {
   }
 
   @Override
-  public boolean existsOrderPosition(UUID eventId, int rowNumber, int placeNumber) {
-    return eventOrderRepository.existsByEventIdAndRowNumberAndPlaceNumber(
-        eventId, rowNumber, placeNumber);
-  }
-
-  @Override
   public List<EventOrder> saveOrders(UUID customerId, List<EventOrder> orders) {
     return eventOrderRepository
         .saveAll(orders.stream().map(order -> toOrderEntity(customerId, order)).toList())
         .stream()
-        .map(eventMapper::toDomain)
-        .toList();
-  }
-
-  @Override
-  public List<EventOrder> findOrdersByIds(Collection<UUID> ids) {
-    return eventOrderRepository.findByIdIn(ids).stream().map(eventMapper::toDomain).toList();
-  }
-
-  @Override
-  public List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId) {
-    return eventOrderRepository.findByIdInAndCustomerId(ids, customerId).stream()
         .map(eventMapper::toDomain)
         .toList();
   }

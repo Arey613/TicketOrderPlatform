@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
@@ -46,6 +47,9 @@ public class ReadQueryExecutor {
   public <T> T execute(
       java.util.function.Function<TransactionStatus, T> readReplicaOperation,
       java.util.function.Function<TransactionStatus, T> primaryOperation) {
+    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+      return primaryTransactionTemplate.execute(primaryOperation::apply);
+    }
     try {
       return readReplicaTransactionTemplate.execute(readReplicaOperation::apply);
     } catch (RuntimeException exception) {

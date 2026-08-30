@@ -87,6 +87,25 @@ class EventQueryPersistenceAdapterTest {
             });
   }
 
+  @Test
+  void readsReservedPositionsAndOrdersByDerivedQueries() {
+    save(event(EVENT_ID, EventStatus.PUBLISHED));
+    saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID)));
+
+    assertThat(queryAdapter.existsOrderPosition(EVENT_ID, 3, 7)).isTrue();
+    assertThat(queryAdapter.existsOrderPosition(EVENT_ID, 3, 8)).isFalse();
+    assertThat(queryAdapter.findOrdersByIds(List.of(EVENT_ORDER_ID)))
+        .extracting(EventOrder::id)
+        .containsExactly(EVENT_ORDER_ID);
+    assertThat(queryAdapter.findOrdersByIdsAndCustomerId(List.of(EVENT_ORDER_ID), CUSTOMER_ID))
+        .singleElement()
+        .satisfies(
+            found -> {
+              assertThat(found.id()).isEqualTo(EVENT_ORDER_ID);
+              assertThat(found.customerId()).isEqualTo(CUSTOMER_ID);
+            });
+  }
+
   private void save(Event event) {
     new TransactionTemplate(primaryTransactionManager).executeWithoutResult(status -> commandAdapter.save(event));
   }

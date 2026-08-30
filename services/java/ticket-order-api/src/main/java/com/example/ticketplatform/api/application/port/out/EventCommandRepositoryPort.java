@@ -13,13 +13,7 @@ public interface EventCommandRepositoryPort {
 
   Optional<Event> findById(UUID id);
 
-  boolean existsOrderPosition(UUID eventId, int rowNumber, int placeNumber);
-
   List<EventOrder> saveOrders(UUID customerId, List<EventOrder> orders);
-
-  List<EventOrder> findOrdersByIds(Collection<UUID> ids);
-
-  List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId);
 
   long deleteOrders(Collection<UUID> ids);
 }

@@ -11,6 +11,7 @@ import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.AbstractPlatformTransactionManager;
 import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 class ReadQueryExecutorTest {
 
@@ -69,6 +70,28 @@ class ReadQueryExecutorTest {
     assertThat(primaryTransactionManager.beginCount).isEqualTo(1);
     assertThat(meterRegistry.counter("ticket_order_api.read_replica.fallback").count())
         .isEqualTo(1);
+  }
+
+  @Test
+  void executesPrimaryOperationWhenServiceTransactionIsActive() {
+    CountingTransactionManager readReplicaTransactionManager = new CountingTransactionManager();
+    CountingTransactionManager primaryTransactionManager = new CountingTransactionManager();
+    ReadQueryExecutor executor =
+        new ReadQueryExecutor(
+            readReplicaTransactionManager,
+            primaryTransactionManager,
+            new SimpleMeterRegistry());
+
+    TransactionSynchronizationManager.setActualTransactionActive(true);
+    try {
+      String result = executor.execute(() -> "replica", () -> "primary");
+
+      assertThat(result).isEqualTo("primary");
+    } finally {
+      TransactionSynchronizationManager.setActualTransactionActive(false);
+    }
+    assertThat(readReplicaTransactionManager.beginCount).isZero();
+    assertThat(primaryTransactionManager.beginCount).isEqualTo(1);
   }
 
   @Test

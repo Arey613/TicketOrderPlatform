@@ -99,7 +99,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
       String positionKey = command.eventId() + ":" + command.rowNumber() + ":" + command.placeNumber();
 
       if (!positions.add(positionKey)
-          || eventCommandRepositoryPort.existsOrderPosition(
+          || eventQueryRepositoryPort.existsOrderPosition(
               event.id(), command.rowNumber(), command.placeNumber())) {
         throw new IllegalStateException("Event place is already reserved");
       }
@@ -118,11 +118,11 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   @Override
   @Transactional
   public int deleteEventOrders(UUID userId, List<UUID> eventOrderIds) {
-    List<EventOrder> orders = eventCommandRepositoryPort.findOrdersByIds(eventOrderIds);
+    List<EventOrder> orders = eventQueryRepositoryPort.findOrdersByIds(eventOrderIds);
     if (orders.size() != eventOrderIds.size()) {
       throw new NoSuchElementException("At least one event order was not found");
     }
-    if (eventCommandRepositoryPort.findOrdersByIdsAndCustomerId(eventOrderIds, userId).size()
+    if (eventQueryRepositoryPort.findOrdersByIdsAndCustomerId(eventOrderIds, userId).size()
         != eventOrderIds.size()) {
       throw new SecurityException("User cannot delete at least one event order");
     }
