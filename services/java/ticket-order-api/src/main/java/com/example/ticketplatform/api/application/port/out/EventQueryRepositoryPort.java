@@ -17,9 +17,10 @@ public interface EventQueryRepositoryPort {
 
   boolean existsOrderPosition(UUID eventId, int rowNumber, int placeNumber);
 
-  long countOrdersByIds(Collection<UUID> ids);
+  // TODO: Review bulk order lookup strategy if delete batches grow beyond small bounded lists.
+  List<EventOrder> findOrdersByIds(Collection<UUID> ids);
 
-  long countOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId);
+  List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId);
 
   List<EventOrder> findOrdersByCustomerId(UUID customerId);
 }

@@ -454,16 +454,16 @@ class EventServiceTest {
     }
 
     @Override
-    public long countOrdersByIds(Collection<UUID> ids) {
-      return savedOrders.stream().filter(order -> ids.contains(order.id())).count();
+    public List<EventOrder> findOrdersByIds(Collection<UUID> ids) {
+      return savedOrders.stream().filter(order -> ids.contains(order.id())).toList();
     }
 
     @Override
-    public long countOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId) {
+    public List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId) {
       return savedOrders.stream()
           .filter(order -> ids.contains(order.id()))
           .filter(order -> customerId.equals(order.customerId()))
-          .count();
+          .toList();
     }
 
     @Override

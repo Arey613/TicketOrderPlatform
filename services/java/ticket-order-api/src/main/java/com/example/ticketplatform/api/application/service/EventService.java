@@ -118,10 +118,11 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   @Override
   @Transactional
   public int deleteEventOrders(UUID userId, List<UUID> eventOrderIds) {
-    if (eventQueryRepositoryPort.countOrdersByIds(eventOrderIds) != eventOrderIds.size()) {
+    List<EventOrder> orders = eventQueryRepositoryPort.findOrdersByIds(eventOrderIds);
+    if (orders.size() != eventOrderIds.size()) {
       throw new NoSuchElementException("At least one event order was not found");
     }
-    if (eventQueryRepositoryPort.countOrdersByIdsAndCustomerId(eventOrderIds, userId)
+    if (eventQueryRepositoryPort.findOrdersByIdsAndCustomerId(eventOrderIds, userId).size()
         != eventOrderIds.size()) {
       throw new SecurityException("User cannot delete at least one event order");
     }

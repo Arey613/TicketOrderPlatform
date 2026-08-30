@@ -65,17 +65,25 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   }
 
   @Override
-  public long countOrdersByIds(Collection<UUID> ids) {
+  public List<EventOrder> findOrdersByIds(Collection<UUID> ids) {
     return readQueryExecutor.execute(
-        () -> readReplicaEventOrderRepository.countByIdIn(ids),
-        () -> primaryEventOrderRepository.countByIdIn(ids));
+        () -> readReplicaEventOrderRepository.findByIdIn(ids).stream()
+            .map(eventMapper::toDomain)
+            .toList(),
+        () -> primaryEventOrderRepository.findByIdIn(ids).stream()
+            .map(eventMapper::toDomain)
+            .toList());
   }
 
   @Override
-  public long countOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId) {
+  public List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId) {
     return readQueryExecutor.execute(
-        () -> readReplicaEventOrderRepository.countByIdInAndCustomerId(ids, customerId),
-        () -> primaryEventOrderRepository.countByIdInAndCustomerId(ids, customerId));
+        () -> readReplicaEventOrderRepository.findByIdInAndCustomerId(ids, customerId).stream()
+            .map(eventMapper::toDomain)
+            .toList(),
+        () -> primaryEventOrderRepository.findByIdInAndCustomerId(ids, customerId).stream()
+            .map(eventMapper::toDomain)
+            .toList());
   }
 
   @Override
