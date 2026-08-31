@@ -1,8 +1,9 @@
-import { lazy, Suspense, useState } from 'react';
 import { LogOut, Ticket } from 'lucide-react';
-import { logout } from './api/authClient';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import type { AuthenticatedUser } from './api/authClient';
+import { logout } from './api/authClient';
 import { clearStoredUser, loadStoredUser, storeUser } from './api/authStorage';
+import { onSessionExpired } from './api/sessionEvents';
 import { HomePage } from './features/home/HomePage';
 
 const AuthPanel = lazy(() =>
@@ -22,11 +23,11 @@ const navItemsByRole = {
 function App() {
   const [authPanelMode, setAuthPanelMode] = useState<AuthMode | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(() => loadStoredUser());
-  const [logoutError, setLogoutError] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
   const isAuthPanelOpen = authPanelMode !== null;
 
   const openAuthPanel = (mode: AuthMode) => {
-    setLogoutError('');
+    setStatusMessage('');
     setAuthPanelMode(mode);
   };
 
@@ -36,16 +37,24 @@ function App() {
   };
 
   const submitLogout = async () => {
-    setLogoutError('');
+    setStatusMessage('');
 
     try {
       await logout();
       clearStoredUser();
       setCurrentUser(null);
     } catch {
-      setLogoutError('Logout failed. Try again in a moment.');
+      setStatusMessage('Logout failed. Try again in a moment.');
     }
   };
+
+  useEffect(() => {
+    return onSessionExpired(() => {
+      clearStoredUser();
+      setCurrentUser(null);
+      setStatusMessage('Your session has expired. Please log in again.');
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
@@ -103,13 +112,18 @@ function App() {
         </div>
       </header>
 
-      {logoutError && (
-        <div className="mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
-            {logoutError}
-          </p>
-        </div>
-      )}
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <p
+          aria-live="polite"
+          className={
+            statusMessage
+              ? 'mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800'
+              : 'sr-only'
+          }
+        >
+          {statusMessage}
+        </p>
+      </div>
 
       <HomePage
         currentUser={currentUser}

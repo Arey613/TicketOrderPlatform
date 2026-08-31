@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
 import { Lock, Mail, X } from 'lucide-react';
-import { login, register, toUserMessage } from '../../api/authClient';
+import type { FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AuthenticatedUser } from '../../api/authClient';
+import { login, register, toUserMessage } from '../../api/authClient';
 
 type AuthMode = 'login' | 'register';
 
@@ -34,6 +34,39 @@ export function AuthPanel({ initialMode, onClose, onAuthenticated }: AuthPanelPr
     };
   }, []);
 
+  const trapFocus = useCallback((event: KeyboardEvent) => {
+    const panel = panelRef.current;
+
+    if (!panel) {
+      return;
+    }
+
+    const focusableElements = Array.from(
+      panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((element) => !element.hasAttribute('aria-hidden'));
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements.at(-1);
+
+    if (!firstElement || !lastElement) {
+      event.preventDefault();
+      return;
+    }
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+      return;
+    }
+
+    if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -48,7 +81,7 @@ export function AuthPanel({ initialMode, onClose, onAuthenticated }: AuthPanelPr
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [onClose, trapFocus]);
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -67,13 +100,14 @@ export function AuthPanel({ initialMode, onClose, onAuthenticated }: AuthPanelPr
       onAuthenticated(user);
       onClose();
     } catch (error) {
-      setErrorMessage(await toUserMessage(error));
+      setErrorMessage(toUserMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: decorative backdrop; Escape key and the close button already provide keyboard-accessible dismissal
     <div
       className="fixed inset-0 z-50 bg-slate-950/45 backdrop-blur-sm"
       onMouseDown={onClose}
@@ -145,11 +179,16 @@ export function AuthPanel({ initialMode, onClose, onAuthenticated }: AuthPanelPr
             </span>
           </label>
 
-          {errorMessage && (
-            <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
-              {errorMessage}
-            </p>
-          )}
+          <p
+            aria-live="polite"
+            className={
+              errorMessage
+                ? 'rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800'
+                : 'sr-only'
+            }
+          >
+            {errorMessage}
+          </p>
 
           <button
             className="w-full rounded-md bg-teal-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400"
@@ -176,37 +215,4 @@ export function AuthPanel({ initialMode, onClose, onAuthenticated }: AuthPanelPr
       </aside>
     </div>
   );
-
-  function trapFocus(event: KeyboardEvent) {
-    const panel = panelRef.current;
-
-    if (!panel) {
-      return;
-    }
-
-    const focusableElements = Array.from(
-      panel.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ),
-    ).filter((element) => !element.hasAttribute('aria-hidden'));
-
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements.at(-1);
-
-    if (!firstElement || !lastElement) {
-      event.preventDefault();
-      return;
-    }
-
-    if (event.shiftKey && document.activeElement === firstElement) {
-      event.preventDefault();
-      lastElement.focus();
-      return;
-    }
-
-    if (!event.shiftKey && document.activeElement === lastElement) {
-      event.preventDefault();
-      firstElement.focus();
-    }
-  }
 }

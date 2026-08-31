@@ -1,18 +1,18 @@
-import { Configuration, EventsApi, ResponseError } from '../generated/api';
 import type {
   CreateEventOrderItem,
   EventListResponse,
   EventResponse,
   MyEventOrdersResponse,
 } from '../generated/api';
+import { Configuration, EventsApi, ResponseError } from '../generated/api';
+import { resolveApiBaseUrl, sessionAwareMiddleware } from './apiConfiguration';
 import { prepareCsrfToken, withCsrfHeader } from './authClient';
-
-const apiBaseUrl = import.meta.env.VITE_TICKET_API_BASE_URL ?? 'http://localhost:8080';
 
 const eventsApi = new EventsApi(
   new Configuration({
-    basePath: apiBaseUrl,
+    basePath: resolveApiBaseUrl(),
     credentials: 'include',
+    middleware: [sessionAwareMiddleware],
   }),
 );
 
@@ -64,7 +64,7 @@ export async function listMyEventOrders(query: PageQuery): Promise<MyEventOrders
   return eventsApi.listMyEventOrders(query);
 }
 
-export async function toEventUserMessage(error: unknown): Promise<string> {
+export function toEventUserMessage(error: unknown): string {
   if (error instanceof ResponseError) {
     if (error.response.status === 401) {
       return 'Login is required for this action.';

@@ -22,3 +22,4 @@ TICKET_PORTAL#123 - short description
 - BUGFIX#2 - hide auth actions after login and add role-aware home actions
 - TICKET_PORTAL#3 - connect customer event browsing and booking UI to API
 - TICKET_SERVICE#9 - support paginated event and order lists
+- TICKET_PORTAL#5 - harden web module architecture, tooling, security, and accessibility

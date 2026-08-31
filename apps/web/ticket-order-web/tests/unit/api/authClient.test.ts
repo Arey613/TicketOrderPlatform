@@ -98,16 +98,16 @@ describe('authClient', () => {
     );
   });
 
-  it('maps generated response errors to user-facing messages', async () => {
-    await expect(
+  it('maps generated response errors to user-facing messages', () => {
+    expect(
       toUserMessage(new ResponseError(new Response(null, { status: 401 }), 'Unauthorized')),
-    ).resolves.toBe('The email or password is not valid.');
+    ).toBe('The email or password is not valid.');
 
-    await expect(
-      toUserMessage(new ResponseError(new Response(null, { status: 409 }), 'Conflict')),
-    ).resolves.toBe('An account with this email already exists.');
+    expect(toUserMessage(new ResponseError(new Response(null, { status: 409 }), 'Conflict'))).toBe(
+      'An account with this email already exists.',
+    );
 
-    await expect(toUserMessage(new Error('Network failed'))).resolves.toBe(
+    expect(toUserMessage(new Error('Network failed'))).toBe(
       'The server is unavailable. Try again in a moment.',
     );
   });

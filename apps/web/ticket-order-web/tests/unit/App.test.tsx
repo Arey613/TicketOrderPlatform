@@ -1,15 +1,15 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import App from '../../src/App';
 import { login, logout, register, toUserMessage } from '../../src/api/authClient';
 import {
   createEventOrders,
   getAuthenticatedEvent,
   getPublishedEvent,
-  listPublishedEvents,
   listMyEventOrders,
+  listPublishedEvents,
 } from '../../src/api/eventsClient';
+import { notifySessionExpired } from '../../src/api/sessionEvents';
 import { submitLoginForm, submitRegistrationForm } from '../support/appTestActions';
 import {
   adminUser,
@@ -18,6 +18,8 @@ import {
   newBuyerUser,
   storedUserKey,
 } from '../support/authTestData';
+import { bookedEvent, myEventOrder, pageMetadata, publishedEvent } from '../support/eventTestData';
+import { renderApp } from '../support/renderApp';
 
 vi.mock('../../src/api/authClient', () => ({
   login: vi.fn(),
@@ -45,54 +47,6 @@ const mockedGetPublishedEvent = vi.mocked(getPublishedEvent);
 const mockedListPublishedEvents = vi.mocked(listPublishedEvents);
 const mockedListMyEventOrders = vi.mocked(listMyEventOrders);
 
-const publishedEvent = {
-  eventId: 'event-1',
-  ownerId: 'manager-1',
-  name: 'The Horizon Live',
-  date: new Date('2026-09-12T19:30:00.000Z'),
-  place: 'Riverside Arena',
-  city: 'Chisinau',
-  type: 'Rock concert',
-  status: 'PUBLISHED',
-  details: {
-    description: 'Live concert with reserved places.',
-    numberOfPlaces: 4,
-    numberOfRows: 2,
-    seatsPerRow: 2,
-    availablePlaces: 3,
-    placeTypes: [{ name: 'STANDARD', price: '59.00', currency: 'USD' }],
-  },
-  ordersTaken: 1,
-  availablePlaces: 3,
-  takenPlaces: [{ row: 1, place: 1 }],
-} as const;
-
-const bookedEvent = {
-  ...publishedEvent,
-  availablePlaces: 2,
-  takenPlaces: [...publishedEvent.takenPlaces, { row: 1, place: 2, isMine: true }],
-} as const;
-
-const myEventOrder = {
-  eventOrderId: 'order-1',
-  eventId: publishedEvent.eventId,
-  eventName: publishedEvent.name,
-  eventDate: publishedEvent.date,
-  row: 1,
-  place: 2,
-  placeType: 'STANDARD',
-  reservationDate: new Date('2026-08-24T10:00:00.000Z'),
-} as const;
-
-const pageMetadata = (size: number, totalElements: number) => ({
-  number: 0,
-  size,
-  totalElements,
-  totalPages: totalElements === 0 ? 0 : 1,
-  first: true,
-  last: true,
-});
-
 describe('App', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -100,7 +54,7 @@ describe('App', () => {
     mockedLogout.mockReset();
     mockedRegister.mockReset();
     mockedToUserMessage.mockReset();
-    mockedToUserMessage.mockResolvedValue('The email or password is not valid.');
+    mockedToUserMessage.mockReturnValue('The email or password is not valid.');
     mockedCreateEventOrders.mockReset();
     mockedCreateEventOrders.mockResolvedValue();
     mockedGetAuthenticatedEvent.mockReset();
@@ -120,7 +74,7 @@ describe('App', () => {
   });
 
   it('renders the public ticketing page with published events', async () => {
-    render(<App />);
+    renderApp();
 
     expect(
       screen.getByRole('heading', {
@@ -128,7 +82,9 @@ describe('App', () => {
       }),
     ).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Upcoming events' })).toBeVisible();
-    expect(await screen.findAllByRole('heading', { name: 'The Horizon Live' })).toHaveLength(2);
+    await waitFor(() => {
+      expect(screen.getAllByRole('heading', { name: 'The Horizon Live' })).toHaveLength(2);
+    });
     expect(screen.getByText('3 left')).toBeVisible();
     expect(screen.getByText('Live concert with reserved places.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Row 1, place 1' })).toBeDisabled();
@@ -142,7 +98,7 @@ describe('App', () => {
 
   it('loads selected event details through the public endpoint for public users', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderApp();
 
     await screen.findAllByRole('heading', { name: 'The Horizon Live' });
     await user.click(screen.getByRole('button', { name: 'Select' }));
@@ -155,10 +111,10 @@ describe('App', () => {
 
   it('opens login instead of booking for public users', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderApp();
 
     await screen.findAllByRole('heading', { name: 'The Horizon Live' });
-    await user.click(screen.getByRole('button', { name: 'Row 1, place 2' }));
+    await user.click(await screen.findByRole('button', { name: 'Row 1, place 2' }));
     await user.click(screen.getByRole('button', { name: 'Login to book' }));
 
     expect(await screen.findByRole('dialog', { name: 'Login' })).toBeVisible();
@@ -168,16 +124,19 @@ describe('App', () => {
   it('books a selected place for an authenticated customer and refreshes owned orders', async () => {
     const user = userEvent.setup();
     localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
-    mockedGetAuthenticatedEvent.mockResolvedValue(bookedEvent);
+    mockedGetAuthenticatedEvent.mockReset();
+    mockedGetAuthenticatedEvent
+      .mockResolvedValueOnce(publishedEvent)
+      .mockResolvedValue(bookedEvent);
     mockedListMyEventOrders.mockResolvedValue({
       items: [myEventOrder],
       page: pageMetadata(20, 1),
     });
 
-    render(<App />);
+    renderApp();
 
     await screen.findByText('buyer@example.com');
-    await user.click(screen.getByRole('button', { name: 'Row 1, place 2' }));
+    await user.click(await screen.findByRole('button', { name: 'Row 1, place 2' }));
     await user.click(screen.getByRole('button', { name: 'Book selected place' }));
 
     await waitFor(() => {
@@ -195,7 +154,7 @@ describe('App', () => {
 
   it('opens and closes the lazy login panel', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderApp();
 
     const loginButton = screen.getAllByRole('button', { name: 'Login' })[0];
     await user.click(loginButton);
@@ -212,7 +171,7 @@ describe('App', () => {
 
   it('keeps keyboard focus inside the login panel', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    renderApp();
 
     await user.click(screen.getAllByRole('button', { name: 'Login' })[0]);
     const dialog = await screen.findByRole('dialog', { name: 'Login' });
@@ -235,7 +194,7 @@ describe('App', () => {
     const user = userEvent.setup();
     mockedLogin.mockResolvedValue(buyerUser);
 
-    render(<App />);
+    renderApp();
 
     await submitLoginForm(user, 'buyer@example.com', 'correct-password');
 
@@ -252,16 +211,13 @@ describe('App', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create account' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Login' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Browse events' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'My orders' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'My tickets' })).toBeVisible();
   });
 
   it('switches to registration and creates an account', async () => {
     const user = userEvent.setup();
     mockedRegister.mockResolvedValue(newBuyerUser);
 
-    render(<App />);
+    renderApp();
 
     await submitRegistrationForm(user, 'new-buyer@example.com', 'new-password');
 
@@ -282,7 +238,7 @@ describe('App', () => {
     const error = new Error('Unauthorized');
     mockedLogin.mockRejectedValue(error);
 
-    render(<App />);
+    renderApp();
 
     await submitLoginForm(user, 'buyer@example.com', 'wrong-password');
 
@@ -296,7 +252,7 @@ describe('App', () => {
     mockedLogin.mockResolvedValue(buyerUser);
     mockedLogout.mockResolvedValue();
 
-    render(<App />);
+    renderApp();
 
     await submitLoginForm(user, 'buyer@example.com', 'correct-password');
     expect(await screen.findByText('buyer@example.com')).toBeVisible();
@@ -313,39 +269,51 @@ describe('App', () => {
     expect(localStorage.getItem(storedUserKey)).toBeNull();
   });
 
+  it('clears the authenticated session and shows a message when the session expires', async () => {
+    localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
+
+    renderApp();
+
+    expect(await screen.findByText('buyer@example.com')).toBeVisible();
+
+    act(() => {
+      notifySessionExpired();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('buyer@example.com')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('Your session has expired. Please log in again.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Create account' })).toBeVisible();
+    expect(localStorage.getItem(storedUserKey)).toBeNull();
+  });
+
   it('restores an authenticated user from local storage', () => {
     localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
 
-    render(<App />);
+    renderApp();
 
     expect(screen.getByText('buyer@example.com')).toBeVisible();
     expect(screen.getByText('CUSTOMER')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Login' })).not.toBeInTheDocument();
   });
 
-  it('shows manager-specific actions for manager users', () => {
+  it('does not render placeholder role-action buttons for any authenticated role', () => {
     localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
-
-    render(<App />);
+    const { unmount } = renderApp();
 
     expect(screen.getByText('manager@example.com')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'My events' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Create event' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Event orders' })).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'User administration' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'My tickets' })).not.toBeInTheDocument();
-  });
+    expect(screen.queryByRole('button', { name: 'My events' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create event' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Event orders' })).not.toBeInTheDocument();
+    unmount();
 
-  it('shows admin-specific actions for admin users', () => {
     localStorage.setItem(storedUserKey, JSON.stringify(adminUser));
-
-    render(<App />);
+    renderApp();
 
     expect(screen.getByText('admin@example.com')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'User administration' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Platform operations' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Event oversight' })).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Create event' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'My tickets' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'User administration' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Platform operations' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Event oversight' })).not.toBeInTheDocument();
   });
 });
