@@ -37,10 +37,13 @@ class LoginRateLimitFilter extends OncePerRequestFilter {
     String email = extractLogin(body);
     String ip = request.getRemoteAddr();
 
-    boolean blockedByIp = loginRateLimiter.isBlockedByIp(ip);
-    boolean blockedByEmail = loginRateLimiter.isBlockedByEmail(email);
-    if (blockedByIp || blockedByEmail) {
-      log.warn("auth.login.rate_limited limited_by={}", blockedByIp ? "ip" : "email");
+    if (loginRateLimiter.isBlockedByIp(ip)) {
+      log.warn("auth.login.rate_limited limited_by=ip");
+      response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+      return;
+    }
+    if (loginRateLimiter.isBlockedByEmail(email)) {
+      log.warn("auth.login.rate_limited limited_by=email");
       response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
       return;
     }

@@ -6,9 +6,11 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class LoginRateLimiter {
 
   private static final int MAX_ATTEMPTS = 5;
@@ -18,10 +20,6 @@ public class LoginRateLimiter {
 
   private final Supplier<Instant> currentTimeSupplier;
   private final ConcurrentHashMap<String, Window> windowsByKey = new ConcurrentHashMap<>();
-
-  LoginRateLimiter(Supplier<Instant> currentTimeSupplier) {
-    this.currentTimeSupplier = currentTimeSupplier;
-  }
 
   boolean isBlockedByIp(String ip) {
     return isBlocked(key(IP_PREFIX, ip));
