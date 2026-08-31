@@ -118,9 +118,36 @@ class EventControllerIntegrationTest {
   }
 
   @Test
+  void listsPublishedEventsForAnonymousViewerViaPublicEndpoint() throws Exception {
+    mockMvc
+        .perform(get("/public/events"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items[0].eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.items[0].ordersTaken").value(1))
+        .andExpect(jsonPath("$.items[0].takenPlaces[0].row").value(3))
+        .andExpect(jsonPath("$.items[0].takenPlaces[0].place").value(7))
+        .andExpect(jsonPath("$.items[0].takenPlaces[0].isMine").doesNotExist())
+        .andExpect(jsonPath("$.page.number").value(0))
+        .andExpect(jsonPath("$.page.size").value(10))
+        .andExpect(jsonPath("$.page.totalElements").value(1))
+        .andExpect(jsonPath("$.page.totalPages").value(1));
+  }
+
+  @Test
   void returnsPublishedEventDetailsForAnonymousViewerWithoutOwnershipHints() throws Exception {
     mockMvc
         .perform(get("/events/{eventId}", EVENT_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.takenPlaces[0].row").value(3))
+        .andExpect(jsonPath("$.takenPlaces[0].place").value(7))
+        .andExpect(jsonPath("$.takenPlaces[0].isMine").doesNotExist());
+  }
+
+  @Test
+  void returnsPublishedEventDetailsForAnonymousViewerViaPublicEndpoint() throws Exception {
+    mockMvc
+        .perform(get("/public/events/{eventId}", EVENT_ID))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()))
         .andExpect(jsonPath("$.takenPlaces[0].row").value(3))

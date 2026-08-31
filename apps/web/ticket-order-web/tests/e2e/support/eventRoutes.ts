@@ -14,8 +14,9 @@ export async function mockPublishedEvents(
   page: Page,
   options: EventRouteOptions = {},
 ): Promise<void> {
-  await page.route('**/events', async (route) => {
-    if (route.request().method() !== 'GET') {
+  await page.route('**/public/events**', async (route) => {
+    const url = new URL(route.request().url());
+    if (route.request().method() !== 'GET' || url.pathname !== '/public/events') {
       await route.fallback();
       return;
     }
@@ -26,6 +27,13 @@ export async function mockPublishedEvents(
         items: [eventResponse(options.bookedAfterCreate)],
         page: pageMetadata(10, 1),
       }),
+    });
+  });
+
+  await page.route(`**/public/events/${eventId}`, async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(eventResponse(options.bookedAfterCreate)),
     });
   });
 
@@ -41,7 +49,13 @@ export async function mockMyOrders(
   page: Page,
   state: EventBookingRouteState = { bookedAfterCreate: true },
 ): Promise<void> {
-  await page.route('**/events/orders/mine', async (route) => {
+  await page.route('**/events/orders/mine**', async (route) => {
+    const url = new URL(route.request().url());
+    if (route.request().method() !== 'GET' || url.pathname !== '/events/orders/mine') {
+      await route.fallback();
+      return;
+    }
+
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({

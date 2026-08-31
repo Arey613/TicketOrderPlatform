@@ -28,12 +28,16 @@ export type PageQuery = {
   size: number;
 };
 
-export async function listEvents(query: PageQuery): Promise<EventListResponse> {
-  return eventsApi.listEvents(query);
+export async function listPublishedEvents(query: PageQuery): Promise<EventListResponse> {
+  return eventsApi.listPublishedEvents(query);
 }
 
-export async function getEvent(eventId: string): Promise<EventResponse> {
+export async function getAuthenticatedEvent(eventId: string): Promise<EventResponse> {
   return eventsApi.getEvent({ eventId });
+}
+
+export async function getPublishedEvent(eventId: string): Promise<EventResponse> {
+  return eventsApi.getPublishedEvent({ eventId });
 }
 
 export async function createEventOrders(selection: SeatSelection): Promise<void> {

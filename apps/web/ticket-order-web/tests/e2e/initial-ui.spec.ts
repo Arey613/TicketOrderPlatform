@@ -14,6 +14,11 @@ test('shows published events and public booked places', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Row 1, place 1' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Row 1, place 2' })).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Login to book' })).toBeDisabled();
+
+  await page.getByRole('button', { name: 'Row 1, place 2' }).click();
+  await page.getByRole('button', { name: 'Login to book' }).click();
+
+  await expect(page.getByRole('dialog', { name: 'Login' })).toBeVisible();
 });
 
 test('opens and closes the separate login panel', async ({ page }) => {

@@ -92,6 +92,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PORTAL#1 - add OpenAPI client generation
 - TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI, startup fixes, and review guidance
 - TICKET_SERVICE#9 - add UI pagination specification
+- TICKET_PORTAL#4 - add public functional access specification
 
 ### Changed
 
