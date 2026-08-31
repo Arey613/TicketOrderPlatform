@@ -14,6 +14,8 @@ MINIKUBE_K8S_MODULE := infrastructure/kubernetes/minikube-local
 SPRING_PROFILES ?= local
 API_IMAGE ?= ticket-order-api
 WEB_IMAGE ?= ticket-order-web
+VITE_TICKET_API_BASE_URL ?= http://localhost:8080
+export VITE_TICKET_API_BASE_URL
 
 help:
 	@printf 'TicketOrderPlatform\n\n'
@@ -133,7 +135,7 @@ docker-build-api: check-docker package-api
 	$(DOCKER) build -f $(API_MODULE)/Dockerfile -t $(API_IMAGE) .
 
 docker-build-web: check-docker
-	$(DOCKER) build -f $(WEB_MODULE)/Dockerfile -t $(WEB_IMAGE) .
+	$(DOCKER) build -f $(WEB_MODULE)/Dockerfile -t $(WEB_IMAGE) --build-arg VITE_TICKET_API_BASE_URL=$(VITE_TICKET_API_BASE_URL) .
 
 compose-build: check-docker package-api
 	$(DOCKER) compose build

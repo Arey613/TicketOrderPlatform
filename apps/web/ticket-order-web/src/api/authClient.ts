@@ -1,12 +1,10 @@
+import type { InitOverrideFunction, UserRole } from '../generated/api';
 import { AuthApi, Configuration, ResponseError } from '../generated/api';
-import type { InitOverrideFunction } from '../generated/api';
-import type { UserRole } from '../generated/api';
-
-const apiBaseUrl = import.meta.env.VITE_TICKET_API_BASE_URL ?? 'http://localhost:8080';
+import { resolveApiBaseUrl } from './apiConfiguration';
 
 const authApi = new AuthApi(
   new Configuration({
-    basePath: apiBaseUrl,
+    basePath: resolveApiBaseUrl(),
     credentials: 'include',
   }),
 );
@@ -67,7 +65,7 @@ export async function logout(): Promise<void> {
   await authApi.logout(withCsrfHeader);
 }
 
-export async function toUserMessage(error: unknown): Promise<string> {
+export function toUserMessage(error: unknown): string {
   if (error instanceof ResponseError) {
     if (error.response.status === 400) {
       return 'Check the form values and try again.';

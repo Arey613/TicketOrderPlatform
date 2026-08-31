@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run format:check && npm run typecheck && npm run test:unit && vite build",
+    "build": "npm run format:check && npm run lint && npm run typecheck && npm run test:unit && vite build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "biome check src tests",
+    "lint:fix": "biome check --write src tests",
     "generate:api": "openapi-generator-cli generate -i ../../../contracts/openapi/ticket-order-api/openapi.yml -g typescript-fetch -o src/generated/api --additional-properties=typescriptThreePlus=true",
     "validate:api": "openapi-generator-cli validate -i ../../../contracts/openapi/ticket-order-api/openapi.yml",
     "preview": "vite preview",
@@ -17,6 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.102.8",
     "@vitejs/plugin-react": "^6.0.4",
     "clsx": "^2.1.1",
     "lucide-react": "^1.32.0",
@@ -25,6 +28,7 @@
     "vite": "^8.1.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.11",
     "@openapitools/openapi-generator-cli": "^2.25.2",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
