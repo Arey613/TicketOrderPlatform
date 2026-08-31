@@ -2,6 +2,8 @@ package com.example.ticketplatform.api.adapter.out.persistence.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.ticketplatform.api.application.port.in.PageRequest;
+import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -62,14 +64,40 @@ class EventQueryPersistenceAdapterTest {
     save(event(EVENT_ID, EventStatus.PUBLISHED));
     save(event(DRAFT_EVENT_ID, EventStatus.DRAFT));
 
-    assertThat(queryAdapter.findPublished()).extracting(Event::id).containsExactly(EVENT_ID);
+    PageResult<Event> page = queryAdapter.findPublished(new PageRequest(0, 10, "date,asc"));
+
+    assertThat(page.items()).extracting(Event::id).containsExactly(EVENT_ID);
+    assertThat(page.page().totalElements()).isEqualTo(1);
+    assertThat(page.page().totalPages()).isEqualTo(1);
   }
 
   @Test
   void readsOwnerEventsByNamedQuery() {
     save(event(EVENT_ID, EventStatus.PUBLISHED));
 
-    assertThat(queryAdapter.findByOwnerId(OWNER_ID)).extracting(Event::id).containsExactly(EVENT_ID);
+    assertThat(queryAdapter.findByOwnerId(OWNER_ID, new PageRequest(0, 10, "date,asc")).items())
+        .extracting(Event::id)
+        .containsExactly(EVENT_ID);
+  }
+
+  @Test
+  void pagesPublishedEventsWithMatchingTotalCount() {
+    save(event(EVENT_ID, EventStatus.PUBLISHED));
+    save(event(DRAFT_EVENT_ID, EventStatus.PUBLISHED));
+
+    PageResult<Event> firstPage = queryAdapter.findPublished(new PageRequest(0, 1, "date,asc"));
+    PageResult<Event> emptyPage = queryAdapter.findPublished(new PageRequest(2, 1, "date,asc"));
+
+    assertThat(firstPage.items()).hasSize(1);
+    assertThat(firstPage.page().totalElements()).isEqualTo(2);
+    assertThat(firstPage.page().totalPages()).isEqualTo(2);
+    assertThat(firstPage.page().first()).isTrue();
+    assertThat(firstPage.page().last()).isFalse();
+    assertThat(emptyPage.items()).isEmpty();
+    assertThat(emptyPage.page().number()).isEqualTo(2);
+    assertThat(emptyPage.page().totalElements()).isEqualTo(2);
+    assertThat(emptyPage.page().totalPages()).isEqualTo(2);
+    assertThat(emptyPage.page().last()).isTrue();
   }
 
   @Test
@@ -77,7 +105,10 @@ class EventQueryPersistenceAdapterTest {
     save(event(EVENT_ID, EventStatus.PUBLISHED));
     saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID)));
 
-    assertThat(queryAdapter.findOrdersByCustomerId(CUSTOMER_ID))
+    PageResult<EventOrder> page =
+        queryAdapter.findOrdersByCustomerId(CUSTOMER_ID, new PageRequest(0, 20, "reservationDate,desc"));
+
+    assertThat(page.items())
         .singleElement()
         .satisfies(
             found -> {
@@ -85,6 +116,7 @@ class EventQueryPersistenceAdapterTest {
               assertThat(found.eventName()).isEqualTo("Event 803");
               assertThat(found.eventDate()).isEqualTo(EVENT_DATE);
             });
+    assertThat(page.page().totalElements()).isEqualTo(1);
   }
 
   @Test

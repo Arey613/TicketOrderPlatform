@@ -42,6 +42,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#6 - add event management API implementation
 - TICKET_SERVICE#7 - add backend observability
 - TICKET_SERVICE#8 - add read-replica CQRS datasource split
+- TICKET_SERVICE#9 - add API pagination specification
 
 ### Changed
 
@@ -59,6 +60,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract
 - TICKET_CONTRACTS#4 - add UI-facing event and auth contract fields
 - TICKET_CONTRACTS#3 - add event management contract
+- TICKET_SERVICE#9 - add pagination contract specification
 
 ### Changed
 
@@ -88,9 +90,11 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#1 - add scoped agent guidance and skill folders
 - TICKET_PORTAL#1 - add OpenAPI client generation
 - TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI, startup fixes, and review guidance
+- TICKET_SERVICE#9 - add UI pagination specification
 
 ### Changed
 
 - BUGFIX#1 - fix Docker image builds and Compose startup
 - BUGFIX#2 - hide auth actions after login and add role-aware home actions
 - TICKET_PORTAL#3 - connect customer event browsing and booking UI to API
+- TICKET_SERVICE#9 - support paginated event and order lists

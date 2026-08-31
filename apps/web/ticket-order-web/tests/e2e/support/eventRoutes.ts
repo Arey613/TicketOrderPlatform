@@ -23,7 +23,8 @@ export async function mockPublishedEvents(
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({
-        events: [eventResponse(options.bookedAfterCreate)],
+        items: [eventResponse(options.bookedAfterCreate)],
+        page: pageMetadata(10, 1),
       }),
     });
   });
@@ -44,7 +45,8 @@ export async function mockMyOrders(
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({
-        orders: state.bookedAfterCreate ? [ownedOrderResponse()] : [],
+        items: state.bookedAfterCreate ? [ownedOrderResponse()] : [],
+        page: pageMetadata(20, state.bookedAfterCreate ? 1 : 0),
       }),
     });
   });
@@ -113,6 +115,17 @@ function ownedOrderResponse() {
     place: 2,
     placeType: 'STANDARD',
     reservationDate: '2026-08-24T10:00:00Z',
+  };
+}
+
+function pageMetadata(size: number, totalElements: number) {
+  return {
+    number: 0,
+    size,
+    totalElements,
+    totalPages: totalElements === 0 ? 0 : 1,
+    first: true,
+    last: true,
   };
 }
 

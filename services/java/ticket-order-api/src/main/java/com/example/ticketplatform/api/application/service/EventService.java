@@ -4,6 +4,8 @@ import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventCommandUseCase;
 import com.example.ticketplatform.api.application.port.in.EventQueryUseCase;
+import com.example.ticketplatform.api.application.port.in.PageRequest;
+import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
@@ -143,18 +145,18 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   }
 
   @Override
-  public List<Event> listPublishedEvents() {
-    return eventQueryRepositoryPort.findPublished();
+  public PageResult<Event> listPublishedEvents(PageRequest pageRequest) {
+    return eventQueryRepositoryPort.findPublished(pageRequest);
   }
 
   @Override
-  public List<Event> listOwnerEvents(UUID ownerId) {
-    return eventQueryRepositoryPort.findByOwnerId(ownerId);
+  public PageResult<Event> listOwnerEvents(UUID ownerId, PageRequest pageRequest) {
+    return eventQueryRepositoryPort.findByOwnerId(ownerId, pageRequest);
   }
 
   @Override
-  public List<EventOrder> listUserOrders(UUID userId) {
-    return eventQueryRepositoryPort.findOrdersByCustomerId(userId);
+  public PageResult<EventOrder> listUserOrders(UUID userId, PageRequest pageRequest) {
+    return eventQueryRepositoryPort.findOrdersByCustomerId(userId, pageRequest);
   }
 
   private Event updateStatus(Event event, EventStatus status) {

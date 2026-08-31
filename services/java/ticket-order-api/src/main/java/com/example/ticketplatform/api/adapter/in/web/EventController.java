@@ -2,9 +2,11 @@ package com.example.ticketplatform.api.adapter.in.web;
 
 import com.example.ticketplatform.api.application.port.in.EventCommandUseCase;
 import com.example.ticketplatform.api.application.port.in.EventQueryUseCase;
+import com.example.ticketplatform.api.application.port.in.PageRequest;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.generated.contract.api.EventsApi;
+import com.example.ticketplatform.api.generated.contract.api.PublicApi;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventOrdersRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreatedEventOrdersResponse;
@@ -23,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-class EventController implements EventsApi {
+class EventController implements EventsApi, PublicApi {
 
   private final EventCommandUseCase eventCommandUseCase;
   private final EventQueryUseCase eventQueryUseCase;
@@ -31,6 +33,7 @@ class EventController implements EventsApi {
   private final EventContractMapper eventContractMapper;
   private final EventResponseAssembler eventResponseAssembler;
   private final EventOrderRequestValidator eventOrderRequestValidator;
+  private final PaginationRequestFactory paginationRequestFactory;
 
   @Override
   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
@@ -73,21 +76,51 @@ class EventController implements EventsApi {
   }
 
   @Override
-  @PreAuthorize("#scope == null || #scope.name() != 'MINE' || hasAnyRole('MANAGER', 'ADMIN')")
-  public ResponseEntity<EventListResponse> listEvents(EventListScope scope) {
-    User user = currentUserProvider.currentUser();
-    if (scope == EventListScope.MINE) {
-      return ResponseEntity.ok(
-          eventResponseAssembler.toEventListResponse(eventQueryUseCase.listOwnerEvents(user.id())));
-    }
-    return ResponseEntity.ok(eventResponseAssembler.toEventListResponse(eventQueryUseCase.listPublishedEvents()));
+  public ResponseEntity<EventResponse> getPublishedEvent(UUID eventId) {
+    return ResponseEntity.ok(
+        eventResponseAssembler.toEventResponse(eventQueryUseCase.getEvent(eventId, null)));
   }
 
   @Override
-  public ResponseEntity<MyEventOrdersResponse> listMyEventOrders() {
+  @PreAuthorize("#scope == null || #scope.name() != 'MINE' || hasAnyRole('MANAGER', 'ADMIN')")
+  public ResponseEntity<EventListResponse> listEvents(
+      EventListScope scope,
+      Integer page,
+      Integer size,
+      String sort) {
+    User user = currentUserProvider.currentUser();
+    PageRequest pageRequest =
+        paginationRequestFactory.eventPage(
+            page, size, sort, paginationRequestFactory.authenticatedEventSorts());
+    if (scope == EventListScope.MINE) {
+      return ResponseEntity.ok(
+          eventResponseAssembler.toEventListResponse(eventQueryUseCase.listOwnerEvents(user.id(), pageRequest)));
+    }
+    return ResponseEntity.ok(
+        eventResponseAssembler.toEventListResponse(eventQueryUseCase.listPublishedEvents(pageRequest)));
+  }
+
+  @Override
+  public ResponseEntity<MyEventOrdersResponse> listMyEventOrders(
+      Integer page,
+      Integer size,
+      String sort) {
     return ResponseEntity.ok(
         eventContractMapper.toMyOrdersResponse(
-            eventQueryUseCase.listUserOrders(currentUserProvider.currentUser().id())));
+            eventQueryUseCase.listUserOrders(
+                currentUserProvider.currentUser().id(),
+                paginationRequestFactory.orderPage(page, size, sort))));
+  }
+
+  @Override
+  public ResponseEntity<EventListResponse> listPublishedEvents(
+      Integer page,
+      Integer size,
+      String sort) {
+    return ResponseEntity.ok(
+        eventResponseAssembler.toEventListResponse(
+            eventQueryUseCase.listPublishedEvents(
+                paginationRequestFactory.publicEventPage(page, size, sort))));
   }
 
   @Override
@@ -116,4 +149,5 @@ class EventController implements EventsApi {
                 currentUserProvider.currentUser().id(),
                 eventContractMapper.toCommand(updateEventRequest))));
   }
+
 }

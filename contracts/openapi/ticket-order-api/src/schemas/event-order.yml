@@ -117,9 +117,12 @@ MyEventOrderResponse:
 MyEventOrdersResponse:
   type: object
   required:
-    - orders
+    - items
+    - page
   properties:
-    orders:
+    items:
       type: array
       items:
         "$ref": "#/components/schemas/MyEventOrderResponse"
+    page:
+      "$ref": "#/components/schemas/PageMetadata"

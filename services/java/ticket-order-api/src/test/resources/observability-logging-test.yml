@@ -1,0 +1,21 @@
+ticket-order-platform:
+  observability:
+    logging:
+      enabled: true
+      request-logging-enabled: true
+      application:
+        targets: console
+        file: build/logs/application-test.log
+      telemetry:
+        targets: console
+        file: build/logs/telemetry-test.log
+      security:
+        targets: console
+        file: build/logs/security-test.log
+      masking:
+        enabled: true
+        additional-fields:
+    rolling:
+      max-file-size: 50MB
+      max-history-days: 14
+      total-size-cap: 1GB

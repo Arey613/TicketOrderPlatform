@@ -39,6 +39,17 @@
         required: false
         schema:
           "$ref": "#/components/schemas/EventListScope"
+      - "$ref": "#/components/parameters/PageParameter"
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          default: 10
+      - "$ref": "#/components/parameters/SortParameter"
     responses:
       "200":
         description: Events response
@@ -56,6 +67,18 @@
     tags:
       - Events
     summary: List published events for public browsing
+    parameters:
+      - "$ref": "#/components/parameters/PageParameter"
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          default: 10
+      - "$ref": "#/components/parameters/SortParameter"
     responses:
       "200":
         description: Published events response

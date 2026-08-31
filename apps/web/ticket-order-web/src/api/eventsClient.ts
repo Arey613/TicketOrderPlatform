@@ -1,5 +1,10 @@
 import { Configuration, EventsApi, ResponseError } from '../generated/api';
-import type { CreateEventOrderItem, EventResponse, MyEventOrderResponse } from '../generated/api';
+import type {
+  CreateEventOrderItem,
+  EventListResponse,
+  EventResponse,
+  MyEventOrdersResponse,
+} from '../generated/api';
 import { prepareCsrfToken, withCsrfHeader } from './authClient';
 
 const apiBaseUrl = import.meta.env.VITE_TICKET_API_BASE_URL ?? 'http://localhost:8080';
@@ -18,9 +23,13 @@ export type SeatSelection = {
   placeType: string;
 };
 
-export async function listEvents(): Promise<EventResponse[]> {
-  const response = await eventsApi.listEvents();
-  return response.events;
+export type PageQuery = {
+  page: number;
+  size: number;
+};
+
+export async function listEvents(query: PageQuery): Promise<EventListResponse> {
+  return eventsApi.listEvents(query);
 }
 
 export async function getEvent(eventId: string): Promise<EventResponse> {
@@ -47,9 +56,8 @@ export async function createEventOrders(selection: SeatSelection): Promise<void>
   );
 }
 
-export async function listMyEventOrders(): Promise<MyEventOrderResponse[]> {
-  const response = await eventsApi.listMyEventOrders();
-  return response.orders;
+export async function listMyEventOrders(query: PageQuery): Promise<MyEventOrdersResponse> {
+  return eventsApi.listMyEventOrders(query);
 }
 
 export async function toEventUserMessage(error: unknown): Promise<string> {

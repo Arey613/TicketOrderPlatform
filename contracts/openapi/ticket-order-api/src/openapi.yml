@@ -45,6 +45,10 @@ components:
   parameters:
     EventId:
       "$ref": "./schemas/event.yml#/EventId"
+    PageParameter:
+      "$ref": "./schemas/pagination.yml#/PageParameter"
+    SortParameter:
+      "$ref": "./schemas/pagination.yml#/SortParameter"
   responses:
     BadRequest:
       description: Request was invalid
@@ -98,6 +102,8 @@ components:
       "$ref": "./schemas/event.yml#/EventStatus"
     EventListScope:
       "$ref": "./schemas/event.yml#/EventListScope"
+    PageMetadata:
+      "$ref": "./schemas/pagination.yml#/PageMetadata"
     EventDetailsRequest:
       "$ref": "./schemas/event.yml#/EventDetailsRequest"
     EventDetailsResponse:

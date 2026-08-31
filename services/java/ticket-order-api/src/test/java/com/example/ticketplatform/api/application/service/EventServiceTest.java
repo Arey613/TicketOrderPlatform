@@ -6,6 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
+import com.example.ticketplatform.api.application.port.in.PageMetadata;
+import com.example.ticketplatform.api.application.port.in.PageRequest;
+import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
@@ -405,13 +408,17 @@ class EventServiceTest {
     }
 
     @Override
-    public List<Event> findPublished() {
-      return events.stream().filter(event -> event.status() == EventStatus.PUBLISHED).toList();
+    public PageResult<Event> findPublished(PageRequest pageRequest) {
+      return page(
+          events.stream().filter(event -> event.status() == EventStatus.PUBLISHED).toList(),
+          pageRequest);
     }
 
     @Override
-    public List<Event> findByOwnerId(UUID ownerId) {
-      return events.stream().filter(event -> event.ownerId().equals(ownerId)).toList();
+    public PageResult<Event> findByOwnerId(UUID ownerId, PageRequest pageRequest) {
+      return page(
+          events.stream().filter(event -> event.ownerId().equals(ownerId)).toList(),
+          pageRequest);
     }
 
     @Override
@@ -447,10 +454,10 @@ class EventServiceTest {
     }
 
     @Override
-    public List<EventOrder> findOrdersByCustomerId(UUID customerId) {
-      return savedOrders.stream()
-          .filter(order -> customerId.equals(order.customerId()))
-          .toList();
+    public PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest) {
+      return page(
+          savedOrders.stream().filter(order -> customerId.equals(order.customerId())).toList(),
+          pageRequest);
     }
 
     @Override
@@ -471,6 +478,14 @@ class EventServiceTest {
       long count = savedOrders.stream().filter(order -> ids.contains(order.id())).count();
       savedOrders.removeIf(order -> ids.contains(order.id()));
       return count;
+    }
+
+    private static <T> PageResult<T> page(List<T> items, PageRequest pageRequest) {
+      int fromIndex = Math.min(pageRequest.page() * pageRequest.size(), items.size());
+      int toIndex = Math.min(fromIndex + pageRequest.size(), items.size());
+      return new PageResult<>(
+          items.subList(fromIndex, toIndex),
+          PageMetadata.of(pageRequest.page(), pageRequest.size(), items.size()));
     }
   }
 }

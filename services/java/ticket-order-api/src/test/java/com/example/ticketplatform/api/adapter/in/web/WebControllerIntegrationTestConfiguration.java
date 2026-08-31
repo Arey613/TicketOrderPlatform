@@ -4,6 +4,9 @@ import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventCommandUseCase;
 import com.example.ticketplatform.api.application.port.in.EventQueryUseCase;
+import com.example.ticketplatform.api.application.port.in.PageMetadata;
+import com.example.ticketplatform.api.application.port.in.PageRequest;
+import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.application.port.out.UserAuthRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.UserQueryRepositoryPort;
@@ -185,20 +188,24 @@ class WebControllerIntegrationTestConfiguration {
     }
 
     @Override
-    public List<Event> listPublishedEvents() {
-      return eventsById.values().stream()
-          .filter(event -> event.status() == EventStatus.PUBLISHED)
-          .toList();
+    public PageResult<Event> listPublishedEvents(PageRequest pageRequest) {
+      return page(
+          eventsById.values().stream()
+              .filter(event -> event.status() == EventStatus.PUBLISHED)
+              .toList(),
+          pageRequest);
     }
 
     @Override
-    public List<Event> listOwnerEvents(UUID ownerId) {
-      return eventsById.values().stream().filter(event -> event.ownerId().equals(ownerId)).toList();
+    public PageResult<Event> listOwnerEvents(UUID ownerId, PageRequest pageRequest) {
+      return page(
+          eventsById.values().stream().filter(event -> event.ownerId().equals(ownerId)).toList(),
+          pageRequest);
     }
 
     @Override
-    public List<EventOrder> listUserOrders(UUID userId) {
-      return orders.stream().filter(order -> userId.equals(order.customerId())).toList();
+    public PageResult<EventOrder> listUserOrders(UUID userId, PageRequest pageRequest) {
+      return page(orders.stream().filter(order -> userId.equals(order.customerId())).toList(), pageRequest);
     }
 
     void reset(List<Event> events, List<EventOrder> orders) {
@@ -241,6 +248,14 @@ class WebControllerIntegrationTestConfiguration {
               .build();
       eventsById.put(updated.id(), updated);
       return updated;
+    }
+
+    private static <T> PageResult<T> page(List<T> items, PageRequest pageRequest) {
+      int fromIndex = Math.min(pageRequest.page() * pageRequest.size(), items.size());
+      int toIndex = Math.min(fromIndex + pageRequest.size(), items.size());
+      return new PageResult<>(
+          items.subList(fromIndex, toIndex),
+          PageMetadata.of(pageRequest.page(), pageRequest.size(), items.size()));
     }
   }
 }

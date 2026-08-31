@@ -1,5 +1,7 @@
 package com.example.ticketplatform.api.application.port.out;
 
+import com.example.ticketplatform.api.application.port.in.PageRequest;
+import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import java.util.Collection;
@@ -11,9 +13,9 @@ public interface EventQueryRepositoryPort {
 
   Optional<Event> findById(UUID id);
 
-  List<Event> findPublished();
+  PageResult<Event> findPublished(PageRequest pageRequest);
 
-  List<Event> findByOwnerId(UUID ownerId);
+  PageResult<Event> findByOwnerId(UUID ownerId, PageRequest pageRequest);
 
   boolean existsOrderPosition(UUID eventId, int rowNumber, int placeNumber);
 
@@ -22,5 +24,5 @@ public interface EventQueryRepositoryPort {
 
   List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId);
 
-  List<EventOrder> findOrdersByCustomerId(UUID customerId);
+  PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest);
 }

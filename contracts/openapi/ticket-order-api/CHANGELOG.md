@@ -22,3 +22,4 @@ TICKET_CONTRACTS#123 - short description
 - TICKET_SERVICE#5 - add registration authentication flow
 - TICKET_SERVICE#6 - address event management review comments
 - TICKET_PORTAL#3 - add booked-place ownership hints
+- TICKET_SERVICE#9 - add pagination parameters and response metadata

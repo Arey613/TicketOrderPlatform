@@ -1,0 +1,28 @@
+ticket-order-platform:
+  pagination:
+    events:
+      default-size: 10
+      default-sort: date,asc
+      allowed-sorts:
+        - date,asc
+        - date,desc
+        - name,asc
+        - name,desc
+        - createdAt,asc
+        - createdAt,desc
+    public-events:
+      default-size: 10
+      default-sort: date,asc
+      allowed-sorts:
+        - date,asc
+        - date,desc
+        - name,asc
+        - name,desc
+    orders:
+      default-size: 20
+      default-sort: reservationDate,desc
+      allowed-sorts:
+        - reservationDate,asc
+        - reservationDate,desc
+        - eventDate,asc
+        - eventDate,desc

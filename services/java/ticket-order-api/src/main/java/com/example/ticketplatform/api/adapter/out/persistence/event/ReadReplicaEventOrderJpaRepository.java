@@ -4,12 +4,14 @@ import com.example.ticketplatform.api.infrastructure.config.persistence.ReadRepl
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 @ReadReplicaRepository
 interface ReadReplicaEventOrderJpaRepository extends JpaRepository<EventOrderEntity, UUID> {
 
-  List<EventOrderEntity> findByCustomerId(UUID customerId);
+  Page<EventOrderEntity> findByCustomerId(UUID customerId, Pageable pageable);
 
   boolean existsByEventIdAndRowNumberAndPlaceNumber(UUID eventId, int rowNumber, int placeNumber);
 

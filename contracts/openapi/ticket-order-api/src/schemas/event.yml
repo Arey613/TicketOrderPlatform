@@ -197,9 +197,12 @@ EventResponse:
 EventListResponse:
   type: object
   required:
-    - events
+    - items
+    - page
   properties:
-    events:
+    items:
       type: array
       items:
         "$ref": "#/components/schemas/EventResponse"
+    page:
+      "$ref": "#/components/schemas/PageMetadata"
