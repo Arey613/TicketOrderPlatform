@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { AuthenticatedUser } from '../../api/authClient';
 import {
   createEventOrders,
-  getEvent,
-  listEvents,
+  getAuthenticatedEvent,
+  getPublishedEvent,
+  listPublishedEvents,
   listMyEventOrders,
   toEventUserMessage,
 } from '../../api/eventsClient';
@@ -86,7 +87,7 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
     setMessage('');
 
     try {
-      const response = await listEvents({ page, size });
+      const response = await listPublishedEvents({ page, size });
       setEvents(response.items);
       setEventsPage(response.page);
       setSelectedEventId((current) =>
@@ -115,7 +116,30 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
     setMessage('');
 
     try {
-      setEventDetails(await getEvent(eventId));
+      const event = currentUser
+        ? await getAuthenticatedEvent(eventId)
+        : await getPublishedEvent(eventId);
+      setEventDetails(event);
+    } catch (error) {
+      setMessage(await toEventUserMessage(error));
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  }
+
+  async function refreshAuthenticatedEventDetails(eventId: string, seat: SelectedSeat | null) {
+    setIsLoadingDetails(true);
+    setMessage('');
+
+    try {
+      const event = await getAuthenticatedEvent(eventId);
+      setEventDetails(event);
+      if (
+        seat &&
+        event.takenPlaces?.some((place) => place.row === seat.row && place.place === seat.place)
+      ) {
+        setSelectedSeat(null);
+      }
     } catch (error) {
       setMessage(await toEventUserMessage(error));
     } finally {
@@ -159,7 +183,7 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
         placeType: defaultPlaceType,
       });
       setSelectedSeat(null);
-      await loadEventDetails(selectedEvent.eventId);
+      await refreshAuthenticatedEventDetails(selectedEvent.eventId, null);
       setOrdersPageNumber(0);
       await loadMyOrders(0, ordersPageSize);
       setMessage('Place booked.');
@@ -178,6 +202,14 @@ export function EventPreviewList({ currentUser, onLogin }: EventPreviewListProps
         })),
       )
     : [];
+
+  useEffect(() => {
+    if (!currentUser || !selectedEventId) {
+      return;
+    }
+
+    void refreshAuthenticatedEventDetails(selectedEventId, selectedSeat);
+  }, [currentUser]);
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8" id="events">

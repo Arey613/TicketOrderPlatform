@@ -5,8 +5,9 @@ import App from '../../src/App';
 import { login, logout, register, toUserMessage } from '../../src/api/authClient';
 import {
   createEventOrders,
-  getEvent,
-  listEvents,
+  getAuthenticatedEvent,
+  getPublishedEvent,
+  listPublishedEvents,
   listMyEventOrders,
 } from '../../src/api/eventsClient';
 import { submitLoginForm, submitRegistrationForm } from '../support/appTestActions';
@@ -27,8 +28,9 @@ vi.mock('../../src/api/authClient', () => ({
 
 vi.mock('../../src/api/eventsClient', () => ({
   createEventOrders: vi.fn(),
-  getEvent: vi.fn(),
-  listEvents: vi.fn(),
+  getAuthenticatedEvent: vi.fn(),
+  getPublishedEvent: vi.fn(),
+  listPublishedEvents: vi.fn(),
   listMyEventOrders: vi.fn(),
   toEventUserMessage: vi.fn(),
 }));
@@ -38,8 +40,9 @@ const mockedLogout = vi.mocked(logout);
 const mockedRegister = vi.mocked(register);
 const mockedToUserMessage = vi.mocked(toUserMessage);
 const mockedCreateEventOrders = vi.mocked(createEventOrders);
-const mockedGetEvent = vi.mocked(getEvent);
-const mockedListEvents = vi.mocked(listEvents);
+const mockedGetAuthenticatedEvent = vi.mocked(getAuthenticatedEvent);
+const mockedGetPublishedEvent = vi.mocked(getPublishedEvent);
+const mockedListPublishedEvents = vi.mocked(listPublishedEvents);
 const mockedListMyEventOrders = vi.mocked(listMyEventOrders);
 
 const publishedEvent = {
@@ -100,10 +103,12 @@ describe('App', () => {
     mockedToUserMessage.mockResolvedValue('The email or password is not valid.');
     mockedCreateEventOrders.mockReset();
     mockedCreateEventOrders.mockResolvedValue();
-    mockedGetEvent.mockReset();
-    mockedGetEvent.mockResolvedValue(publishedEvent);
-    mockedListEvents.mockReset();
-    mockedListEvents.mockResolvedValue({
+    mockedGetAuthenticatedEvent.mockReset();
+    mockedGetAuthenticatedEvent.mockResolvedValue(publishedEvent);
+    mockedGetPublishedEvent.mockReset();
+    mockedGetPublishedEvent.mockResolvedValue(publishedEvent);
+    mockedListPublishedEvents.mockReset();
+    mockedListPublishedEvents.mockResolvedValue({
       items: [publishedEvent],
       page: pageMetadata(10, 1),
     });
@@ -130,6 +135,22 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'Row 1, place 2' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Create account' })).toBeVisible();
     expect(screen.getAllByRole('button', { name: 'Login' })[0]).toBeVisible();
+    expect(mockedListPublishedEvents).toHaveBeenCalledWith({ page: 0, size: 10 });
+    expect(mockedGetAuthenticatedEvent).not.toHaveBeenCalled();
+    expect(mockedListMyEventOrders).not.toHaveBeenCalled();
+  });
+
+  it('loads selected event details through the public endpoint for public users', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await screen.findAllByRole('heading', { name: 'The Horizon Live' });
+    await user.click(screen.getByRole('button', { name: 'Select' }));
+
+    await waitFor(() => {
+      expect(mockedGetPublishedEvent).toHaveBeenCalledWith('event-1');
+    });
+    expect(mockedGetAuthenticatedEvent).not.toHaveBeenCalled();
   });
 
   it('opens login instead of booking for public users', async () => {
@@ -147,7 +168,7 @@ describe('App', () => {
   it('books a selected place for an authenticated customer and refreshes owned orders', async () => {
     const user = userEvent.setup();
     localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
-    mockedGetEvent.mockResolvedValue(bookedEvent);
+    mockedGetAuthenticatedEvent.mockResolvedValue(bookedEvent);
     mockedListMyEventOrders.mockResolvedValue({
       items: [myEventOrder],
       page: pageMetadata(20, 1),
