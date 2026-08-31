@@ -30,8 +30,8 @@ class ConfigurableCorrelationTimeZoneIntegrationTest {
   @Test
   void generatesCorrelationIdDateWithConfiguredTimeZone() throws Exception {
     mockMvc
-        .perform(get("/actuator/health"))
-        .andExpect(status().isOk())
+        .perform(get("/auth/csrf"))
+        .andExpect(status().isNoContent())
         .andExpect(
             header()
                 .string(

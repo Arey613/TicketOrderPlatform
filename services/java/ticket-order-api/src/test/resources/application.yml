@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: local
   config:
     import:
       - classpath:observability-logging-test.yml

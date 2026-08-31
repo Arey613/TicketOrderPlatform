@@ -264,6 +264,63 @@ class EventControllerIntegrationTest {
   }
 
   @Test
+  void rejectsEventOrderDeletionForAnonymousViewer() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/events/orders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "eventOrderIds": [
+                            "00000000-0000-0000-0000-000000000604"
+                          ]
+                        }
+                        """)))
+        .andExpect(status().isUnauthorized());
+
+    assertThat(testEvents.deletedOrderCount()).isZero();
+  }
+
+  @Test
+  void rejectsEventOrderDeletionForManagerRole() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/events/orders")
+                    .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "eventOrderIds": [
+                            "00000000-0000-0000-0000-000000000604"
+                          ]
+                        }
+                        """)))
+        .andExpect(status().isForbidden());
+
+    assertThat(testEvents.deletedOrderCount()).isZero();
+  }
+
+  @Test
+  void returnsPublicEventsListWithoutAuthentication() throws Exception {
+    mockMvc
+        .perform(get("/public/events"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.items[0].eventId").value(EVENT_ID.toString()));
+  }
+
+  @Test
+  void returnsPublicEventDetailsWithoutAuthentication() throws Exception {
+    mockMvc
+        .perform(get("/public/events/{eventId}", EVENT_ID))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()));
+  }
+
+  @Test
   void deletesCurrentUserOrders() throws Exception {
     mockMvc
         .perform(

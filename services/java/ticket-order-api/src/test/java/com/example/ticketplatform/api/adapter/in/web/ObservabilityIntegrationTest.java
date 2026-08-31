@@ -57,8 +57,8 @@ class ObservabilityIntegrationTest {
   void generatesCorrelationIdWhenHeaderIsMissing() throws Exception {
     String correlationId =
         mockMvc
-            .perform(get("/actuator/health"))
-            .andExpect(status().isOk())
+            .perform(get("/auth/csrf"))
+            .andExpect(status().isNoContent())
             .andExpect(header().exists("X-Correlation-ID"))
             .andReturn()
             .getResponse()
@@ -72,8 +72,8 @@ class ObservabilityIntegrationTest {
   @Test
   void reusesValidCorrelationId() throws Exception {
     mockMvc
-        .perform(get("/actuator/health").header("X-Correlation-ID", VALID_CORRELATION_ID))
-        .andExpect(status().isOk())
+        .perform(get("/auth/csrf").header("X-Correlation-ID", VALID_CORRELATION_ID))
+        .andExpect(status().isNoContent())
         .andExpect(header().string("X-Correlation-ID", VALID_CORRELATION_ID));
   }
 
@@ -81,7 +81,7 @@ class ObservabilityIntegrationTest {
   void rejectsCorrelationIdOutsideConfiguredPattern() throws Exception {
     mockMvc
         .perform(
-            get("/actuator/health")
+            get("/auth/csrf")
                 .header(
                     "X-Correlation-ID",
                     "018f0f5e-4e7a-7a89-b2f3-5d9d4a0b91c2-2026-08-13"))
@@ -120,7 +120,7 @@ class ObservabilityIntegrationTest {
 
   @Test
   void clearsMdcAfterRequestCompletion() throws Exception {
-    mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());
+    mockMvc.perform(get("/auth/csrf")).andExpect(status().isNoContent());
 
     assertThat(MDC.getCopyOfContextMap()).isNull();
   }
@@ -128,8 +128,8 @@ class ObservabilityIntegrationTest {
   @Test
   void emitsJsonLogWithCorrelationMdc(CapturedOutput output) throws Exception {
     mockMvc
-        .perform(get("/actuator/health").header("X-Correlation-ID", VALID_CORRELATION_ID))
-        .andExpect(status().isOk());
+        .perform(get("/auth/csrf").header("X-Correlation-ID", VALID_CORRELATION_ID))
+        .andExpect(status().isNoContent());
 
     String requestLog =
         output.getOut().lines()
@@ -148,10 +148,10 @@ class ObservabilityIntegrationTest {
   void extractsTraceContextIntoJsonLogMdc(CapturedOutput output) throws Exception {
     mockMvc
         .perform(
-            get("/actuator/health")
+            get("/auth/csrf")
                 .header("X-Correlation-ID", VALID_CORRELATION_ID)
                 .header("traceparent", TRACEPARENT))
-        .andExpect(status().isOk());
+        .andExpect(status().isNoContent());
 
     String requestLog =
         output.getOut().lines()

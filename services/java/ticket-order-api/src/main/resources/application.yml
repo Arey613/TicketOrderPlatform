@@ -25,6 +25,8 @@ spring:
       mode: never
 
 management:
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:9090}
   endpoints:
     web:
       exposure:

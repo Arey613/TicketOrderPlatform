@@ -24,16 +24,16 @@ class ConfigurableCorrelationPatternIntegrationTest {
   @Test
   void acceptsCorrelationIdMatchingConfiguredPattern() throws Exception {
     mockMvc
-        .perform(get("/actuator/health").header("X-Correlation-ID", "ticket-order-1234abcd"))
-        .andExpect(status().isOk())
+        .perform(get("/auth/csrf").header("X-Correlation-ID", "ticket-order-1234abcd"))
+        .andExpect(status().isNoContent())
         .andExpect(header().string("X-Correlation-ID", "ticket-order-1234abcd"));
   }
 
   @Test
   void generatesCorrelationIdFromConfiguredTemplate() throws Exception {
     mockMvc
-        .perform(get("/actuator/health"))
-        .andExpect(status().isOk())
+        .perform(get("/auth/csrf"))
+        .andExpect(status().isNoContent())
         .andExpect(
             header()
                 .string("X-Correlation-ID", Matchers.matchesPattern("ticket-order-[0-9a-f]{8}")));

@@ -29,6 +29,10 @@ class AuthenticationSessionManager {
     SecurityContext context = SecurityContextHolder.createEmptyContext();
     context.setAuthentication(authentication);
     SecurityContextHolder.setContext(context);
+
+    if (request.getSession(false) != null) {
+      request.changeSessionId();
+    }
     new HttpSessionSecurityContextRepository().saveContext(context, request, response);
   }
 
