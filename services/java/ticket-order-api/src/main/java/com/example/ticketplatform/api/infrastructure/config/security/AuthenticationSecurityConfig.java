@@ -38,7 +38,9 @@ class AuthenticationSecurityConfig {
         .authorizeHttpRequests(
                 authorize ->
                 authorize
-                    .requestMatchers("/actuator/health", "/auth/**", "/public/events/**", "/error")
+                    .requestMatchers("/actuator/health", "/auth/**", "/error")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/public/events", "/public/events/*")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/events/*")
                     .permitAll()
