@@ -61,6 +61,7 @@ class EventController implements EventsApi, PublicApi {
   }
 
   @Override
+  @PreAuthorize("hasRole('CUSTOMER')")
   public ResponseEntity<Void> deleteEventOrders(DeleteEventOrdersRequest deleteEventOrdersRequest) {
     eventCommandUseCase.deleteEventOrders(
         currentUserProvider.currentUser().id(), deleteEventOrdersRequest.getEventOrderIds());

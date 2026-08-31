@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.ticketplatform.api.adapter.in.web.WebControllerIntegrationTestConfiguration.TestUsers;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.infrastructure.config.security.AuthenticatedUserPrincipal;
+import com.example.ticketplatform.api.infrastructure.config.security.LoginRateLimiter;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
 import java.util.UUID;
@@ -45,9 +46,13 @@ class AuthControllerIntegrationTest {
   @Autowired
   private TestUsers testUsers;
 
+  @Autowired
+  private LoginRateLimiter loginRateLimiter;
+
   @BeforeEach
   void setUp() {
     testUsers.reset(List.of(ENABLED_USER, DISABLED_USER));
+    loginRateLimiter.reset();
   }
 
   @Test
@@ -143,6 +148,36 @@ class AuthControllerIntegrationTest {
   }
 
   @Test
+  void rotatesSessionIdOnLogin() throws Exception {
+    MockHttpSession preLoginSession = new MockHttpSession();
+    String preLoginSessionId = preLoginSession.getId();
+    Cookie csrfCookie = csrfCookie();
+
+    MvcResult loginResult =
+        mockMvc
+            .perform(
+                post("/auth/login")
+                    .session(preLoginSession)
+                    .cookie(csrfCookie)
+                    .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "login": "customer@example.com",
+                          "password": "secret"
+                        }
+                        """))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    MockHttpSession postLoginSession = (MockHttpSession) loginResult.getRequest().getSession(false);
+
+    assertThat(postLoginSession).isNotNull();
+    assertThat(postLoginSession.getId()).isNotEqualTo(preLoginSessionId);
+  }
+
+  @Test
   void registersUserAndAllowsSessionBackedAccess() throws Exception {
     Cookie csrfCookie = csrfCookie();
 
@@ -187,6 +222,37 @@ class AuthControllerIntegrationTest {
     mockMvc
         .perform(get("/users/{userId}", registeredUser.id()).session(session))
         .andExpect(status().isOk());
+  }
+
+  @Test
+  void rotatesSessionIdOnRegistration() throws Exception {
+    MockHttpSession preRegisterSession = new MockHttpSession();
+    String preRegisterSessionId = preRegisterSession.getId();
+    Cookie csrfCookie = csrfCookie();
+
+    MvcResult registerResult =
+        mockMvc
+            .perform(
+                post("/auth/register")
+                    .session(preRegisterSession)
+                    .cookie(csrfCookie)
+                    .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "email": "session.fixation@example.com",
+                          "password": "new-secret"
+                        }
+                        """))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    MockHttpSession postRegisterSession =
+        (MockHttpSession) registerResult.getRequest().getSession(false);
+
+    assertThat(postRegisterSession).isNotNull();
+    assertThat(postRegisterSession.getId()).isNotEqualTo(preRegisterSessionId);
   }
 
   @Test

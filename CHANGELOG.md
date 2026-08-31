@@ -43,6 +43,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#7 - add backend observability
 - TICKET_SERVICE#8 - add read-replica CQRS datasource split
 - TICKET_SERVICE#9 - add API pagination specification
+- TICKET_SERVICE#10 - add security hardening across auth, authorization, and actuator access
 
 ### Changed
 

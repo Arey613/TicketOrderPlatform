@@ -7,8 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.ticketplatform.api.adapter.in.web.WebControllerIntegrationTestConfiguration.TestUsers;
 import com.example.ticketplatform.api.domain.model.user.User;
-import com.example.ticketplatform.api.domain.model.user.UserRole;
-import com.example.ticketplatform.api.infrastructure.config.security.AuthenticatedUserPrincipal;
+import com.example.ticketplatform.api.infrastructure.config.security.LoginRateLimiter;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
 import java.util.UUID;
@@ -19,11 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
@@ -40,9 +34,12 @@ class ActuatorHealthIntegrationTest {
 
   @Autowired private TestUsers testUsers;
 
+  @Autowired private LoginRateLimiter loginRateLimiter;
+
   @BeforeEach
   void setUp() {
     testUsers.reset(List.of(USER));
+    loginRateLimiter.reset();
   }
 
   @Test
@@ -51,20 +48,13 @@ class ActuatorHealthIntegrationTest {
   }
 
   @Test
-  void protectsMetricsWithoutAuthentication() throws Exception {
-    mockMvc.perform(get("/actuator/metrics")).andExpect(status().isUnauthorized());
+  void exposesMetricsWithoutAuthentication() throws Exception {
+    mockMvc.perform(get("/actuator/metrics")).andExpect(status().isOk());
   }
 
   @Test
-  void protectsPrometheusWithoutAuthentication() throws Exception {
-    mockMvc.perform(get("/actuator/prometheus")).andExpect(status().isUnauthorized());
-  }
-
-  @Test
-  void exposesPrometheusWhenAuthenticated() throws Exception {
-    mockMvc
-        .perform(get("/actuator/prometheus").session(authenticatedSession()))
-        .andExpect(status().isOk());
+  void exposesPrometheusWithoutAuthentication() throws Exception {
+    mockMvc.perform(get("/actuator/prometheus")).andExpect(status().isOk());
   }
 
   @Test
@@ -88,7 +78,7 @@ class ActuatorHealthIntegrationTest {
 
     String prometheus =
         mockMvc
-            .perform(get("/actuator/prometheus").session(authenticatedSession()))
+            .perform(get("/actuator/prometheus"))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
@@ -96,19 +86,6 @@ class ActuatorHealthIntegrationTest {
 
     assertThat(prometheus).contains("ticket_auth_login_attempts_total");
     assertThat(prometheus).contains("ticket_auth_login_failure_total");
-  }
-
-  private static MockHttpSession authenticatedSession() {
-    var context = SecurityContextHolder.createEmptyContext();
-    context.setAuthentication(
-        UsernamePasswordAuthenticationToken.authenticated(
-            new AuthenticatedUserPrincipal(USER_ID, "actuator@example.com", UserRole.CUSTOMER),
-            null,
-            List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))));
-
-    MockHttpSession session = new MockHttpSession();
-    session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-    return session;
   }
 
   private Cookie csrfCookie() throws Exception {

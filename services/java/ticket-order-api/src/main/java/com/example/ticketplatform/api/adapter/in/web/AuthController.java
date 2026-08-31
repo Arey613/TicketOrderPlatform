@@ -53,6 +53,9 @@ class AuthController implements AuthApi {
     return ResponseEntity.noContent().build();
   }
 
+  // TODO: duplicate-email registration currently surfaces as an unhandled exception (raw 500)
+  // instead of 409 Conflict. Needs a @RestControllerAdvice mapping to the contract's
+  // ErrorResponse schema.
   @Override
   public ResponseEntity<UserResponse> registerUser(RegisterUserRequest registerUserRequest) {
     String passwordHash = passwordHasherPort.hash(registerUserRequest.getPassword());

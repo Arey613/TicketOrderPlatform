@@ -3,6 +3,7 @@ spring:
     import:
       - classpath:observability-logging-test.yml
       - classpath:pagination-test.yml
+      - classpath:test-profile.yml
   application:
     name: ticket-order-api
   datasource:
