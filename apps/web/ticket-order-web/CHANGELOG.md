@@ -16,6 +16,7 @@ TICKET_PORTAL#123 - short description
 - TICKET_PORTAL#1 - add OpenAPI client generation
 - TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI, startup fixes, and review guidance
 - TICKET_PORTAL#4 - add public functional access specification
+- TICKET_PORTAL#6 - add event creation page for managers and admins
 
 ### Changed
 
