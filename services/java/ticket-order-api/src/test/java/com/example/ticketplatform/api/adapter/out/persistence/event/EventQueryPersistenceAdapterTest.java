@@ -62,6 +62,7 @@ class EventQueryPersistenceAdapterTest {
   @Test
   void readsPublishedEventsByNamedQuery() {
     save(event(EVENT_ID, EventStatus.PUBLISHED));
+    saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID)));
     save(event(DRAFT_EVENT_ID, EventStatus.DRAFT));
 
     PageResult<Event> page = queryAdapter.findPublished(new PageRequest(0, 10, "date,asc"));
@@ -72,12 +73,27 @@ class EventQueryPersistenceAdapterTest {
   }
 
   @Test
+  void readsEventByIdWithOrders() {
+    save(event(EVENT_ID, EventStatus.PUBLISHED));
+    saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID)));
+
+    Event event = queryAdapter.findById(EVENT_ID).orElseThrow();
+
+    assertThat(event.orders()).singleElement().satisfies(order -> assertThat(order.placeNumber()).isEqualTo(7));
+  }
+
+  @Test
   void readsOwnerEventsByNamedQuery() {
     save(event(EVENT_ID, EventStatus.PUBLISHED));
+    saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID)));
 
     assertThat(queryAdapter.findByOwnerId(OWNER_ID, new PageRequest(0, 10, "date,asc")).items())
-        .extracting(Event::id)
-        .containsExactly(EVENT_ID);
+        .singleElement()
+        .satisfies(
+            event -> {
+              assertThat(event.id()).isEqualTo(EVENT_ID);
+              assertThat(event.details()).isNotNull();
+            });
   }
 
   @Test

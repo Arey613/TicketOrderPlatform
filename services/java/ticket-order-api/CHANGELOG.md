@@ -31,3 +31,4 @@ TICKET_SERVICE#123 - short description
 - TICKET_SERVICE#7 - address observability review comments
 - BUGFIX#2 - keep operational persistence on the primary transactional datasource
 - TICKET_PORTAL#3 - add customer-owned event-order behavior
+- BUGFIX#3 - avoid join-fetching event orders for paged event queries

@@ -31,8 +31,8 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   @Override
   public Optional<Event> findById(UUID id) {
     return readQueryExecutor.execute(
-        () -> readReplicaEventRepository.findById(id).map(eventMapper::toDomain),
-        () -> primaryEventRepository.findById(id).map(eventMapper::toDomain));
+        () -> readReplicaEventRepository.findByIdWithOrders(id).map(eventMapper::toDomain),
+        () -> primaryEventRepository.findByIdWithOrders(id).map(eventMapper::toDomain));
   }
 
   @Override
@@ -105,7 +105,7 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
 
   private PageResult<Event> toPageResult(Page<EventEntity> page) {
     return new PageResult<>(
-        page.getContent().stream().map(eventMapper::toDomain).toList(),
+        page.getContent().stream().map(eventMapper::toDomainWithoutOrders).toList(),
         PageMetadata.of(page.getNumber(), page.getSize(), page.getTotalElements()));
   }
 
