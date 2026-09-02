@@ -1,8 +1,9 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { login, logout, register, toUserMessage } from '../../src/api/authClient';
 import {
+  createEvent,
   createEventOrders,
   getAuthenticatedEvent,
   getPublishedEvent,
@@ -29,6 +30,7 @@ vi.mock('../../src/api/authClient', () => ({
 }));
 
 vi.mock('../../src/api/eventsClient', () => ({
+  createEvent: vi.fn(),
   createEventOrders: vi.fn(),
   getAuthenticatedEvent: vi.fn(),
   getPublishedEvent: vi.fn(),
@@ -41,6 +43,7 @@ const mockedLogin = vi.mocked(login);
 const mockedLogout = vi.mocked(logout);
 const mockedRegister = vi.mocked(register);
 const mockedToUserMessage = vi.mocked(toUserMessage);
+const mockedCreateEvent = vi.mocked(createEvent);
 const mockedCreateEventOrders = vi.mocked(createEventOrders);
 const mockedGetAuthenticatedEvent = vi.mocked(getAuthenticatedEvent);
 const mockedGetPublishedEvent = vi.mocked(getPublishedEvent);
@@ -55,6 +58,7 @@ describe('App', () => {
     mockedRegister.mockReset();
     mockedToUserMessage.mockReset();
     mockedToUserMessage.mockReturnValue('The email or password is not valid.');
+    mockedCreateEvent.mockReset();
     mockedCreateEventOrders.mockReset();
     mockedCreateEventOrders.mockResolvedValue();
     mockedGetAuthenticatedEvent.mockReset();
@@ -315,5 +319,78 @@ describe('App', () => {
     expect(screen.queryByRole('button', { name: 'User administration' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Platform operations' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Event oversight' })).not.toBeInTheDocument();
+  });
+
+  describe('event creation access', () => {
+    afterEach(() => {
+      window.history.pushState(null, '', '/');
+    });
+
+    it('shows a working "Create event" nav link for managers and admins only', () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+      const { unmount } = renderApp();
+
+      expect(screen.getByRole('link', { name: 'Create event' })).toHaveAttribute(
+        'href',
+        '/events/create',
+      );
+      unmount();
+
+      localStorage.setItem(storedUserKey, JSON.stringify(adminUser));
+      const { unmount: unmountAdmin } = renderApp();
+
+      expect(screen.getByRole('link', { name: 'Create event' })).toHaveAttribute(
+        'href',
+        '/events/create',
+      );
+      unmountAdmin();
+
+      localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
+      renderApp();
+
+      expect(screen.queryByRole('link', { name: 'Create event' })).not.toBeInTheDocument();
+    });
+
+    it('renders the create-event page for a manager visiting the route directly', async () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+      window.history.pushState(null, '', '/events/create');
+
+      renderApp();
+
+      expect(await screen.findByRole('heading', { name: 'Create event' })).toBeVisible();
+    });
+
+    it('renders the create-event page for an admin visiting the route directly', async () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(adminUser));
+      window.history.pushState(null, '', '/events/create');
+
+      renderApp();
+
+      expect(await screen.findByRole('heading', { name: 'Create event' })).toBeVisible();
+    });
+
+    it('redirects a customer away from the create-event route', async () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
+      window.history.pushState(null, '', '/events/create');
+
+      renderApp();
+
+      expect(
+        await screen.findByRole('heading', { name: 'Order tickets without queues' }),
+      ).toBeVisible();
+      expect(screen.queryByRole('heading', { name: 'Create event' })).not.toBeInTheDocument();
+      expect(window.location.pathname).toBe('/');
+    });
+
+    it('redirects a logged-out visitor away from the create-event route', async () => {
+      window.history.pushState(null, '', '/events/create');
+
+      renderApp();
+
+      expect(
+        await screen.findByRole('heading', { name: 'Order tickets without queues' }),
+      ).toBeVisible();
+      expect(window.location.pathname).toBe('/');
+    });
   });
 });

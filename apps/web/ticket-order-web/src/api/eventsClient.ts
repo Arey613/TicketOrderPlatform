@@ -1,5 +1,7 @@
+import type { CreateEventFormValues } from '../features/events/createEventSchema';
 import type {
   CreateEventOrderItem,
+  CreateEventRequest,
   EventListResponse,
   EventResponse,
   MyEventOrdersResponse,
@@ -62,6 +64,31 @@ export async function createEventOrders(selection: SeatSelection): Promise<void>
 
 export async function listMyEventOrders(query: PageQuery): Promise<MyEventOrdersResponse> {
   return eventsApi.listMyEventOrders(query);
+}
+
+export async function createEvent(command: CreateEventFormValues): Promise<EventResponse> {
+  await prepareCsrfToken();
+
+  const createEventRequest: CreateEventRequest = {
+    name: command.name,
+    date: new Date(command.date),
+    place: command.place,
+    city: command.city || undefined,
+    type: command.type,
+    summary: command.summary || undefined,
+    imageUrl: command.imageUrl || undefined,
+    price: command.price || undefined,
+    currency: command.currency || undefined,
+    details: {
+      description: command.details.description,
+      numberOfPlaces: command.details.numberOfPlaces,
+      numberOfRows: command.details.numberOfRows,
+      seatsPerRow: command.details.seatsPerRow,
+      placeTypes: command.details.placeTypes?.length ? command.details.placeTypes : undefined,
+    },
+  };
+
+  return eventsApi.createEvent({ createEventRequest }, withCsrfHeader);
 }
 
 export function toEventUserMessage(error: unknown): string {

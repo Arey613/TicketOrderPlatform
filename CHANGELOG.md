@@ -93,6 +93,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI, startup fixes, and review guidance
 - TICKET_SERVICE#9 - add UI pagination specification
 - TICKET_PORTAL#4 - add public functional access specification
+- TICKET_PORTAL#6 - add event creation page for managers and admins
 
 ### Changed
 
