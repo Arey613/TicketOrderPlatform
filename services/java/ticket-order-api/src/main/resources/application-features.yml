@@ -1,0 +1,12 @@
+spring:
+  sql:
+    init:
+      mode: always
+      separator: "^^^ END OF STATEMENT ^^^"
+      schema-locations:
+        - classpath:features/eventorderprojection/schema.sql
+
+ticket-order-platform:
+  features:
+    event-order-projection:
+      cleanup-delay: PT5M
