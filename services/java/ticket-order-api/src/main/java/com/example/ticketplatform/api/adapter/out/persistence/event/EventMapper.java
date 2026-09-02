@@ -40,6 +40,10 @@ interface EventMapper {
   @Mapping(target = "orders", expression = "java(toBookedPlaces(entity.getOrders()))")
   Event toDomain(EventEntity entity);
 
+  @Mapping(target = "status", expression = "java(toDomainStatus(entity.getStatus()))")
+  @Mapping(target = "orders", expression = "java(java.util.List.of())")
+  Event toDomainWithoutOrders(EventEntity entity);
+
   EventDetails toDomain(EventDetailsEntity entity);
 
   @Mapping(target = "eventId", source = "event.id")
