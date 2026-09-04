@@ -1,0 +1,81 @@
+package com.example.ticketplatform.api.adapter.in.web;
+
+import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
+import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+
+/**
+ * Swaps the real S3-backed {@link ObjectStoragePort} for an in-memory stub so controller
+ * integration tests never talk to S3/LocalStack, while still exercising the real
+ * ownership-check, validation, and persistence path through the real application service and
+ * JPA-backed repository ports.
+ */
+@TestConfiguration
+class EventMediaControllerIntegrationTestConfiguration {
+
+  @Bean
+  @Primary
+  StubObjectStoragePort stubObjectStoragePort() {
+    return new StubObjectStoragePort();
+  }
+
+  static class StubObjectStoragePort implements ObjectStoragePort {
+
+    private String lastUploadKey;
+    private String lastUploadContentType;
+    private String lastUploadCacheControl;
+    private String lastPresignKey;
+    private String lastPresignContentType;
+
+    @Override
+    public String upload(String key, byte[] data, String contentType, String cacheControl) {
+      this.lastUploadKey = key;
+      this.lastUploadContentType = contentType;
+      this.lastUploadCacheControl = cacheControl;
+      return "https://cdn.example.com/" + key;
+    }
+
+    @Override
+    public PresignedUpload issuePresignedUploadUrl(
+        String key, String contentType, String cacheControl, Duration ttl) {
+      this.lastPresignKey = key;
+      this.lastPresignContentType = contentType;
+      URI uploadUrl = URI.create("https://bucket.example.com/" + key + "?signature=stub");
+      URI publicUrl = URI.create("https://cdn.example.com/" + key);
+      return new PresignedUpload(
+          uploadUrl,
+          Map.of("Content-Type", contentType, "Cache-Control", cacheControl),
+          Instant.now().plus(ttl),
+          publicUrl);
+    }
+
+    void reset() {
+      lastUploadKey = null;
+      lastUploadContentType = null;
+      lastUploadCacheControl = null;
+      lastPresignKey = null;
+      lastPresignContentType = null;
+    }
+
+    String lastUploadKey() {
+      return lastUploadKey;
+    }
+
+    String lastUploadContentType() {
+      return lastUploadContentType;
+    }
+
+    String lastPresignKey() {
+      return lastPresignKey;
+    }
+
+    String lastPresignContentType() {
+      return lastPresignContentType;
+    }
+  }
+}

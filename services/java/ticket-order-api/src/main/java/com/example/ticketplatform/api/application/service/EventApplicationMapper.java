@@ -57,6 +57,14 @@ interface EventApplicationMapper {
   @Mapping(target = "updatedAt", source = "now")
   Event toEventWithStatus(Event event, EventStatus status, Instant now);
 
+  @Mapping(target = "imageUrl", source = "imageUrl")
+  @Mapping(target = "updatedAt", source = "now")
+  Event toEventWithImage(Event event, String imageUrl, Instant now);
+
+  @Mapping(target = "videoUrl", source = "videoUrl")
+  @Mapping(target = "updatedAt", source = "now")
+  Event toEventWithVideo(Event event, String videoUrl, Instant now);
+
   @Mapping(target = "id", source = "eventOrderId")
   @Mapping(target = "customerId", ignore = true)
   @Mapping(target = "rowNumber", source = "command.rowNumber")

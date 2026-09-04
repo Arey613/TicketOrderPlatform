@@ -158,6 +158,76 @@
         "$ref": "#/components/responses/Forbidden"
       "404":
         "$ref": "#/components/responses/NotFound"
+"/events/{eventId}/image":
+  post:
+    operationId: attachEventImage
+    tags:
+      - Events
+    summary: Attach an image to an event
+    security:
+      - sessionAuth: []
+    parameters:
+      - "$ref": "#/components/parameters/EventId"
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - image
+            properties:
+              image:
+                type: string
+                format: binary
+    responses:
+      "200":
+        description: Image was attached
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventResponse"
+      "400":
+        "$ref": "#/components/responses/BadRequest"
+      "401":
+        "$ref": "#/components/responses/Unauthorized"
+      "403":
+        "$ref": "#/components/responses/Forbidden"
+      "404":
+        "$ref": "#/components/responses/NotFound"
+      "413":
+        "$ref": "#/components/responses/PayloadTooLarge"
+"/events/{eventId}/video-upload-url":
+  post:
+    operationId: issueEventVideoUploadUrl
+    tags:
+      - Events
+    summary: Issue a presigned URL for uploading an event video directly to storage
+    security:
+      - sessionAuth: []
+    parameters:
+      - "$ref": "#/components/parameters/EventId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/IssueVideoUploadUrlRequest"
+    responses:
+      "201":
+        description: Upload URL was issued
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/IssueVideoUploadUrlResponse"
+      "400":
+        "$ref": "#/components/responses/BadRequest"
+      "401":
+        "$ref": "#/components/responses/Unauthorized"
+      "403":
+        "$ref": "#/components/responses/Forbidden"
+      "404":
+        "$ref": "#/components/responses/NotFound"
 "/events/{eventId}/publish":
   post:
     operationId: publishEvent

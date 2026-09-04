@@ -23,6 +23,10 @@ spring:
   sql:
     init:
       mode: never
+  servlet:
+    multipart:
+      max-file-size: ${TICKET_ORDER_MEDIA_IMAGE_MAX_UPLOAD_SIZE:5MB}
+      max-request-size: ${TICKET_ORDER_MEDIA_IMAGE_MAX_REQUEST_SIZE:6MB}
 
 management:
   server:
@@ -65,6 +69,30 @@ ticket-order-platform:
     metrics:
       enabled: ${TICKET_ORDER_METRICS_ENABLED:true}
       auth-metrics-enabled: ${TICKET_ORDER_AUTH_METRICS_ENABLED:true}
+      event-media-metrics-enabled: ${TICKET_ORDER_EVENT_MEDIA_METRICS_ENABLED:true}
+  storage:
+    s3:
+      bucket: ${TICKET_ORDER_STORAGE_S3_BUCKET:ticket-order-event-media}
+      region: ${TICKET_ORDER_STORAGE_S3_REGION:us-east-1}
+      endpoint: ${TICKET_ORDER_STORAGE_S3_ENDPOINT:}
+      presign-endpoint: ${TICKET_ORDER_STORAGE_S3_PRESIGN_ENDPOINT:}
+      path-style-access: ${TICKET_ORDER_STORAGE_S3_PATH_STYLE_ACCESS:false}
+      public-base-url: ${TICKET_ORDER_STORAGE_S3_PUBLIC_BASE_URL:https://ticket-order-event-media.s3.us-east-1.amazonaws.com}
+      presign-ttl: ${TICKET_ORDER_STORAGE_S3_PRESIGN_TTL:15m}
+  media:
+    image:
+      max-size-bytes: ${TICKET_ORDER_MEDIA_IMAGE_MAX_SIZE_BYTES:5242880}
+      allowed-content-types:
+        - image/jpeg
+        - image/png
+        - image/webp
+      cache-control: ${TICKET_ORDER_MEDIA_IMAGE_CACHE_CONTROL:public, max-age=3600}
+    video:
+      allowed-content-types:
+        - video/mp4
+        - video/webm
+        - video/quicktime
+      cache-control: ${TICKET_ORDER_MEDIA_VIDEO_CACHE_CONTROL:public, max-age=3600}
   cors:
     allowed-origins:
       - http://localhost:5173

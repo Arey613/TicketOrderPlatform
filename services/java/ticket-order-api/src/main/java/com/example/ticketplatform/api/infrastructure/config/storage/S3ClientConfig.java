@@ -1,0 +1,52 @@
+package com.example.ticketplatform.api.infrastructure.config.storage;
+
+import java.net.URI;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+
+/**
+ * Wires the AWS SDK v2 S3 client and presigner from {@link S3StorageProperties}. LocalStack vs.
+ * real AWS is purely a config difference: an {@code endpoint} override and path-style access are
+ * applied only when configured, nothing is hardcoded to either target.
+ */
+@Configuration
+@EnableConfigurationProperties(S3StorageProperties.class)
+class S3ClientConfig {
+
+  @Bean
+  S3Client s3Client(S3StorageProperties properties) {
+    S3ClientBuilder builder =
+        S3Client.builder()
+            .region(Region.of(properties.region()))
+            .serviceConfiguration(
+                S3Configuration.builder()
+                    .pathStyleAccessEnabled(Boolean.TRUE.equals(properties.pathStyleAccess()))
+                    .build());
+    if (StringUtils.hasText(properties.endpoint())) {
+      builder.endpointOverride(URI.create(properties.endpoint()));
+    }
+    return builder.build();
+  }
+
+  @Bean
+  S3Presigner s3Presigner(S3StorageProperties properties) {
+    S3Presigner.Builder builder =
+        S3Presigner.builder()
+            .region(Region.of(properties.region()))
+            .serviceConfiguration(
+                S3Configuration.builder()
+                    .pathStyleAccessEnabled(Boolean.TRUE.equals(properties.pathStyleAccess()))
+                    .build());
+    if (StringUtils.hasText(properties.resolvedPresignEndpoint())) {
+      builder.endpointOverride(URI.create(properties.resolvedPresignEndpoint()));
+    }
+    return builder.build();
+  }
+}

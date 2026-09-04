@@ -15,6 +15,7 @@ TICKET_CONTRACTS#123 - short description
 - TICKET_CONTRACTS#1 - add ticket service OpenAPI contract
 - TICKET_CONTRACTS#3 - add event management contract
 - TICKET_CONTRACTS#4 - add UI-facing event and auth contract fields
+- TICKET_CONTRACTS#11 - add event image and video attachment contract
 
 ### Changed
 

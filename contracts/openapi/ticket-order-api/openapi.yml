@@ -316,6 +316,76 @@ paths:
           "$ref": "#/components/responses/NotFound"
         "409":
           "$ref": "#/components/responses/Conflict"
+  "/events/{eventId}/image":
+    post:
+      operationId: attachEventImage
+      tags:
+        - Events
+      summary: Attach an image to an event
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Image was attached
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EventResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "413":
+          "$ref": "#/components/responses/PayloadTooLarge"
+  "/events/{eventId}/video-upload-url":
+    post:
+      operationId: issueEventVideoUploadUrl
+      tags:
+        - Events
+      summary: Issue a presigned URL for uploading an event video directly to storage
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/IssueVideoUploadUrlRequest"
+      responses:
+        "201":
+          description: Upload URL was issued
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/IssueVideoUploadUrlResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
   "/events/orders":
     post:
       operationId: createEventOrders
@@ -450,6 +520,12 @@ components:
             "$ref": "#/components/schemas/ErrorResponse"
     Conflict:
       description: Request conflicts with current resource state
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+    PayloadTooLarge:
+      description: Uploaded file exceeds the allowed size limit
       content:
         application/json:
           schema:
@@ -673,9 +749,6 @@ components:
         summary:
           type: string
           maxLength: 500
-        imageUrl:
-          type: string
-          format: uri
         price:
           type: string
           pattern: "^\\d+(\\.\\d{1,2})?$"
@@ -746,6 +819,15 @@ components:
         imageUrl:
           type: string
           format: uri
+          description: >-
+            Public object URL for the event's attached image, present only once
+            an image has been uploaded.
+        videoUrl:
+          type: string
+          format: uri
+          description: >-
+            Public object URL for the event's attached video, present only once
+            a video has been uploaded.
         price:
           type: string
           pattern: "^\\d+(\\.\\d{1,2})?$"
@@ -779,6 +861,47 @@ components:
             "$ref": "#/components/schemas/EventResponse"
         page:
           "$ref": "#/components/schemas/PageMetadata"
+    IssueVideoUploadUrlRequest:
+      type: object
+      required:
+        - fileName
+        - contentType
+      properties:
+        fileName:
+          type: string
+          minLength: 1
+          maxLength: 255
+        contentType:
+          type: string
+          enum:
+            - video/mp4
+            - video/webm
+            - video/quicktime
+      additionalProperties: false
+    IssueVideoUploadUrlResponse:
+      type: object
+      required:
+        - event
+        - uploadUrl
+        - requiredHeaders
+        - expiresAt
+      properties:
+        event:
+          "$ref": "#/components/schemas/EventResponse"
+        uploadUrl:
+          type: string
+          format: uri
+          description: Presigned S3 PUT URL the client uploads the video bytes to directly.
+        requiredHeaders:
+          type: object
+          additionalProperties:
+            type: string
+          description: >-
+            Headers the client must send exactly as given on the PUT request, or
+            the upload will fail signature validation.
+        expiresAt:
+          type: string
+          format: date-time
     CreateEventOrderItem:
       type: object
       required:

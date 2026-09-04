@@ -37,6 +37,11 @@ class MigrationSchemaBoundaryTest {
       Pattern.compile(
           "CREATE\\s+TABLE\\s+IF\\s+NOT\\s+EXISTS\\s+(\\w+)\\s*\\((.*?)\\);",
           Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private static final Pattern ALTER_TABLE_PATTERN =
+      Pattern.compile("ALTER\\s+TABLE\\s+(\\w+)\\s*(.*?);", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private static final Pattern ADD_COLUMN_PATTERN =
+      Pattern.compile(
+          "ADD\\s+COLUMN\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?(\\w+)", Pattern.CASE_INSENSITIVE);
   private static final List<String> TRANSACTIONAL_ENTITY_CLASSES =
       List.of(
           "com.example.ticketplatform.api.adapter.out.persistence.user.UserEntity",
@@ -97,13 +102,13 @@ class MigrationSchemaBoundaryTest {
 
   private static Map<String, Set<String>> transactionalMigrationColumns() throws IOException {
     String sql = readSqlFiles(TRANSACTIONAL_MIGRATIONS);
-    Matcher matcher = CREATE_TABLE_PATTERN.matcher(sql);
     Map<String, Set<String>> tables = new java.util.LinkedHashMap<>();
 
-    while (matcher.find()) {
-      String tableName = matcher.group(1);
+    Matcher createTableMatcher = CREATE_TABLE_PATTERN.matcher(sql);
+    while (createTableMatcher.find()) {
+      String tableName = createTableMatcher.group(1);
       Set<String> columns =
-          Arrays.stream(matcher.group(2).split(",\\R"))
+          Arrays.stream(createTableMatcher.group(2).split(",\\R"))
               .map(String::strip)
               .filter(line -> !line.isBlank())
               .filter(line -> !line.toUpperCase().startsWith("CONSTRAINT "))
@@ -111,6 +116,20 @@ class MigrationSchemaBoundaryTest {
               .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
 
       tables.put(tableName, columns);
+    }
+
+    // Versioned migrations after the initial CREATE TABLE may add columns via
+    // ALTER TABLE ... ADD COLUMN ... (e.g. V1.0005__add_event_media.sql) rather than redefining
+    // the table, so those additions must be folded in too for this comparison to stay accurate.
+    Matcher alterTableMatcher = ALTER_TABLE_PATTERN.matcher(sql);
+    while (alterTableMatcher.find()) {
+      String tableName = alterTableMatcher.group(1);
+      Matcher addColumnMatcher = ADD_COLUMN_PATTERN.matcher(alterTableMatcher.group(2));
+      while (addColumnMatcher.find()) {
+        tables
+            .computeIfAbsent(tableName, key -> new java.util.LinkedHashSet<>())
+            .add(addColumnMatcher.group(1));
+      }
     }
 
     return tables;

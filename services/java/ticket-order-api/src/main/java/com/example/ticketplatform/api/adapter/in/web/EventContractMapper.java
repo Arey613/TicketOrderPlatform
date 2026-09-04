@@ -3,6 +3,7 @@ package com.example.ticketplatform.api.adapter.in.web;
 import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
+import com.example.ticketplatform.api.application.port.in.IssueVideoUploadUrlCommand;
 import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.domain.model.event.BookedPlace;
@@ -18,10 +19,12 @@ import com.example.ticketplatform.api.generated.contract.model.EventDetailsReque
 import com.example.ticketplatform.api.generated.contract.model.EventDetailsResponse;
 import com.example.ticketplatform.api.generated.contract.model.EventListResponse;
 import com.example.ticketplatform.api.generated.contract.model.EventResponse;
+import com.example.ticketplatform.api.generated.contract.model.IssueVideoUploadUrlRequest;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrderResponse;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrdersResponse;
 import com.example.ticketplatform.api.generated.contract.model.PageMetadata;
 import com.example.ticketplatform.api.generated.contract.model.UpdateEventRequest;
+import java.net.URI;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -43,6 +46,12 @@ interface EventContractMapper {
   CreateEventCommand toCommand(CreateEventRequest request, UUID ownerId);
 
   UpdateEventCommand toCommand(UpdateEventRequest request);
+
+  @Mapping(
+      target = "contentType",
+      expression =
+          "java(request.getContentType() == null ? null : request.getContentType().getValue())")
+  IssueVideoUploadUrlCommand toCommand(IssueVideoUploadUrlRequest request);
 
   @Mapping(target = "rowNumber", source = "row")
   @Mapping(target = "placeNumber", source = "place")
@@ -107,6 +116,10 @@ interface EventContractMapper {
   @Named("toPublicBookedPlaceResponses")
   default List<BookedPlaceResponse> toPublicBookedPlaceResponses(List<BookedPlace> orders) {
     return orders.stream().map(this::toBookedPlaceResponse).toList();
+  }
+
+  default URI toUri(String value) {
+    return value == null ? null : URI.create(value);
   }
 
   default Instant toInstant(OffsetDateTime dateTime) {

@@ -1,0 +1,305 @@
+package com.example.ticketplatform.api.adapter.in.web;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.example.ticketplatform.api.adapter.in.web.EventMediaControllerIntegrationTestConfiguration.StubObjectStoragePort;
+import com.example.ticketplatform.api.adapter.in.web.WebControllerIntegrationTestConfiguration.TestUsers;
+import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
+import com.example.ticketplatform.api.domain.model.event.Event;
+import com.example.ticketplatform.api.domain.model.event.EventDetails;
+import com.example.ticketplatform.api.domain.model.event.EventStatus;
+import com.example.ticketplatform.api.domain.model.user.User;
+import com.example.ticketplatform.api.domain.model.user.UserRole;
+import jakarta.servlet.http.Cookie;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import javax.imageio.ImageIO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Exercises the real ownership-check, {@link
+ * com.example.ticketplatform.api.application.service.ImageSignatureValidator} validation, and
+ * JPA-backed persistence path for event image/video media endpoints, with only {@link
+ * com.example.ticketplatform.api.application.port.out.ObjectStoragePort} swapped for an
+ * in-memory stub. Authentication reuses {@link TestUsers} (in-memory, no DB) from {@link
+ * WebControllerIntegrationTestConfiguration}; event ownership checks route entirely through the
+ * primary datasource, so wrapping the test in {@code @Transactional} is safe here.
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+@Import({WebControllerIntegrationTestConfiguration.class, EventMediaControllerIntegrationTestConfiguration.class})
+class EventMediaControllerIntegrationTest {
+
+  private static final Instant EVENT_TIME = Instant.parse("2026-09-15T19:30:00Z");
+  private static final Instant NOW = Instant.parse("2026-08-11T10:00:00Z");
+  private static final UUID MANAGER_ID = UUID.fromString("00000000-0000-0000-0000-000000000801");
+  private static final UUID OTHER_MANAGER_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000802");
+  private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000803");
+  private static final UUID EVENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000804");
+  private static final User MANAGER =
+      WebControllerIntegrationTestConfiguration.user(
+          MANAGER_ID, "media-manager@example.com", "{noop}secret", UserRole.MANAGER, true);
+  private static final User OTHER_MANAGER =
+      WebControllerIntegrationTestConfiguration.user(
+          OTHER_MANAGER_ID, "other-media-manager@example.com", "{noop}secret", UserRole.MANAGER, true);
+  private static final User CUSTOMER =
+      WebControllerIntegrationTestConfiguration.user(
+          CUSTOMER_ID, "media-customer@example.com", "{noop}secret", UserRole.CUSTOMER, true);
+
+  @Autowired
+  private MockMvc mockMvc;
+
+  @Autowired
+  private TestUsers testUsers;
+
+  @Autowired
+  private EventCommandRepositoryPort eventCommandRepositoryPort;
+
+  @Autowired
+  private StubObjectStoragePort stubObjectStoragePort;
+
+  @BeforeEach
+  void setUp() {
+    testUsers.reset(List.of(MANAGER, OTHER_MANAGER, CUSTOMER));
+    stubObjectStoragePort.reset();
+    eventCommandRepositoryPort.save(event());
+  }
+
+  @Test
+  void attachesImageForOwningManager() throws Exception {
+    MockMultipartFile image =
+        new MockMultipartFile("image", "photo.png", "image/png", validPngBytes());
+
+    mockMvc
+        .perform(withCsrf(multipart("/events/{eventId}/image", EVENT_ID))
+                .file(image)
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.imageUrl").isNotEmpty());
+
+    assertThat(stubObjectStoragePort.lastUploadContentType()).isEqualTo("image/png");
+    assertThat(stubObjectStoragePort.lastUploadKey()).startsWith("events/" + EVENT_ID + "/image/");
+  }
+
+  @Test
+  void attachesImageWhenDeclaredContentTypeIsMisleadingBecauseBytesAreSniffed() throws Exception {
+    MockMultipartFile image =
+        new MockMultipartFile("image", "photo.png", "text/plain", validPngBytes());
+
+    mockMvc
+        .perform(withCsrf(multipart("/events/{eventId}/image", EVENT_ID))
+                .file(image)
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isOk());
+
+    // Sniffed as image/png from bytes, not trusted from the misleading declared "text/plain".
+    assertThat(stubObjectStoragePort.lastUploadContentType()).isEqualTo("image/png");
+  }
+
+  @Test
+  void rejectsImageAttachForCustomerRole() throws Exception {
+    MockMultipartFile image =
+        new MockMultipartFile("image", "photo.png", "image/png", validPngBytes());
+
+    mockMvc
+        .perform(withCsrf(multipart("/events/{eventId}/image", EVENT_ID))
+                .file(image)
+                .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void rejectsImageAttachForNonOwningManager() throws Exception {
+    MockMultipartFile image =
+        new MockMultipartFile("image", "photo.png", "image/png", validPngBytes());
+
+    mockMvc
+        .perform(withCsrf(multipart("/events/{eventId}/image", EVENT_ID))
+                .file(image)
+                .session(authenticatedSession(OTHER_MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void rejectsSvgImageAttach() throws Exception {
+    byte[] svg =
+        "<?xml version=\"1.0\"?><svg xmlns=\"http://www.w3.org/2000/svg\"></svg>"
+            .getBytes(StandardCharsets.UTF_8);
+    MockMultipartFile image = new MockMultipartFile("image", "photo.svg", "image/svg+xml", svg);
+
+    mockMvc
+        .perform(withCsrf(multipart("/events/{eventId}/image", EVENT_ID))
+                .file(image)
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void rejectsCorruptImageBytes() throws Exception {
+    byte[] corrupt = "definitely not an image".getBytes(StandardCharsets.UTF_8);
+    MockMultipartFile image = new MockMultipartFile("image", "photo.png", "image/png", corrupt);
+
+    mockMvc
+        .perform(withCsrf(multipart("/events/{eventId}/image", EVENT_ID))
+                .file(image)
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void rejectsOversizedImagePayloadAtTheApplicationSizeLimit() throws Exception {
+    // MockMvc's multipart() request builder constructs MultipartFile parts directly and never
+    // routes through the real embedded servlet container's multipart parsing, so it cannot
+    // reproduce Spring's spring.servlet.multipart.max-file-size -> MaxUploadSizeExceededException
+    // -> 413 path (that HTTP-layer mapping is covered separately by
+    // EventControllerExceptionHandlerTest.payloadTooLargeMapsMaxUploadSizeExceededExceptionTo413).
+    // Here we prove the application-level size guard in ImageSignatureValidator rejects an
+    // oversized payload with 400, which is what actually happens on this test transport.
+    byte[] oversized = new byte[6 * 1024 * 1024];
+    MockMultipartFile image = new MockMultipartFile("image", "photo.png", "image/png", oversized);
+
+    mockMvc
+        .perform(withCsrf(multipart("/events/{eventId}/image", EVENT_ID))
+                .file(image)
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void issuesVideoUploadUrlForOwningManagerWithEventAlreadyUpdated() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(post("/events/{eventId}/video-upload-url", EVENT_ID))
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "fileName": "clip.mp4",
+                      "contentType": "video/mp4"
+                    }
+                    """))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.event.eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.event.videoUrl").isNotEmpty())
+        .andExpect(jsonPath("$.uploadUrl").isNotEmpty())
+        .andExpect(jsonPath("$.requiredHeaders").isNotEmpty())
+        .andExpect(jsonPath("$.expiresAt").isNotEmpty());
+
+    assertThat(stubObjectStoragePort.lastPresignContentType()).isEqualTo("video/mp4");
+    assertThat(stubObjectStoragePort.lastPresignKey()).startsWith("events/" + EVENT_ID + "/video/");
+  }
+
+  @Test
+  void rejectsVideoUploadUrlForCustomerRole() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(post("/events/{eventId}/video-upload-url", EVENT_ID))
+                .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "fileName": "clip.mp4",
+                      "contentType": "video/mp4"
+                    }
+                    """))
+        .andExpect(status().isForbidden());
+  }
+
+  private static byte[] validPngBytes() {
+    try {
+      BufferedImage image = new BufferedImage(4, 4, BufferedImage.TYPE_INT_ARGB);
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
+      ImageIO.write(image, "png", output);
+      return output.toByteArray();
+    } catch (IOException exception) {
+      throw new IllegalStateException("Failed to build test PNG", exception);
+    }
+  }
+
+  private static Event event() {
+    return Event.builder()
+        .id(EVENT_ID)
+        .ownerId(MANAGER_ID)
+        .date(EVENT_TIME)
+        .name("Media concert")
+        .place("Main hall")
+        .type("MUSIC")
+        .status(EventStatus.PUBLISHED)
+        .details(
+            EventDetails.builder()
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000805"))
+                .description("Large show")
+                .numberOfPlaces(120)
+                .numberOfRows(12)
+                .seatsPerRow(10)
+                .build())
+        .orders(List.of())
+        .createdAt(NOW)
+        .updatedAt(NOW)
+        .build();
+  }
+
+  private static MockHttpSession authenticatedSession(String email, String role) {
+    var context = SecurityContextHolder.createEmptyContext();
+    context.setAuthentication(
+        UsernamePasswordAuthenticationToken.authenticated(
+            email, null, List.of(new SimpleGrantedAuthority(role))));
+
+    MockHttpSession session = new MockHttpSession();
+    session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+    return session;
+  }
+
+  private MockHttpServletRequestBuilder withCsrf(MockHttpServletRequestBuilder request)
+      throws Exception {
+    Cookie csrfCookie = csrfCookie();
+    return request.cookie(csrfCookie).header("X-XSRF-TOKEN", csrfCookie.getValue());
+  }
+
+  private MockMultipartHttpServletRequestBuilder withCsrf(
+      MockMultipartHttpServletRequestBuilder request) throws Exception {
+    Cookie csrfCookie = csrfCookie();
+    request.cookie(csrfCookie).header("X-XSRF-TOKEN", csrfCookie.getValue());
+    return request;
+  }
+
+  private Cookie csrfCookie() throws Exception {
+    return mockMvc
+        .perform(get("/auth/csrf"))
+        .andExpect(status().isNoContent())
+        .andReturn()
+        .getResponse()
+        .getCookie("XSRF-TOKEN");
+  }
+}

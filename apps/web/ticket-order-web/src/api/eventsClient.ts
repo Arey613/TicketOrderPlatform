@@ -76,7 +76,6 @@ export async function createEvent(command: CreateEventFormValues): Promise<Event
     city: command.city || undefined,
     type: command.type,
     summary: command.summary || undefined,
-    imageUrl: command.imageUrl || undefined,
     price: command.price || undefined,
     currency: command.currency || undefined,
     details: {

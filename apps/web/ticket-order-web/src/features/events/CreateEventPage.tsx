@@ -18,7 +18,6 @@ const defaultValues: CreateEventFormInput = {
   city: '',
   type: '',
   summary: '',
-  imageUrl: '',
   price: '',
   currency: '',
   details: {
@@ -32,7 +31,10 @@ const defaultValues: CreateEventFormInput = {
 
 const inputClassName =
   'mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20';
+const fileInputClassName =
+  'mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none file:mr-3 file:rounded file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-slate-700 focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20';
 const labelClassName = 'block text-sm font-semibold text-slate-900';
+const hintClassName = 'mt-1 text-xs text-slate-500';
 
 export function CreateEventPage() {
   const navigate = useNavigate();
@@ -57,17 +59,21 @@ export function CreateEventPage() {
 
   const onSubmit = handleSubmit((values) => {
     mutation.mutate(values, {
-      onSuccess: () => {
-        navigate('/', { state: { eventCreated: true } });
+      onSuccess: (result) => {
+        if (!result.mediaWarning) {
+          navigate('/', { state: { eventCreated: true } });
+        }
       },
     });
   });
+
+  const mediaWarning = mutation.isSuccess ? mutation.data.mediaWarning : undefined;
 
   const statusMessage = mutation.isPending
     ? 'Creating event...'
     : mutation.isError
       ? toEventUserMessage(mutation.error)
-      : '';
+      : (mediaWarning ?? '');
 
   return (
     <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -172,10 +178,40 @@ export function CreateEventPage() {
           </div>
 
           <div>
-            <label className={labelClassName} htmlFor="imageUrl">
-              Image URL (optional)
+            <label className={labelClassName} htmlFor="image">
+              Image (optional)
             </label>
-            <input className={inputClassName} id="imageUrl" {...register('imageUrl')} />
+            <input
+              accept="image/jpeg,image/png,image/webp"
+              aria-describedby={errors.image ? 'image-error' : undefined}
+              aria-invalid={Boolean(errors.image)}
+              className={fileInputClassName}
+              id="image"
+              type="file"
+              {...register('image')}
+            />
+            <p className={hintClassName}>JPEG, PNG, or WebP, up to 5MB.</p>
+            <FieldError id="image-error" message={errors.image?.message} />
+          </div>
+
+          <div>
+            <label className={labelClassName} htmlFor="video">
+              Video (optional)
+            </label>
+            <input
+              accept="video/mp4,video/webm,video/quicktime"
+              aria-describedby={errors.video ? 'video-error' : 'video-hint'}
+              aria-invalid={Boolean(errors.video)}
+              className={fileInputClassName}
+              id="video"
+              type="file"
+              {...register('video')}
+            />
+            <p className={hintClassName} id="video-hint">
+              MP4, WebM, or QuickTime, up to 3 minutes. The length limit is checked in your browser
+              only, not by the server.
+            </p>
+            <FieldError id="video-error" message={errors.video?.message} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -321,7 +357,9 @@ export function CreateEventPage() {
             statusMessage
               ? mutation.isError
                 ? 'rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800'
-                : 'rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-900'
+                : mediaWarning
+                  ? 'rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900'
+                  : 'rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-900'
               : 'sr-only'
           }
         >

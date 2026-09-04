@@ -100,9 +100,6 @@ CreateEventRequest:
     summary:
       type: string
       maxLength: 500
-    imageUrl:
-      type: string
-      format: uri
     price:
       type: string
       pattern: "^\\d+(\\.\\d{1,2})?$"
@@ -173,6 +170,15 @@ EventResponse:
     imageUrl:
       type: string
       format: uri
+      description: >-
+        Public object URL for the event's attached image, present only once
+        an image has been uploaded.
+    videoUrl:
+      type: string
+      format: uri
+      description: >-
+        Public object URL for the event's attached video, present only once
+        a video has been uploaded.
     price:
       type: string
       pattern: "^\\d+(\\.\\d{1,2})?$"
@@ -206,3 +212,44 @@ EventListResponse:
         "$ref": "#/components/schemas/EventResponse"
     page:
       "$ref": "#/components/schemas/PageMetadata"
+IssueVideoUploadUrlRequest:
+  type: object
+  required:
+    - fileName
+    - contentType
+  properties:
+    fileName:
+      type: string
+      minLength: 1
+      maxLength: 255
+    contentType:
+      type: string
+      enum:
+        - video/mp4
+        - video/webm
+        - video/quicktime
+  additionalProperties: false
+IssueVideoUploadUrlResponse:
+  type: object
+  required:
+    - event
+    - uploadUrl
+    - requiredHeaders
+    - expiresAt
+  properties:
+    event:
+      "$ref": "#/components/schemas/EventResponse"
+    uploadUrl:
+      type: string
+      format: uri
+      description: Presigned S3 PUT URL the client uploads the video bytes to directly.
+    requiredHeaders:
+      type: object
+      additionalProperties:
+        type: string
+      description: >-
+        Headers the client must send exactly as given on the PUT request, or
+        the upload will fail signature validation.
+    expiresAt:
+      type: string
+      format: date-time
