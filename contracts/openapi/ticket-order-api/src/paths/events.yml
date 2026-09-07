@@ -228,6 +228,39 @@
         "$ref": "#/components/responses/Forbidden"
       "404":
         "$ref": "#/components/responses/NotFound"
+"/events/{eventId}/video-upload-confirmation":
+  post:
+    operationId: confirmEventVideoUpload
+    tags:
+      - Events
+    summary: Confirm a previously issued event video upload completed successfully
+    security:
+      - sessionAuth: []
+    parameters:
+      - "$ref": "#/components/parameters/EventId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ConfirmVideoUploadRequest"
+    responses:
+      "200":
+        description: Video upload was confirmed
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventResponse"
+      "400":
+        "$ref": "#/components/responses/BadRequest"
+      "401":
+        "$ref": "#/components/responses/Unauthorized"
+      "403":
+        "$ref": "#/components/responses/Forbidden"
+      "404":
+        "$ref": "#/components/responses/NotFound"
+      "409":
+        "$ref": "#/components/responses/Conflict"
 "/events/{eventId}/publish":
   post:
     operationId: publishEvent

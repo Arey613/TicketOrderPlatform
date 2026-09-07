@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.ticketplatform.api.application.port.in.AttachEventImageCommand;
+import com.example.ticketplatform.api.application.port.in.ConfirmVideoUploadCommand;
 import com.example.ticketplatform.api.application.port.in.IssueVideoUploadUrlCommand;
 import com.example.ticketplatform.api.application.port.in.VideoUploadIssuance;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
@@ -12,14 +13,14 @@ import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.domain.model.event.EventStatus;
+import com.example.ticketplatform.api.domain.model.user.User;
+import com.example.ticketplatform.api.domain.model.user.UserRole;
 import com.example.ticketplatform.api.infrastructure.config.media.MediaProperties;
-import com.example.ticketplatform.api.infrastructure.config.storage.S3StorageProperties;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -32,6 +33,8 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 class EventMediaServiceTest {
 
@@ -44,7 +47,7 @@ class EventMediaServiceTest {
   @Test
   void attachesImageAndPersistsUploadedUrl() {
     TestEventRepository events = new TestEventRepository();
-    events.events.add(event(EVENT_ID, OWNER_ID));
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
     TestObjectStoragePort storage = new TestObjectStoragePort();
     EventMediaService service = newService(events, storage);
 
@@ -60,12 +63,13 @@ class EventMediaServiceTest {
     assertThat(storage.lastContentType).isEqualTo("image/png");
     assertThat(storage.lastCacheControl).isEqualTo("public, max-age=3600");
     assertThat(events.savedEvents).hasSize(1);
+    assertThat(storage.deletedKeys).isEmpty();
   }
 
   @Test
   void rejectsImageAttachForNonOwner() {
     TestEventRepository events = new TestEventRepository();
-    events.events.add(event(EVENT_ID, OWNER_ID));
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
     EventMediaService service = newService(events, new TestObjectStoragePort());
 
     assertThatThrownBy(
@@ -81,7 +85,7 @@ class EventMediaServiceTest {
   @Test
   void rejectsImageAttachForInvalidBytes() {
     TestEventRepository events = new TestEventRepository();
-    events.events.add(event(EVENT_ID, OWNER_ID));
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
     EventMediaService service = newService(events, new TestObjectStoragePort());
 
     assertThatThrownBy(
@@ -110,36 +114,91 @@ class EventMediaServiceTest {
   }
 
   @Test
-  void issuesVideoUploadUrlAndPersistsUrlImmediately() {
+  void rejectsImageAttachForPublishedEvent() {
     TestEventRepository events = new TestEventRepository();
-    events.events.add(event(EVENT_ID, OWNER_ID));
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.PUBLISHED));
+    TestObjectStoragePort storage = new TestObjectStoragePort();
+    EventMediaService service = newService(events, storage);
+
+    assertThatThrownBy(
+            () ->
+                service.attachEventImage(
+                    EVENT_ID,
+                    OWNER_ID,
+                    new AttachEventImageCommand(validPngBytes(), "photo.png", "image/png")))
+        .isInstanceOf(IllegalStateException.class);
+    assertThat(events.savedEvents).isEmpty();
+    assertThat(storage.lastUploadKey).isNull();
+  }
+
+  @Test
+  void deletesUploadedImageWhenSaveFails() {
+    TestEventRepository events = new TestEventRepository();
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
+    TestObjectStoragePort storage = new TestObjectStoragePort();
+    events.failNextSave = true;
+    EventMediaService service = newService(events, storage);
+
+    assertThatThrownBy(
+            () ->
+                service.attachEventImage(
+                    EVENT_ID,
+                    OWNER_ID,
+                    new AttachEventImageCommand(validPngBytes(), "photo.png", "image/png")))
+        .isInstanceOf(IllegalStateException.class);
+
+    assertThat(storage.deletedKeys).containsExactly(storage.lastUploadKey);
+  }
+
+  @Test
+  void issuesVideoUploadUrlWithoutPersistingItYet() {
+    TestEventRepository events = new TestEventRepository();
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
     TestObjectStoragePort storage = new TestObjectStoragePort();
     EventMediaService service = newService(events, storage);
 
     VideoUploadIssuance issuance =
         service.issueVideoUploadUrl(
-            EVENT_ID, OWNER_ID, new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4"));
+            EVENT_ID, OWNER_ID, new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L));
 
     assertThat(issuance.uploadUrl()).isEqualTo(storage.lastPresignedUploadUrl);
-    assertThat(issuance.event().videoUrl()).isEqualTo(storage.lastPresignedPublicUrl.toString());
+    assertThat(issuance.videoUrl()).isEqualTo(storage.lastPresignedPublicUrl.toString());
     assertThat(storage.lastPresignKey).startsWith("events/" + EVENT_ID + "/video/");
     assertThat(storage.lastPresignKey).endsWith(".mp4");
     assertThat(storage.lastPresignContentType).isEqualTo("video/mp4");
-    assertThat(events.savedEvents).hasSize(1);
-    // Persisted before any "upload complete" step exists - intentional optimistic persistence.
-    assertThat(events.savedEvents.get(0).videoUrl()).isNotNull();
+    assertThat(storage.lastPresignContentLength).isEqualTo(1_000L);
+    // Not persisted at issuance time - only after confirmVideoUpload succeeds.
+    assertThat(events.savedEvents).isEmpty();
   }
 
   @Test
   void rejectsVideoUploadUrlForUnsupportedContentType() {
     TestEventRepository events = new TestEventRepository();
-    events.events.add(event(EVENT_ID, OWNER_ID));
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
     EventMediaService service = newService(events, new TestObjectStoragePort());
 
     assertThatThrownBy(
             () ->
                 service.issueVideoUploadUrl(
-                    EVENT_ID, OWNER_ID, new IssueVideoUploadUrlCommand("clip.avi", "video/avi")))
+                    EVENT_ID,
+                    OWNER_ID,
+                    new IssueVideoUploadUrlCommand("clip.avi", "video/avi", 1_000L)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThat(events.savedEvents).isEmpty();
+  }
+
+  @Test
+  void rejectsVideoUploadUrlExceedingMaxSize() {
+    TestEventRepository events = new TestEventRepository();
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
+    EventMediaService service = newService(events, new TestObjectStoragePort());
+
+    assertThatThrownBy(
+            () ->
+                service.issueVideoUploadUrl(
+                    EVENT_ID,
+                    OWNER_ID,
+                    new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 100_000_000L)))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(events.savedEvents).isEmpty();
   }
@@ -147,7 +206,7 @@ class EventMediaServiceTest {
   @Test
   void rejectsVideoUploadUrlForNonOwner() {
     TestEventRepository events = new TestEventRepository();
-    events.events.add(event(EVENT_ID, OWNER_ID));
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
     EventMediaService service = newService(events, new TestObjectStoragePort());
 
     assertThatThrownBy(
@@ -155,28 +214,74 @@ class EventMediaServiceTest {
                 service.issueVideoUploadUrl(
                     EVENT_ID,
                     OTHER_OWNER_ID,
-                    new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4")))
+                    new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L)))
         .isInstanceOf(SecurityException.class);
+    assertThat(events.savedEvents).isEmpty();
+  }
+
+  @Test
+  void rejectsVideoUploadUrlForPublishedEvent() {
+    TestEventRepository events = new TestEventRepository();
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.PUBLISHED));
+    EventMediaService service = newService(events, new TestObjectStoragePort());
+
+    assertThatThrownBy(
+            () ->
+                service.issueVideoUploadUrl(
+                    EVENT_ID, OWNER_ID, new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L)))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void confirmsVideoUploadAndPersistsUrl() {
+    TestEventRepository events = new TestEventRepository();
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
+    TestObjectStoragePort storage = new TestObjectStoragePort();
+    EventMediaService service = newService(events, storage);
+
+    VideoUploadIssuance issuance =
+        service.issueVideoUploadUrl(
+            EVENT_ID, OWNER_ID, new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L));
+
+    Event updated =
+        service.confirmVideoUpload(
+            EVENT_ID, OWNER_ID, new ConfirmVideoUploadCommand(URI.create(issuance.videoUrl())));
+
+    assertThat(updated.videoUrl()).isEqualTo(issuance.videoUrl());
+    assertThat(events.savedEvents).hasSize(1);
+  }
+
+  @Test
+  void rejectsVideoUploadConfirmationForUnrelatedUrl() {
+    TestEventRepository events = new TestEventRepository();
+    events.events.add(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
+    EventMediaService service = newService(events, new TestObjectStoragePort());
+
+    assertThatThrownBy(
+            () ->
+                service.confirmVideoUpload(
+                    EVENT_ID,
+                    OWNER_ID,
+                    new ConfirmVideoUploadCommand(
+                        URI.create("https://cdn.example.com/events/other-event/video/x.mp4"))))
+        .isInstanceOf(IllegalArgumentException.class);
     assertThat(events.savedEvents).isEmpty();
   }
 
   private EventMediaService newService(TestEventRepository events, ObjectStoragePort storage) {
     MediaProperties mediaProperties = new MediaProperties(null, null);
+    TestUserRepository users = new TestUserRepository(OWNER_ID, OTHER_OWNER_ID);
+    SingleConnectionDataSource dataSource =
+        new SingleConnectionDataSource("jdbc:h2:mem:event-media-service-test", true);
     return new EventMediaService(
         events,
+        new EventAccessGuard(events, users),
         new ImageSignatureValidator(mediaProperties),
         storage,
         Mappers.getMapper(EventApplicationMapper.class),
         Clock.fixed(TEST_TIME, ZoneOffset.UTC)::instant,
         mediaProperties,
-        new S3StorageProperties(
-            "test-bucket",
-            "us-east-1",
-            "",
-            "",
-            false,
-            "https://cdn.example.com",
-            Duration.ofMinutes(15)));
+        new DataSourceTransactionManager(dataSource));
   }
 
   private static byte[] validPngBytes() {
@@ -190,7 +295,7 @@ class EventMediaServiceTest {
     }
   }
 
-  private static Event event(UUID id, UUID ownerId) {
+  private static Event event(UUID id, UUID ownerId, EventStatus status) {
     return Event.builder()
         .id(id)
         .ownerId(ownerId)
@@ -198,7 +303,7 @@ class EventMediaServiceTest {
         .name("Concert")
         .place("Main hall")
         .type("MUSIC")
-        .status(EventStatus.PUBLISHED)
+        .status(status)
         .details(
             EventDetails.builder()
                 .id(UUID.randomUUID())
@@ -217,9 +322,14 @@ class EventMediaServiceTest {
 
     private final List<Event> events = new ArrayList<>();
     private final List<Event> savedEvents = new ArrayList<>();
+    private boolean failNextSave;
 
     @Override
     public Event save(Event event) {
+      if (failNextSave) {
+        failNextSave = false;
+        throw new IllegalStateException("Simulated save failure");
+      }
       savedEvents.add(event);
       events.removeIf(existing -> existing.id().equals(event.id()));
       events.add(event);
@@ -242,6 +352,29 @@ class EventMediaServiceTest {
     }
   }
 
+  private static class TestUserRepository
+      implements com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort {
+
+    private final List<User> users;
+
+    TestUserRepository(UUID... userIds) {
+      this.users =
+          List.of(userIds).stream()
+              .map(id -> new User(id, id + "@example.com", "{noop}secret", UserRole.MANAGER, true, TEST_TIME, TEST_TIME))
+              .toList();
+    }
+
+    @Override
+    public Optional<User> findById(UUID id) {
+      return users.stream().filter(user -> user.id().equals(id)).findFirst();
+    }
+
+    @Override
+    public User save(User user) {
+      return user;
+    }
+  }
+
   private static class TestObjectStoragePort implements ObjectStoragePort {
 
     private String lastUploadKey;
@@ -250,8 +383,10 @@ class EventMediaServiceTest {
     private String lastUploadedUrl;
     private String lastPresignKey;
     private String lastPresignContentType;
+    private long lastPresignContentLength;
     private URI lastPresignedUploadUrl;
     private URI lastPresignedPublicUrl;
+    private final List<String> deletedKeys = new ArrayList<>();
 
     @Override
     public String upload(String key, byte[] data, String contentType, String cacheControl) {
@@ -264,16 +399,22 @@ class EventMediaServiceTest {
 
     @Override
     public PresignedUpload issuePresignedUploadUrl(
-        String key, String contentType, String cacheControl, Duration ttl) {
+        String key, String contentType, String cacheControl, long contentLength) {
       this.lastPresignKey = key;
       this.lastPresignContentType = contentType;
+      this.lastPresignContentLength = contentLength;
       this.lastPresignedUploadUrl = URI.create("https://bucket.example.com/" + key + "?signature=abc");
       this.lastPresignedPublicUrl = URI.create("https://cdn.example.com/" + key);
       return new PresignedUpload(
           lastPresignedUploadUrl,
           Map.of("Content-Type", contentType, "Cache-Control", cacheControl),
-          TEST_TIME.plus(ttl),
+          TEST_TIME.plusSeconds(900),
           lastPresignedPublicUrl);
+    }
+
+    @Override
+    public void delete(String key) {
+      deletedKeys.add(key);
     }
   }
 }

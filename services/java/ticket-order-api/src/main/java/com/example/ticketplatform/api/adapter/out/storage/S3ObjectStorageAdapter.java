@@ -4,11 +4,9 @@ import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
 import com.example.ticketplatform.api.infrastructure.config.storage.S3StorageProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +16,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.BucketAlreadyExistsException;
 import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -41,29 +40,35 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
   private final S3Presigner s3Presigner;
   private final S3StorageProperties s3StorageProperties;
   private final Supplier<Instant> currentTimeSupplier;
-  private final AtomicBoolean bucketEnsured = new AtomicBoolean(false);
+  private volatile boolean bucketEnsured = false;
 
   /**
    * Ensures the target bucket exists, lazily on first use rather than at startup ({@code
    * @PostConstruct}) so that constructing this bean never triggers a network call - safe to call
-   * repeatedly.
+   * repeatedly. Double-checked locking so a concurrent caller blocks until the first ensure
+   * completes instead of racing ahead and hitting {@link NoSuchBucketException}.
    */
   private void ensureBucketExists() {
-    if (!bucketEnsured.compareAndSet(false, true)) {
+    if (bucketEnsured) {
       return;
     }
-    try {
-      s3Client.headBucket(
-          HeadBucketRequest.builder().bucket(s3StorageProperties.bucket()).build());
-    } catch (NoSuchBucketException exception) {
-      createBucket();
-    } catch (S3Exception exception) {
-      if (exception.statusCode() == NOT_FOUND_STATUS_CODE) {
-        createBucket();
-      } else {
-        bucketEnsured.set(false);
-        throw exception;
+    synchronized (this) {
+      if (bucketEnsured) {
+        return;
       }
+      try {
+        s3Client.headBucket(
+            HeadBucketRequest.builder().bucket(s3StorageProperties.bucket()).build());
+      } catch (NoSuchBucketException exception) {
+        createBucket();
+      } catch (S3Exception exception) {
+        if (exception.statusCode() == NOT_FOUND_STATUS_CODE) {
+          createBucket();
+        } else {
+          throw exception;
+        }
+      }
+      bucketEnsured = true;
     }
   }
 
@@ -83,7 +88,7 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
 
   @Override
   public PresignedUpload issuePresignedUploadUrl(
-      String key, String contentType, String cacheControl, Duration ttl) {
+      String key, String contentType, String cacheControl, long contentLength) {
     ensureBucketExists();
     PutObjectRequest putObjectRequest =
         PutObjectRequest.builder()
@@ -91,27 +96,35 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
             .key(key)
             .contentType(contentType)
             .cacheControl(cacheControl)
+            .contentLength(contentLength)
             .build();
 
     PresignedPutObjectRequest presignedRequest =
         s3Presigner.presignPutObject(
             PutObjectPresignRequest.builder()
-                .signatureDuration(ttl)
+                .signatureDuration(s3StorageProperties.presignTtl())
                 .putObjectRequest(putObjectRequest)
                 .build());
 
     return new PresignedUpload(
         toUri(presignedRequest),
         toRequiredHeaders(presignedRequest),
-        currentTimeSupplier.get().plus(ttl),
+        currentTimeSupplier.get().plus(s3StorageProperties.presignTtl()),
         buildPublicUrl(key));
+  }
+
+  @Override
+  public void delete(String key) {
+    ensureBucketExists();
+    s3Client.deleteObject(
+        DeleteObjectRequest.builder().bucket(s3StorageProperties.bucket()).key(key).build());
   }
 
   private URI toUri(PresignedPutObjectRequest presignedRequest) {
     try {
       return presignedRequest.url().toURI();
     } catch (URISyntaxException exception) {
-      throw new IllegalStateException("Presigned S3 URL is not a valid URI", exception);
+      throw new ObjectStorageException("Presigned S3 URL is not a valid URI", exception);
     }
   }
 

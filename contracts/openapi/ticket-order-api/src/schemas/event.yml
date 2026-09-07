@@ -217,6 +217,7 @@ IssueVideoUploadUrlRequest:
   required:
     - fileName
     - contentType
+    - fileSizeBytes
   properties:
     fileName:
       type: string
@@ -228,17 +229,32 @@ IssueVideoUploadUrlRequest:
         - video/mp4
         - video/webm
         - video/quicktime
+    fileSizeBytes:
+      type: integer
+      format: int64
+      minimum: 1
+      description: >-
+        Exact byte size of the video file. Signed into the presigned upload URL so
+        object storage rejects an upload whose actual size does not match.
   additionalProperties: false
 IssueVideoUploadUrlResponse:
   type: object
   required:
     - event
+    - videoUrl
     - uploadUrl
     - requiredHeaders
     - expiresAt
   properties:
     event:
       "$ref": "#/components/schemas/EventResponse"
+    videoUrl:
+      type: string
+      format: uri
+      description: >-
+        Public object URL the video will be reachable at once uploaded. Not yet
+        persisted on the event - pass it back to the video-upload-confirmation
+        endpoint after the upload succeeds.
     uploadUrl:
       type: string
       format: uri
@@ -253,3 +269,15 @@ IssueVideoUploadUrlResponse:
     expiresAt:
       type: string
       format: date-time
+ConfirmVideoUploadRequest:
+  type: object
+  required:
+    - videoUrl
+  properties:
+    videoUrl:
+      type: string
+      format: uri
+      description: >-
+        The videoUrl previously returned by issueEventVideoUploadUrl, confirming
+        the upload to that object completed successfully.
+  additionalProperties: false

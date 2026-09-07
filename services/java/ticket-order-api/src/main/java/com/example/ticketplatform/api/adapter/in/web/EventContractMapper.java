@@ -1,5 +1,6 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
+import com.example.ticketplatform.api.application.port.in.ConfirmVideoUploadCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
@@ -11,6 +12,7 @@ import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.generated.contract.model.BookedPlaceResponse;
+import com.example.ticketplatform.api.generated.contract.model.ConfirmVideoUploadRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventOrderItem;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreatedEventOrderResponse;
@@ -52,6 +54,8 @@ interface EventContractMapper {
       expression =
           "java(request.getContentType() == null ? null : request.getContentType().getValue())")
   IssueVideoUploadUrlCommand toCommand(IssueVideoUploadUrlRequest request);
+
+  ConfirmVideoUploadCommand toCommand(ConfirmVideoUploadRequest request);
 
   @Mapping(target = "rowNumber", source = "row")
   @Mapping(target = "placeNumber", source = "place")

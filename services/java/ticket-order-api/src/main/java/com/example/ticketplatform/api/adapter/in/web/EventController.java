@@ -11,6 +11,7 @@ import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.generated.contract.api.EventsApi;
 import com.example.ticketplatform.api.generated.contract.api.PublicApi;
+import com.example.ticketplatform.api.generated.contract.model.ConfirmVideoUploadRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventOrdersRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreatedEventOrdersResponse;
@@ -157,9 +158,21 @@ class EventController implements EventsApi, PublicApi {
         .body(
             new IssueVideoUploadUrlResponse(
                 eventResponseAssembler.toEventResponse(issuance.event()),
+                URI.create(issuance.videoUrl()),
                 issuance.uploadUrl(),
                 issuance.requiredHeaders(),
                 eventContractMapper.toOffsetDateTime(issuance.expiresAt())));
+  }
+
+  @Override
+  @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+  public ResponseEntity<EventResponse> confirmEventVideoUpload(
+      UUID eventId, ConfirmVideoUploadRequest confirmVideoUploadRequest) {
+    User user = currentUserProvider.currentUser();
+    Event event =
+        eventVideoUseCase.confirmVideoUpload(
+            eventId, user.id(), eventContractMapper.toCommand(confirmVideoUploadRequest));
+    return ResponseEntity.ok(eventResponseAssembler.toEventResponse(event));
   }
 
   @Override

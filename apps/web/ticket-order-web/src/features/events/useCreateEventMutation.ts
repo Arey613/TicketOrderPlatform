@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import {
   attachEventImage,
+  confirmEventVideoUpload,
   issueEventVideoUploadUrl,
   uploadEventVideo,
 } from '../../api/eventMediaClient';
@@ -35,11 +36,12 @@ export function useCreateEventMutation() {
 
       if (values.video) {
         try {
-          const { uploadUrl, requiredHeaders } = await issueEventVideoUploadUrl(
+          const { uploadUrl, videoUrl, requiredHeaders } = await issueEventVideoUploadUrl(
             event.eventId,
             values.video,
           );
           await uploadEventVideo(uploadUrl, values.video, requiredHeaders);
+          await confirmEventVideoUpload(event.eventId, videoUrl);
         } catch {
           failedMedia.push('video');
         }

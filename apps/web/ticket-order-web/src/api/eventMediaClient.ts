@@ -1,8 +1,9 @@
+import { ALLOWED_VIDEO_TYPES } from '../features/events/mediaLimits';
 import type { EventResponse, IssueVideoUploadUrlResponse } from '../generated/api';
 import {
   Configuration,
   EventsApi,
-  IssueVideoUploadUrlRequestContentTypeEnum,
+  type IssueVideoUploadUrlRequestContentTypeEnum,
 } from '../generated/api';
 import { resolveApiBaseUrl, sessionAwareMiddleware } from './apiConfiguration';
 import { prepareCsrfToken, withCsrfHeader } from './authClient';
@@ -15,12 +16,8 @@ const eventsApi = new EventsApi(
   }),
 );
 
-const SUPPORTED_VIDEO_CONTENT_TYPES: readonly string[] = Object.values(
-  IssueVideoUploadUrlRequestContentTypeEnum,
-);
-
 function toVideoContentType(type: string): IssueVideoUploadUrlRequestContentTypeEnum {
-  if (SUPPORTED_VIDEO_CONTENT_TYPES.includes(type)) {
+  if (ALLOWED_VIDEO_TYPES.includes(type)) {
     return type as IssueVideoUploadUrlRequestContentTypeEnum;
   }
 
@@ -45,8 +42,21 @@ export async function issueEventVideoUploadUrl(
       issueVideoUploadUrlRequest: {
         fileName: video.name,
         contentType: toVideoContentType(video.type),
+        fileSizeBytes: video.size,
       },
     },
+    withCsrfHeader,
+  );
+}
+
+export async function confirmEventVideoUpload(
+  eventId: string,
+  videoUrl: string,
+): Promise<EventResponse> {
+  await prepareCsrfToken();
+
+  return eventsApi.confirmEventVideoUpload(
+    { eventId, confirmVideoUploadRequest: { videoUrl } },
     withCsrfHeader,
   );
 }

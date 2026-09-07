@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   attachEventImage,
+  confirmEventVideoUpload,
   issueEventVideoUploadUrl,
   uploadEventVideo,
 } from '../../../../src/api/eventMediaClient';
@@ -25,6 +26,7 @@ vi.mock('../../../../src/api/eventsClient', async () => {
 
 vi.mock('../../../../src/api/eventMediaClient', () => ({
   attachEventImage: vi.fn(),
+  confirmEventVideoUpload: vi.fn(),
   issueEventVideoUploadUrl: vi.fn(),
   uploadEventVideo: vi.fn(),
 }));
@@ -33,6 +35,7 @@ const mockedCreateEvent = vi.mocked(createEvent);
 const mockedAttachEventImage = vi.mocked(attachEventImage);
 const mockedIssueEventVideoUploadUrl = vi.mocked(issueEventVideoUploadUrl);
 const mockedUploadEventVideo = vi.mocked(uploadEventVideo);
+const mockedConfirmEventVideoUpload = vi.mocked(confirmEventVideoUpload);
 
 /**
  * Stubs the `<video>` element's `src` setter so setting `src` synchronously reports the
@@ -109,6 +112,7 @@ describe('CreateEventPage', () => {
     mockedAttachEventImage.mockReset();
     mockedIssueEventVideoUploadUrl.mockReset();
     mockedUploadEventVideo.mockReset();
+    mockedConfirmEventVideoUpload.mockReset();
   });
 
   it('focuses the page heading on mount', () => {
@@ -239,12 +243,17 @@ describe('CreateEventPage', () => {
       mockedCreateEvent.mockResolvedValue(createdEvent);
       mockedAttachEventImage.mockResolvedValue({ ...createdEvent, imageUrl: 'https://cdn/img' });
       mockedIssueEventVideoUploadUrl.mockResolvedValue({
-        event: { ...createdEvent, videoUrl: 'https://cdn/video' },
+        event: createdEvent,
+        videoUrl: 'https://cdn/video',
         uploadUrl: 'https://storage.example/upload',
         requiredHeaders: { 'x-amz-signature': 'abc' },
         expiresAt: new Date('2026-09-10T20:00:00Z'),
       });
       mockedUploadEventVideo.mockResolvedValue(undefined);
+      mockedConfirmEventVideoUpload.mockResolvedValue({
+        ...createdEvent,
+        videoUrl: 'https://cdn/video',
+      });
 
       const restoreVideoDuration = mockVideoDuration(150);
       try {
@@ -270,13 +279,19 @@ describe('CreateEventPage', () => {
           video,
           { 'x-amz-signature': 'abc' },
         );
+        await waitFor(() => {
+          expect(mockedConfirmEventVideoUpload).toHaveBeenCalledWith(
+            'event-1',
+            'https://cdn/video',
+          );
+        });
         expect(await screen.findByText('Home page')).toBeVisible();
       } finally {
         restoreVideoDuration();
       }
     });
 
-    it('shows a partial-success message and stays on the page when the image upload fails', async () => {
+    it('navigates home even when the image upload fails, carrying the warning in route state', async () => {
       mockedCreateEvent.mockResolvedValue(createdEvent);
       mockedAttachEventImage.mockRejectedValue(new Error('storage unavailable'));
 
@@ -289,12 +304,7 @@ describe('CreateEventPage', () => {
 
       await user.click(screen.getByRole('button', { name: 'Create event' }));
 
-      expect(
-        await screen.findByText(
-          'Event created, but the image could not be uploaded. Try attaching it again later.',
-        ),
-      ).toBeVisible();
-      expect(screen.queryByText('Home page')).not.toBeInTheDocument();
+      expect(await screen.findByText('Home page')).toBeVisible();
     });
   });
 });

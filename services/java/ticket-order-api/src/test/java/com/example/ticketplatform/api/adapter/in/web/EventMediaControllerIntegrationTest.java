@@ -15,6 +15,7 @@ import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventStatus;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
+import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.http.Cookie;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -195,7 +196,7 @@ class EventMediaControllerIntegrationTest {
   }
 
   @Test
-  void issuesVideoUploadUrlForOwningManagerWithEventAlreadyUpdated() throws Exception {
+  void issuesVideoUploadUrlWithoutPersistingItYet() throws Exception {
     mockMvc
         .perform(
             withCsrf(post("/events/{eventId}/video-upload-url", EVENT_ID))
@@ -205,18 +206,39 @@ class EventMediaControllerIntegrationTest {
                     """
                     {
                       "fileName": "clip.mp4",
-                      "contentType": "video/mp4"
+                      "contentType": "video/mp4",
+                      "fileSizeBytes": 1000
                     }
                     """))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.event.eventId").value(EVENT_ID.toString()))
-        .andExpect(jsonPath("$.event.videoUrl").isNotEmpty())
+        .andExpect(jsonPath("$.event.videoUrl").doesNotExist())
+        .andExpect(jsonPath("$.videoUrl").isNotEmpty())
         .andExpect(jsonPath("$.uploadUrl").isNotEmpty())
         .andExpect(jsonPath("$.requiredHeaders").isNotEmpty())
         .andExpect(jsonPath("$.expiresAt").isNotEmpty());
 
     assertThat(stubObjectStoragePort.lastPresignContentType()).isEqualTo("video/mp4");
     assertThat(stubObjectStoragePort.lastPresignKey()).startsWith("events/" + EVENT_ID + "/video/");
+    assertThat(stubObjectStoragePort.lastPresignContentLength()).isEqualTo(1000L);
+  }
+
+  @Test
+  void rejectsVideoUploadUrlExceedingMaxSize() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(post("/events/{eventId}/video-upload-url", EVENT_ID))
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "fileName": "clip.mp4",
+                      "contentType": "video/mp4",
+                      "fileSizeBytes": 999999999
+                    }
+                    """))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
@@ -230,10 +252,122 @@ class EventMediaControllerIntegrationTest {
                     """
                     {
                       "fileName": "clip.mp4",
-                      "contentType": "video/mp4"
+                      "contentType": "video/mp4",
+                      "fileSizeBytes": 1000
                     }
                     """))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void confirmsVideoUploadAndPersistsUrl() throws Exception {
+    String videoUrl = issueVideoUploadUrl();
+
+    mockMvc
+        .perform(
+            withCsrf(post("/events/{eventId}/video-upload-confirmation", EVENT_ID))
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"videoUrl\": \"" + videoUrl + "\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()))
+        .andExpect(jsonPath("$.videoUrl").value(videoUrl));
+  }
+
+  @Test
+  void rejectsVideoUploadConfirmationForUnrelatedUrl() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(post("/events/{eventId}/video-upload-confirmation", EVENT_ID))
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"videoUrl\": \"https://cdn.example.com/events/unrelated/video/x.mp4\"}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void rejectsVideoUploadConfirmationForCustomerRole() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(post("/events/{eventId}/video-upload-confirmation", EVENT_ID))
+                .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"videoUrl\": \"https://cdn.example.com/events/" + EVENT_ID + "/video/x.mp4\"}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void rejectsImageAttachForPublishedEvent() throws Exception {
+    eventCommandRepositoryPort.save(publish(eventCommandRepositoryPort.findById(EVENT_ID).orElseThrow()));
+    MockMultipartFile image =
+        new MockMultipartFile("image", "photo.png", "image/png", validPngBytes());
+
+    mockMvc
+        .perform(withCsrf(multipart("/events/{eventId}/image", EVENT_ID))
+                .file(image)
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isConflict());
+  }
+
+  @Test
+  void rejectsVideoUploadUrlForPublishedEvent() throws Exception {
+    eventCommandRepositoryPort.save(publish(eventCommandRepositoryPort.findById(EVENT_ID).orElseThrow()));
+
+    mockMvc
+        .perform(
+            withCsrf(post("/events/{eventId}/video-upload-url", EVENT_ID))
+                .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "fileName": "clip.mp4",
+                      "contentType": "video/mp4",
+                      "fileSizeBytes": 1000
+                    }
+                    """))
+        .andExpect(status().isConflict());
+  }
+
+  private String issueVideoUploadUrl() throws Exception {
+    String response =
+        mockMvc
+            .perform(
+                withCsrf(post("/events/{eventId}/video-upload-url", EVENT_ID))
+                    .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "fileName": "clip.mp4",
+                          "contentType": "video/mp4",
+                          "fileSizeBytes": 1000
+                        }
+                        """))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString(StandardCharsets.UTF_8);
+    return JsonPath.read(response, "$.videoUrl");
+  }
+
+  private static Event publish(Event event) {
+    return new Event(
+        event.id(),
+        event.ownerId(),
+        event.date(),
+        event.name(),
+        event.place(),
+        event.type(),
+        EventStatus.PUBLISHED,
+        event.details(),
+        event.orders(),
+        event.imageUrl(),
+        event.videoUrl(),
+        event.createdAt(),
+        event.updatedAt());
   }
 
   private static byte[] validPngBytes() {
@@ -255,7 +389,7 @@ class EventMediaControllerIntegrationTest {
         .name("Media concert")
         .place("Main hall")
         .type("MUSIC")
-        .status(EventStatus.PUBLISHED)
+        .status(EventStatus.DRAFT)
         .details(
             EventDetails.builder()
                 .id(UUID.fromString("00000000-0000-0000-0000-000000000805"))

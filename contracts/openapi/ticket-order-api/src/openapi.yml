@@ -41,6 +41,8 @@ paths:
     "$ref": "./paths/events.yml#/~1events~1{eventId}~1image"
   "/events/{eventId}/video-upload-url":
     "$ref": "./paths/events.yml#/~1events~1{eventId}~1video-upload-url"
+  "/events/{eventId}/video-upload-confirmation":
+    "$ref": "./paths/events.yml#/~1events~1{eventId}~1video-upload-confirmation"
   "/events/orders":
     "$ref": "./paths/event-orders.yml#/~1events~1orders"
   "/events/orders/mine":
@@ -134,6 +136,8 @@ components:
       "$ref": "./schemas/event.yml#/IssueVideoUploadUrlRequest"
     IssueVideoUploadUrlResponse:
       "$ref": "./schemas/event.yml#/IssueVideoUploadUrlResponse"
+    ConfirmVideoUploadRequest:
+      "$ref": "./schemas/event.yml#/ConfirmVideoUploadRequest"
     CreateEventOrderItem:
       "$ref": "./schemas/event-order.yml#/CreateEventOrderItem"
     CreateEventOrdersRequest:

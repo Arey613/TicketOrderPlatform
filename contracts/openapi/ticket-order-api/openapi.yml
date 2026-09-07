@@ -386,6 +386,39 @@ paths:
           "$ref": "#/components/responses/Forbidden"
         "404":
           "$ref": "#/components/responses/NotFound"
+  "/events/{eventId}/video-upload-confirmation":
+    post:
+      operationId: confirmEventVideoUpload
+      tags:
+        - Events
+      summary: Confirm a previously issued event video upload completed successfully
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ConfirmVideoUploadRequest"
+      responses:
+        "200":
+          description: Video upload was confirmed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EventResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
   "/events/orders":
     post:
       operationId: createEventOrders
@@ -866,6 +899,7 @@ components:
       required:
         - fileName
         - contentType
+        - fileSizeBytes
       properties:
         fileName:
           type: string
@@ -877,17 +911,32 @@ components:
             - video/mp4
             - video/webm
             - video/quicktime
+        fileSizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          description: >-
+            Exact byte size of the video file. Signed into the presigned upload URL so
+            object storage rejects an upload whose actual size does not match.
       additionalProperties: false
     IssueVideoUploadUrlResponse:
       type: object
       required:
         - event
+        - videoUrl
         - uploadUrl
         - requiredHeaders
         - expiresAt
       properties:
         event:
           "$ref": "#/components/schemas/EventResponse"
+        videoUrl:
+          type: string
+          format: uri
+          description: >-
+            Public object URL the video will be reachable at once uploaded. Not yet
+            persisted on the event - pass it back to the video-upload-confirmation
+            endpoint after the upload succeeds.
         uploadUrl:
           type: string
           format: uri
@@ -902,6 +951,18 @@ components:
         expiresAt:
           type: string
           format: date-time
+    ConfirmVideoUploadRequest:
+      type: object
+      required:
+        - videoUrl
+      properties:
+        videoUrl:
+          type: string
+          format: uri
+          description: >-
+            The videoUrl previously returned by issueEventVideoUploadUrl, confirming
+            the upload to that object completed successfully.
+      additionalProperties: false
     CreateEventOrderItem:
       type: object
       required:

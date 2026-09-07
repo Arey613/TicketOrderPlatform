@@ -6,4 +6,8 @@ import java.time.Instant;
 import java.util.Map;
 
 public record VideoUploadIssuance(
-    Event event, URI uploadUrl, Map<String, String> requiredHeaders, Instant expiresAt) {}
+    Event event,
+    String videoUrl,
+    URI uploadUrl,
+    Map<String, String> requiredHeaders,
+    Instant expiresAt) {}

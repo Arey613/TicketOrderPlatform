@@ -60,20 +60,16 @@ export function CreateEventPage() {
   const onSubmit = handleSubmit((values) => {
     mutation.mutate(values, {
       onSuccess: (result) => {
-        if (!result.mediaWarning) {
-          navigate('/', { state: { eventCreated: true } });
-        }
+        navigate('/', { state: { eventCreated: true, mediaWarning: result.mediaWarning } });
       },
     });
   });
-
-  const mediaWarning = mutation.isSuccess ? mutation.data.mediaWarning : undefined;
 
   const statusMessage = mutation.isPending
     ? 'Creating event...'
     : mutation.isError
       ? toEventUserMessage(mutation.error)
-      : (mediaWarning ?? '');
+      : '';
 
   return (
     <section className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -357,9 +353,7 @@ export function CreateEventPage() {
             statusMessage
               ? mutation.isError
                 ? 'rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800'
-                : mediaWarning
-                  ? 'rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900'
-                  : 'rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-900'
+                : 'rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-900'
               : 'sr-only'
           }
         >

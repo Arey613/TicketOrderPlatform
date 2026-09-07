@@ -49,10 +49,10 @@ function Layout({ currentUser, statusMessage, setStatusMessage, onLogin, onLogou
   const navigate = useNavigate();
 
   useEffect(() => {
-    const state = location.state as { eventCreated?: boolean } | null;
+    const state = location.state as { eventCreated?: boolean; mediaWarning?: string } | null;
 
     if (state?.eventCreated) {
-      setStatusMessage('Event created as a draft.');
+      setStatusMessage(state.mediaWarning ?? 'Event created as a draft.');
       navigate(location.pathname, { replace: true, state: null });
     }
   }, [location, navigate, setStatusMessage]);
