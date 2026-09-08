@@ -6,6 +6,9 @@ import java.util.Map;
 
 public interface ObjectStoragePort {
 
+  /**
+   * Uploads {@code data} to {@code key}, replacing any object already stored at that key.
+   */
   String upload(String key, byte[] data, String contentType, String cacheControl);
 
   PresignedUpload issuePresignedUploadUrl(

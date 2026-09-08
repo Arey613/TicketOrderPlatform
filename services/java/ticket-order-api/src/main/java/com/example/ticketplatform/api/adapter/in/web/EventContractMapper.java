@@ -66,6 +66,8 @@ interface EventContractMapper {
   @Mapping(target = "eventId", source = "id")
   @Mapping(target = "ordersTaken", expression = "java(event.orders().size())")
   @Mapping(target = "takenPlaces", source = "orders", qualifiedByName = "toPublicBookedPlaceResponses")
+  @Mapping(target = "imageUrl", qualifiedByName = "toUri")
+  @Mapping(target = "videoUrl", qualifiedByName = "toUri")
   EventResponse toResponse(Event event);
 
   EventDetailsResponse toResponse(EventDetails details);
@@ -122,6 +124,7 @@ interface EventContractMapper {
     return orders.stream().map(this::toBookedPlaceResponse).toList();
   }
 
+  @Named("toUri")
   default URI toUri(String value) {
     return value == null ? null : URI.create(value);
   }

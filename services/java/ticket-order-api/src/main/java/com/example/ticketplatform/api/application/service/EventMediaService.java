@@ -17,13 +17,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 class EventMediaService implements EventImageUseCase, EventVideoUseCase {
 
@@ -41,6 +43,8 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
 
   private static final String DEFAULT_EXTENSION = "bin";
   private static final String VIDEO_KEY_INFIX = "/video/";
+  private static final String IMAGE_KEY_FORMAT = "events/%s/image/%s.%s";
+  private static final String VIDEO_KEY_FORMAT = "events/%s/video/%s.%s";
 
   private final EventCommandRepositoryPort eventCommandRepositoryPort;
   private final EventAccessGuard eventAccessGuard;
@@ -49,25 +53,12 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
   private final EventApplicationMapper eventApplicationMapper;
   private final Supplier<Instant> currentTimeSupplier;
   private final MediaProperties mediaProperties;
-  private final TransactionTemplate primaryTransactionTemplate;
+  // The @Primary primary datasource's transaction manager is resolved by type; relies on
+  // exactly one PlatformTransactionManager bean being marked @Primary (PersistenceConfig).
+  private final PlatformTransactionManager primaryTransactionManager;
 
-  EventMediaService(
-      EventCommandRepositoryPort eventCommandRepositoryPort,
-      EventAccessGuard eventAccessGuard,
-      ImageSignatureValidator imageSignatureValidator,
-      ObjectStoragePort objectStoragePort,
-      EventApplicationMapper eventApplicationMapper,
-      Supplier<Instant> currentTimeSupplier,
-      MediaProperties mediaProperties,
-      @Qualifier("primaryTransactionManager") PlatformTransactionManager primaryTransactionManager) {
-    this.eventCommandRepositoryPort = eventCommandRepositoryPort;
-    this.eventAccessGuard = eventAccessGuard;
-    this.imageSignatureValidator = imageSignatureValidator;
-    this.objectStoragePort = objectStoragePort;
-    this.eventApplicationMapper = eventApplicationMapper;
-    this.currentTimeSupplier = currentTimeSupplier;
-    this.mediaProperties = mediaProperties;
-    this.primaryTransactionTemplate = new TransactionTemplate(primaryTransactionManager);
+  private <T> T inPrimaryTransaction(TransactionCallback<T> action) {
+    return new TransactionTemplate(primaryTransactionManager).execute(action);
   }
 
   @Override
@@ -79,8 +70,8 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
     warnOnContentTypeMismatch(eventId, command.declaredContentType(), validation.contentType());
 
     String key =
-        "events/%s/image/%s.%s"
-            .formatted(eventId, UUID.randomUUID(), imageExtension(validation.contentType()));
+        IMAGE_KEY_FORMAT.formatted(
+            eventId, UUID.randomUUID(), imageExtension(validation.contentType()));
     String imageUrl =
         objectStoragePort.upload(
             key,
@@ -91,7 +82,7 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
     Instant now = currentTimeSupplier.get();
     try {
       Event updated =
-          primaryTransactionTemplate.execute(
+          inPrimaryTransaction(
               status ->
                   eventCommandRepositoryPort.save(
                       eventApplicationMapper.toEventWithImage(event, imageUrl, now)));
@@ -129,8 +120,8 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
     }
 
     String key =
-        "events/%s/video/%s.%s"
-            .formatted(eventId, UUID.randomUUID(), videoExtension(command.contentType()));
+        VIDEO_KEY_FORMAT.formatted(
+            eventId, UUID.randomUUID(), videoExtension(command.contentType()));
     PresignedUpload presignedUpload =
         objectStoragePort.issuePresignedUploadUrl(
             key,
@@ -159,7 +150,7 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
 
     Instant now = currentTimeSupplier.get();
     Event updated =
-        primaryTransactionTemplate.execute(
+        inPrimaryTransaction(
             status ->
                 eventCommandRepositoryPort.save(
                     eventApplicationMapper.toEventWithVideo(
@@ -183,6 +174,9 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
     try {
       objectStoragePort.delete(key);
     } catch (RuntimeException exception) {
+      // TODO: this failure is only logged today, leaving the object orphaned in storage with
+      // no other signal. Once the platform has an alerting system, wire this into it so an
+      // admin can intervene instead of relying on log scraping.
       log.warn("event.media.image.compensation_delete_failed key={}", key, exception);
     }
   }

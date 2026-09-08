@@ -41,6 +41,21 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
   private final S3StorageProperties s3StorageProperties;
   private final Supplier<Instant> currentTimeSupplier;
   private volatile boolean bucketEnsured = false;
+  // Lazily computed and cached on first use rather than in the constructor, so a bean with an
+  // unconfigured publicBaseUrl (e.g. in a test context where this adapter isn't the one actually
+  // wired in) can still be constructed without failing.
+  private volatile String normalizedPublicBaseUrl;
+
+  private String normalizedPublicBaseUrl() {
+    String cached = normalizedPublicBaseUrl;
+    if (cached != null) {
+      return cached;
+    }
+    String baseUrl = s3StorageProperties.publicBaseUrl();
+    String normalized = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+    normalizedPublicBaseUrl = normalized;
+    return normalized;
+  }
 
   /**
    * Ensures the target bucket exists, lazily on first use rather than at startup ({@code
@@ -124,7 +139,9 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
     try {
       return presignedRequest.url().toURI();
     } catch (URISyntaxException exception) {
-      throw new ObjectStorageException("Presigned S3 URL is not a valid URI", exception);
+      // Not a caller error - deliberately left unmapped by EventControllerExceptionHandler so
+      // it falls through to a default 500 instead of being confused with a client conflict.
+      throw new RuntimeException("Presigned S3 URL is not a valid URI", exception);
     }
   }
 
@@ -137,9 +154,7 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
   }
 
   private URI buildPublicUrl(String key) {
-    String baseUrl = s3StorageProperties.publicBaseUrl();
-    String normalizedBase = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-    return URI.create(normalizedBase + "/" + key);
+    return URI.create(normalizedPublicBaseUrl() + "/" + key);
   }
 
   private void createBucket() {
