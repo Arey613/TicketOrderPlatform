@@ -120,20 +120,16 @@ test.describe('event media attachments', () => {
     await page.getByRole('link', { name: 'Create event' }).click();
     await fillRequiredFields(page);
 
-    await page
-      .getByLabel('Image (optional)')
-      .setInputFiles({
-        name: 'cover.png',
-        mimeType: 'image/png',
-        buffer: Buffer.from([1, 2, 3, 4]),
-      });
-    await page
-      .getByLabel('Video (optional)')
-      .setInputFiles({
-        name: 'trailer.mp4',
-        mimeType: 'video/mp4',
-        buffer: Buffer.from([5, 6, 7, 8]),
-      });
+    await page.getByLabel('Image (optional)').setInputFiles({
+      name: 'cover.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from([1, 2, 3, 4]),
+    });
+    await page.getByLabel('Video (optional)').setInputFiles({
+      name: 'trailer.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from([5, 6, 7, 8]),
+    });
 
     await page.getByRole('button', { name: 'Create event' }).click();
 
@@ -156,13 +152,11 @@ test.describe('event media attachments', () => {
     await page.getByRole('link', { name: 'Create event' }).click();
     await fillRequiredFields(page);
 
-    await page
-      .getByLabel('Image (optional)')
-      .setInputFiles({
-        name: 'cover.png',
-        mimeType: 'image/png',
-        buffer: Buffer.from([1, 2, 3, 4]),
-      });
+    await page.getByLabel('Image (optional)').setInputFiles({
+      name: 'cover.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from([1, 2, 3, 4]),
+    });
 
     await page.getByRole('button', { name: 'Create event' }).click();
 
@@ -190,13 +184,11 @@ test.describe('event media attachments', () => {
     await page.getByRole('link', { name: 'Create event' }).click();
     await fillRequiredFields(page);
 
-    await page
-      .getByLabel('Video (optional)')
-      .setInputFiles({
-        name: 'trailer.mp4',
-        mimeType: 'video/mp4',
-        buffer: Buffer.from([5, 6, 7, 8]),
-      });
+    await page.getByLabel('Video (optional)').setInputFiles({
+      name: 'trailer.mp4',
+      mimeType: 'video/mp4',
+      buffer: Buffer.from([5, 6, 7, 8]),
+    });
 
     await page.getByRole('button', { name: 'Create event' }).click();
 
