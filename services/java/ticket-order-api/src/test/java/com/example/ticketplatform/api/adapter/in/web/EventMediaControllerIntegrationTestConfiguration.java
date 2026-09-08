@@ -11,12 +11,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
-/**
- * Swaps the real S3-backed {@link ObjectStoragePort} for an in-memory stub so controller
- * integration tests never talk to S3/LocalStack, while still exercising the real
- * ownership-check, validation, and persistence path through the real application service and
- * JPA-backed repository ports.
- */
 @TestConfiguration
 class EventMediaControllerIntegrationTestConfiguration {
 

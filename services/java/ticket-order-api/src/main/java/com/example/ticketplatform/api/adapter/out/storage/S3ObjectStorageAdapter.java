@@ -25,10 +25,6 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-/**
- * Driven adapter for {@link ObjectStoragePort} backed by AWS SDK v2 S3. LocalStack vs. real AWS
- * is purely a config toggle applied in {@code S3ClientConfig}; nothing here is target-specific.
- */
 @Repository
 @RequiredArgsConstructor
 @Slf4j
@@ -41,9 +37,6 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
   private final S3StorageProperties s3StorageProperties;
   private final Supplier<Instant> currentTimeSupplier;
   private volatile boolean bucketEnsured = false;
-  // Lazily computed and cached on first use rather than in the constructor, so a bean with an
-  // unconfigured publicBaseUrl (e.g. in a test context where this adapter isn't the one actually
-  // wired in) can still be constructed without failing.
   private volatile String normalizedPublicBaseUrl;
 
   private String normalizedPublicBaseUrl() {
@@ -57,12 +50,6 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
     return normalized;
   }
 
-  /**
-   * Ensures the target bucket exists, lazily on first use rather than at startup ({@code
-   * @PostConstruct}) so that constructing this bean never triggers a network call - safe to call
-   * repeatedly. Double-checked locking so a concurrent caller blocks until the first ensure
-   * completes instead of racing ahead and hitting {@link NoSuchBucketException}.
-   */
   private void ensureBucketExists() {
     if (bucketEnsured) {
       return;
@@ -139,8 +126,6 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
     try {
       return presignedRequest.url().toURI();
     } catch (URISyntaxException exception) {
-      // Not a caller error - deliberately left unmapped by EventControllerExceptionHandler so
-      // it falls through to a default 500 instead of being confused with a client conflict.
       throw new RuntimeException("Presigned S3 URL is not a valid URI", exception);
     }
   }

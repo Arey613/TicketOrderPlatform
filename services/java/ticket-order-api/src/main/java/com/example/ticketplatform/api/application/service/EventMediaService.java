@@ -53,8 +53,6 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
   private final EventApplicationMapper eventApplicationMapper;
   private final Supplier<Instant> currentTimeSupplier;
   private final MediaProperties mediaProperties;
-  // The @Primary primary datasource's transaction manager is resolved by type; relies on
-  // exactly one PlatformTransactionManager bean being marked @Primary (PersistenceConfig).
   private final PlatformTransactionManager primaryTransactionManager;
 
   private <T> T inPrimaryTransaction(TransactionCallback<T> action) {

@@ -5,17 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-/**
- * Direct unit coverage for {@link EventControllerExceptionHandler}'s status mapping.
- *
- * <p>{@code MaxUploadSizeExceededException} -> 413 in particular cannot be reproduced through a
- * {@code MockMvc}-based controller integration test: {@code MockMvc}'s {@code multipart()}
- * request builder constructs {@code MultipartFile} parts directly rather than routing through the
- * real embedded servlet container's multipart parsing, so Spring's {@code
- * spring.servlet.multipart.max-file-size} enforcement (which is what actually throws this
- * exception in production) never triggers on that test transport. This test proves the handler
- * itself is wired correctly regardless of transport.
- */
 class EventControllerExceptionHandlerTest {
 
   private final EventControllerExceptionHandler handler = new EventControllerExceptionHandler();

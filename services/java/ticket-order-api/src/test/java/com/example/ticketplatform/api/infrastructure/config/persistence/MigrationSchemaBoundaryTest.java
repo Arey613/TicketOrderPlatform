@@ -118,9 +118,6 @@ class MigrationSchemaBoundaryTest {
       tables.put(tableName, columns);
     }
 
-    // Versioned migrations after the initial CREATE TABLE may add columns via
-    // ALTER TABLE ... ADD COLUMN ... (e.g. V1.0005__add_event_media.sql) rather than redefining
-    // the table, so those additions must be folded in too for this comparison to stay accurate.
     Matcher alterTableMatcher = ALTER_TABLE_PATTERN.matcher(sql);
     while (alterTableMatcher.find()) {
       String tableName = alterTableMatcher.group(1);

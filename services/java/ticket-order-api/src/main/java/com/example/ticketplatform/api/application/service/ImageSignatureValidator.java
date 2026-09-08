@@ -9,11 +9,6 @@ import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-/**
- * Validates event image bytes server-side: size, magic-byte signature against an allow-list of
- * JPEG/PNG/WEBP, and that the bytes actually decode as an image. Never trusts a declared MIME
- * type or file extension.
- */
 @Component
 @RequiredArgsConstructor
 public class ImageSignatureValidator {
@@ -46,10 +41,6 @@ public class ImageSignatureValidator {
                     new IllegalArgumentException(
                         "Image bytes do not match an allowed signature (JPEG, PNG, WEBP)"));
 
-    // The JDK ships no built-in ImageIO WEBP reader, so ImageIO.read() can never confirm a
-    // genuine WEBP payload. The RIFF/WEBP container signature check above is the strongest
-    // verification available without adding a new imaging dependency; only JPEG/PNG (which the
-    // JDK can always decode) go through the additional ImageIO decode check.
     if (!"image/webp".equals(sniffedContentType) && !decodesAsImage(imageData)) {
       throw new IllegalArgumentException("Image bytes could not be decoded as a valid image");
     }

@@ -167,7 +167,6 @@ class EventMediaServiceTest {
     assertThat(storage.lastPresignKey).endsWith(".mp4");
     assertThat(storage.lastPresignContentType).isEqualTo("video/mp4");
     assertThat(storage.lastPresignContentLength).isEqualTo(1_000L);
-    // Not persisted at issuance time - only after confirmVideoUpload succeeds.
     assertThat(events.savedEvents).isEmpty();
   }
 

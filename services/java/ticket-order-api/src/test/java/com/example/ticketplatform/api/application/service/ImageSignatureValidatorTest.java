@@ -58,7 +58,6 @@ class ImageSignatureValidatorTest {
   @Test
   void rejectsCorruptBytesWithValidJpegSignatureButUndecodableBody() {
     byte[] jpeg = validJpegBytes();
-    // Keep the JPEG magic-byte signature but corrupt the rest so ImageIO cannot decode it.
     for (int i = 3; i < jpeg.length; i++) {
       jpeg[i] = 0x00;
     }
@@ -83,8 +82,6 @@ class ImageSignatureValidatorTest {
 
   @Test
   void sniffsContentTypeFromBytesRegardlessOfAnyDeclaredType() {
-    // The validator's only input is the raw byte array - there is no "declared type" parameter
-    // it could trust instead of sniffing, proving detection is signature-based.
     byte[] png = validPngBytes();
 
     ImageSignatureValidator.ValidationResult result = validator.validate(png);
@@ -118,9 +115,6 @@ class ImageSignatureValidatorTest {
   }
 
   private static byte[] validWebpBytes() {
-    // Minimal RIFF/WEBP container: "RIFF" + little-endian size + "WEBP" + a VP8 chunk header.
-    // The JDK ships no built-in WEBP ImageIO reader, so the validator only checks the container
-    // signature for this type (see ImageSignatureValidator) rather than a full decode.
     byte[] vp8Chunk = {'V', 'P', '8', ' ', 0x10, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03};
     int riffSize = 4 + vp8Chunk.length;
     List<Byte> bytes =

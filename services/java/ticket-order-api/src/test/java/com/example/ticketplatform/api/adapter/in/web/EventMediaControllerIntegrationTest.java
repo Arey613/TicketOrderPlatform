@@ -43,15 +43,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Exercises the real ownership-check, {@link
- * com.example.ticketplatform.api.application.service.ImageSignatureValidator} validation, and
- * JPA-backed persistence path for event image/video media endpoints, with only {@link
- * com.example.ticketplatform.api.application.port.out.ObjectStoragePort} swapped for an
- * in-memory stub. Authentication reuses {@link TestUsers} (in-memory, no DB) from {@link
- * WebControllerIntegrationTestConfiguration}; event ownership checks route entirely through the
- * primary datasource, so wrapping the test in {@code @Transactional} is safe here.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -122,7 +113,6 @@ class EventMediaControllerIntegrationTest {
                 .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
         .andExpect(status().isOk());
 
-    // Sniffed as image/png from bytes, not trusted from the misleading declared "text/plain".
     assertThat(stubObjectStoragePort.lastUploadContentType()).isEqualTo("image/png");
   }
 
@@ -178,13 +168,6 @@ class EventMediaControllerIntegrationTest {
 
   @Test
   void rejectsOversizedImagePayloadAtTheApplicationSizeLimit() throws Exception {
-    // MockMvc's multipart() request builder constructs MultipartFile parts directly and never
-    // routes through the real embedded servlet container's multipart parsing, so it cannot
-    // reproduce Spring's spring.servlet.multipart.max-file-size -> MaxUploadSizeExceededException
-    // -> 413 path (that HTTP-layer mapping is covered separately by
-    // EventControllerExceptionHandlerTest.payloadTooLargeMapsMaxUploadSizeExceededExceptionTo413).
-    // Here we prove the application-level size guard in ImageSignatureValidator rejects an
-    // oversized payload with 400, which is what actually happens on this test transport.
     byte[] oversized = new byte[6 * 1024 * 1024];
     MockMultipartFile image = new MockMultipartFile("image", "photo.png", "image/png", oversized);
 

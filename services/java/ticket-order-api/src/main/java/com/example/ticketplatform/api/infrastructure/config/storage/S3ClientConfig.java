@@ -11,11 +11,6 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
-/**
- * Wires the AWS SDK v2 S3 client and presigner from {@link S3StorageProperties}. LocalStack vs.
- * real AWS is purely a config difference: an {@code endpoint} override and path-style access are
- * applied only when configured, nothing is hardcoded to either target.
- */
 @Configuration
 @EnableConfigurationProperties(S3StorageProperties.class)
 class S3ClientConfig {
