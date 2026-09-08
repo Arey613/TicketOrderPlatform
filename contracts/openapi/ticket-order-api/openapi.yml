@@ -557,6 +557,9 @@ components:
         application/json:
           schema:
             "$ref": "#/components/schemas/ErrorResponse"
+    # TODO: review these shared error responses (BadRequest, Unauthorized, Forbidden, NotFound,
+    # Conflict, PayloadTooLarge) to make them more generic/consistent across the whole API,
+    # rather than growing new one-off response definitions per endpoint.
     PayloadTooLarge:
       description: Uploaded file exceeds the allowed size limit
       content:
