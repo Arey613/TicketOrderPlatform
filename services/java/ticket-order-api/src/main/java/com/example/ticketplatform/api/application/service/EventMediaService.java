@@ -175,7 +175,7 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
       // TODO: this failure is only logged today, leaving the object orphaned in storage with
       // no other signal. Once the platform has an alerting system, wire this into it so an
       // admin can intervene instead of relying on log scraping.
-      log.warn("event.media.image.compensation_delete_failed key={}", key, exception);
+      log.error("event.media.image.compensation_delete_failed key={}", key, exception);
     }
   }
 
