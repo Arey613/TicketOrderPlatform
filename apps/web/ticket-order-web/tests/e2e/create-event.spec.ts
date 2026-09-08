@@ -7,6 +7,7 @@ import {
 } from './support/authRoutes';
 import { mockCreateEvent } from './support/createEventRoutes';
 import { mockPublishedEvents } from './support/eventRoutes';
+import { mockAttachEventImage, mockVideoDuration, mockVideoUpload } from './support/mediaRoutes';
 
 async function fillRequiredFields(page: Page): Promise<void> {
   await page.getByLabel('Name', { exact: true }).fill('Summer music night');
@@ -97,4 +98,113 @@ test('supports a keyboard-only flow to open and cancel the create-event form', a
   await page.keyboard.press('Enter');
 
   await expect(page.getByRole('heading', { name: 'Order tickets without queues' })).toBeVisible();
+});
+
+test.describe('event media attachments', () => {
+  test('uploads an image and video, confirms the video upload, and lands on the home page', async ({
+    page,
+  }) => {
+    await mockSuccessfulLogin(page, managerLoginUser);
+    await mockPublishedEvents(page);
+    await mockCreateEvent(page);
+    await mockAttachEventImage(page);
+    await mockVideoUpload(page);
+    await mockVideoDuration(page, 150);
+
+    await page.goto('/');
+    await page.evaluate(() => {
+      document.cookie = 'XSRF-TOKEN=e2e-token; Path=/';
+    });
+    await loginAs(page, managerLoginUser);
+
+    await page.getByRole('link', { name: 'Create event' }).click();
+    await fillRequiredFields(page);
+
+    await page
+      .getByLabel('Image (optional)')
+      .setInputFiles({
+        name: 'cover.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from([1, 2, 3, 4]),
+      });
+    await page
+      .getByLabel('Video (optional)')
+      .setInputFiles({
+        name: 'trailer.mp4',
+        mimeType: 'video/mp4',
+        buffer: Buffer.from([5, 6, 7, 8]),
+      });
+
+    await page.getByRole('button', { name: 'Create event' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Order tickets without queues' })).toBeVisible();
+    await expect(page.getByText('Event created as a draft.')).toBeVisible();
+  });
+
+  test('still navigates home with a warning when the image upload fails', async ({ page }) => {
+    await mockSuccessfulLogin(page, managerLoginUser);
+    await mockPublishedEvents(page);
+    await mockCreateEvent(page);
+    await mockAttachEventImage(page, { fail: true });
+
+    await page.goto('/');
+    await page.evaluate(() => {
+      document.cookie = 'XSRF-TOKEN=e2e-token; Path=/';
+    });
+    await loginAs(page, managerLoginUser);
+
+    await page.getByRole('link', { name: 'Create event' }).click();
+    await fillRequiredFields(page);
+
+    await page
+      .getByLabel('Image (optional)')
+      .setInputFiles({
+        name: 'cover.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from([1, 2, 3, 4]),
+      });
+
+    await page.getByRole('button', { name: 'Create event' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Order tickets without queues' })).toBeVisible();
+    await expect(
+      page.getByText(
+        'Event created, but the image could not be uploaded. Try attaching it again later.',
+      ),
+    ).toBeVisible();
+  });
+
+  test('still navigates home with a warning when the video upload fails', async ({ page }) => {
+    await mockSuccessfulLogin(page, managerLoginUser);
+    await mockPublishedEvents(page);
+    await mockCreateEvent(page);
+    await mockVideoUpload(page, { failUpload: true });
+    await mockVideoDuration(page, 150);
+
+    await page.goto('/');
+    await page.evaluate(() => {
+      document.cookie = 'XSRF-TOKEN=e2e-token; Path=/';
+    });
+    await loginAs(page, managerLoginUser);
+
+    await page.getByRole('link', { name: 'Create event' }).click();
+    await fillRequiredFields(page);
+
+    await page
+      .getByLabel('Video (optional)')
+      .setInputFiles({
+        name: 'trailer.mp4',
+        mimeType: 'video/mp4',
+        buffer: Buffer.from([5, 6, 7, 8]),
+      });
+
+    await page.getByRole('button', { name: 'Create event' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Order tickets without queues' })).toBeVisible();
+    await expect(
+      page.getByText(
+        'Event created, but the video could not be uploaded. Try attaching it again later.',
+      ),
+    ).toBeVisible();
+  });
 });
