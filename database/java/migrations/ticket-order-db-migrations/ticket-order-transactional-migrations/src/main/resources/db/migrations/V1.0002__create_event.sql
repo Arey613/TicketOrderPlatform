@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS t_event (
     place VARCHAR(200) NOT NULL,
     type VARCHAR(100) NOT NULL,
     status VARCHAR(32) NOT NULL,
+    image_url VARCHAR(2048),
+    video_url VARCHAR(2048),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );

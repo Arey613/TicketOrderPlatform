@@ -14,6 +14,7 @@ DATABASE_MIGRATIONS#123 - short description
 
 - DATABASE_MIGRATIONS#1 - add Java database migration modules
 - DATABASE_MIGRATIONS#3 - add event management schema
+- DATABASE_MIGRATIONS#11 - add event image and video URL columns
 
 ### Changed
 

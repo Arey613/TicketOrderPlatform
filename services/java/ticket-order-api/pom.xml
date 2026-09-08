@@ -26,6 +26,7 @@
         <openapi.contract>${project.basedir}/../../../contracts/openapi/ticket-order-api/openapi.yml</openapi.contract>
         <opentelemetry-instrumentation-bom.version>2.30.0</opentelemetry-instrumentation-bom.version>
         <spotless-maven-plugin.version>3.9.0</spotless-maven-plugin.version>
+        <aws-sdk-bom.version>2.29.52</aws-sdk-bom.version>
     </properties>
 
     <dependencyManagement>
@@ -34,6 +35,13 @@
                 <groupId>io.opentelemetry.instrumentation</groupId>
                 <artifactId>opentelemetry-instrumentation-bom</artifactId>
                 <version>${opentelemetry-instrumentation-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws-sdk-bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -87,6 +95,10 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

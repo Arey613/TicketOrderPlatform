@@ -37,8 +37,45 @@ public class TicketOrderMetrics {
         .increment();
   }
 
+  public void recordEventImageAttachAccepted() {
+    if (!eventMediaMetricsEnabled()) {
+      return;
+    }
+    meterRegistry.counter("ticket.event.media.image.attach", RESULT, "accepted").increment();
+  }
+
+  public void recordEventImageAttachRejected(String reason) {
+    if (!eventMediaMetricsEnabled()) {
+      return;
+    }
+    meterRegistry
+        .counter("ticket.event.media.image.attach", RESULT, "rejected", REASON, reason)
+        .increment();
+  }
+
+  public void recordEventVideoUploadUrlIssued() {
+    if (!eventMediaMetricsEnabled()) {
+      return;
+    }
+    meterRegistry.counter("ticket.event.media.video.upload_url", RESULT, "issued").increment();
+  }
+
+  public void recordEventVideoUploadUrlRejected(String reason) {
+    if (!eventMediaMetricsEnabled()) {
+      return;
+    }
+    meterRegistry
+        .counter("ticket.event.media.video.upload_url", RESULT, "rejected", REASON, reason)
+        .increment();
+  }
+
   private boolean authMetricsEnabled() {
     return observabilityProperties.metrics().enabled()
         && observabilityProperties.metrics().authMetricsEnabled();
+  }
+
+  private boolean eventMediaMetricsEnabled() {
+    return observabilityProperties.metrics().enabled()
+        && observabilityProperties.metrics().eventMediaMetricsEnabled();
   }
 }

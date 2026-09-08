@@ -1,8 +1,10 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
+import com.example.ticketplatform.api.application.port.in.ConfirmVideoUploadCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventCommand;
 import com.example.ticketplatform.api.application.port.in.CreateEventOrderCommand;
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
+import com.example.ticketplatform.api.application.port.in.IssueVideoUploadUrlCommand;
 import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.domain.model.event.BookedPlace;
@@ -10,6 +12,7 @@ import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.generated.contract.model.BookedPlaceResponse;
+import com.example.ticketplatform.api.generated.contract.model.ConfirmVideoUploadRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventOrderItem;
 import com.example.ticketplatform.api.generated.contract.model.CreateEventRequest;
 import com.example.ticketplatform.api.generated.contract.model.CreatedEventOrderResponse;
@@ -18,10 +21,12 @@ import com.example.ticketplatform.api.generated.contract.model.EventDetailsReque
 import com.example.ticketplatform.api.generated.contract.model.EventDetailsResponse;
 import com.example.ticketplatform.api.generated.contract.model.EventListResponse;
 import com.example.ticketplatform.api.generated.contract.model.EventResponse;
+import com.example.ticketplatform.api.generated.contract.model.IssueVideoUploadUrlRequest;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrderResponse;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrdersResponse;
 import com.example.ticketplatform.api.generated.contract.model.PageMetadata;
 import com.example.ticketplatform.api.generated.contract.model.UpdateEventRequest;
+import java.net.URI;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -44,6 +49,14 @@ interface EventContractMapper {
 
   UpdateEventCommand toCommand(UpdateEventRequest request);
 
+  @Mapping(
+      target = "contentType",
+      expression =
+          "java(request.getContentType() == null ? null : request.getContentType().getValue())")
+  IssueVideoUploadUrlCommand toCommand(IssueVideoUploadUrlRequest request);
+
+  ConfirmVideoUploadCommand toCommand(ConfirmVideoUploadRequest request);
+
   @Mapping(target = "rowNumber", source = "row")
   @Mapping(target = "placeNumber", source = "place")
   CreateEventOrderCommand toCommand(CreateEventOrderItem item);
@@ -53,6 +66,8 @@ interface EventContractMapper {
   @Mapping(target = "eventId", source = "id")
   @Mapping(target = "ordersTaken", expression = "java(event.orders().size())")
   @Mapping(target = "takenPlaces", source = "orders", qualifiedByName = "toPublicBookedPlaceResponses")
+  @Mapping(target = "imageUrl", qualifiedByName = "toUri")
+  @Mapping(target = "videoUrl", qualifiedByName = "toUri")
   EventResponse toResponse(Event event);
 
   EventDetailsResponse toResponse(EventDetails details);
@@ -107,6 +122,11 @@ interface EventContractMapper {
   @Named("toPublicBookedPlaceResponses")
   default List<BookedPlaceResponse> toPublicBookedPlaceResponses(List<BookedPlace> orders) {
     return orders.stream().map(this::toBookedPlaceResponse).toList();
+  }
+
+  @Named("toUri")
+  default URI toUri(String value) {
+    return value == null ? null : URI.create(value);
   }
 
   default Instant toInstant(OffsetDateTime dateTime) {

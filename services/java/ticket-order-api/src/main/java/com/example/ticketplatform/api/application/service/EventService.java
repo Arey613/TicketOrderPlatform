@@ -33,6 +33,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   private final EventQueryRepositoryPort eventQueryRepositoryPort;
   private final UserCommandRepositoryPort userCommandRepositoryPort;
   private final EventApplicationMapper eventApplicationMapper;
+  private final EventAccessGuard eventAccessGuard;
   private final Supplier<Instant> currentTimeSupplier;
 
   @Override
@@ -56,7 +57,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   @Override
   @Transactional
   public Event updateEvent(UUID eventId, UUID userId, UpdateEventCommand command) {
-    Event event = getOwnedEvent(eventId, userId);
+    Event event = eventAccessGuard.requireOwnedEvent(eventId, userId);
     if (event.status() != EventStatus.DRAFT) {
       throw new IllegalStateException("Event cannot be updated from status " + event.status());
     }
@@ -73,7 +74,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   @Override
   @Transactional
   public Event markEventAsPublished(UUID eventId, UUID userId) {
-    Event event = getOwnedEvent(eventId, userId);
+    Event event = eventAccessGuard.requireOwnedEvent(eventId, userId);
     if (event.status() != EventStatus.DRAFT) {
       throw new IllegalStateException("Event cannot be published from status " + event.status());
     }
@@ -83,7 +84,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   @Override
   @Transactional
   public Event markEventAsDraft(UUID eventId, UUID userId) {
-    Event event = getOwnedEvent(eventId, userId);
+    Event event = eventAccessGuard.requireOwnedEvent(eventId, userId);
     if (event.status() != EventStatus.PUBLISHED) {
       throw new IllegalStateException("Event cannot be unpublished from status " + event.status());
     }
@@ -162,18 +163,6 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   private Event updateStatus(Event event, EventStatus status) {
     return eventCommandRepositoryPort.save(
         eventApplicationMapper.toEventWithStatus(event, status, currentTimeSupplier.get()));
-  }
-
-  private Event getOwnedEvent(UUID eventId, UUID userId) {
-    User user = getUser(userId);
-    Event event =
-        eventCommandRepositoryPort
-            .findById(eventId)
-            .orElseThrow(() -> new NoSuchElementException("Event not found: " + eventId));
-    if (!event.ownerId().equals(user.id())) {
-      throw new SecurityException("User does not own event: " + eventId);
-    }
-    return event;
   }
 
   private Event getEventForOrdering(UUID eventId) {

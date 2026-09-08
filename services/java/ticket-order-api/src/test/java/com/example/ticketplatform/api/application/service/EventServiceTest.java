@@ -319,11 +319,13 @@ class EventServiceTest {
   }
 
   private EventService newService(TestEventRepositoryPort events, List<User> users) {
+    TestUserRepositoryPort userRepositoryPort = new TestUserRepositoryPort(users);
     return new EventService(
         events,
         events,
-        new TestUserRepositoryPort(users),
+        userRepositoryPort,
         Mappers.getMapper(EventApplicationMapper.class),
+        new EventAccessGuard(events, userRepositoryPort),
         Clock.fixed(TEST_TIME, ZoneOffset.UTC)::instant);
   }
 
