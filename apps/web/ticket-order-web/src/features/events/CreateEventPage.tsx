@@ -179,14 +179,16 @@ export function CreateEventPage() {
             </label>
             <input
               accept="image/jpeg,image/png,image/webp"
-              aria-describedby={errors.image ? 'image-error' : undefined}
+              aria-describedby={errors.image ? 'image-error' : 'image-hint'}
               aria-invalid={Boolean(errors.image)}
               className={fileInputClassName}
               id="image"
               type="file"
               {...register('image')}
             />
-            <p className={hintClassName}>JPEG, PNG, or WebP, up to 5MB.</p>
+            <p className={hintClassName} id="image-hint">
+              JPEG, PNG, or WebP, up to 5MB.
+            </p>
             <FieldError id="image-error" message={errors.image?.message} />
           </div>
 

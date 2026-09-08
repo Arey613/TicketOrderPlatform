@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ALLOWED_IMAGE_TYPES, ALLOWED_VIDEO_TYPES, MAX_IMAGE_SIZE_BYTES } from './mediaLimits';
 
 const MAX_VIDEO_DURATION_SECONDS = 180;
+const VIDEO_METADATA_TIMEOUT_MS = 10_000;
 
 function extractFile(fileList: FileList | undefined): File | undefined {
   return fileList && fileList.length > 0 ? fileList[0] : undefined;
@@ -19,8 +20,14 @@ export function getVideoDurationSeconds(file: File): Promise<number> {
     videoElement.preload = 'metadata';
 
     const cleanup = () => {
+      clearTimeout(timeoutId);
       URL.revokeObjectURL(objectUrl);
     };
+
+    const timeoutId = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timed out reading video metadata.'));
+    }, VIDEO_METADATA_TIMEOUT_MS);
 
     videoElement.addEventListener('loadedmetadata', () => {
       const duration = videoElement.duration;
