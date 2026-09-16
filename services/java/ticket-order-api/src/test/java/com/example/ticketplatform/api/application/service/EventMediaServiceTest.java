@@ -9,6 +9,7 @@ import com.example.ticketplatform.api.application.port.in.IssueVideoUploadUrlCom
 import com.example.ticketplatform.api.application.port.in.VideoUploadIssuance;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
+import com.example.ticketplatform.api.application.port.out.ObjectStoragePort.ObjectMetadata;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -43,6 +44,8 @@ class EventMediaServiceTest {
   private static final UUID OTHER_OWNER_ID =
       UUID.fromString("00000000-0000-0000-0000-000000000102");
   private static final UUID EVENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000103");
+  private static final String VIDEO_SHA256 =
+      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
   @Test
   void attachesImageAndPersistsUploadedUrl() {
@@ -159,7 +162,9 @@ class EventMediaServiceTest {
 
     VideoUploadIssuance issuance =
         service.issueVideoUploadUrl(
-            EVENT_ID, OWNER_ID, new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L));
+            EVENT_ID,
+            OWNER_ID,
+            new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L, VIDEO_SHA256));
 
     assertThat(issuance.uploadUrl()).isEqualTo(storage.lastPresignedUploadUrl);
     assertThat(issuance.videoUrl()).isEqualTo(storage.lastPresignedPublicUrl.toString());
@@ -167,6 +172,7 @@ class EventMediaServiceTest {
     assertThat(storage.lastPresignKey).endsWith(".mp4");
     assertThat(storage.lastPresignContentType).isEqualTo("video/mp4");
     assertThat(storage.lastPresignContentLength).isEqualTo(1_000L);
+    assertThat(storage.lastPresignMetadata).containsEntry("sha256", VIDEO_SHA256);
     assertThat(events.savedEvents).isEmpty();
   }
 
@@ -181,7 +187,7 @@ class EventMediaServiceTest {
                 service.issueVideoUploadUrl(
                     EVENT_ID,
                     OWNER_ID,
-                    new IssueVideoUploadUrlCommand("clip.avi", "video/avi", 1_000L)))
+                    new IssueVideoUploadUrlCommand("clip.avi", "video/avi", 1_000L, VIDEO_SHA256)))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(events.savedEvents).isEmpty();
   }
@@ -197,7 +203,7 @@ class EventMediaServiceTest {
                 service.issueVideoUploadUrl(
                     EVENT_ID,
                     OWNER_ID,
-                    new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 100_000_000L)))
+                    new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 200_000_000L, VIDEO_SHA256)))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(events.savedEvents).isEmpty();
   }
@@ -213,7 +219,7 @@ class EventMediaServiceTest {
                 service.issueVideoUploadUrl(
                     EVENT_ID,
                     OTHER_OWNER_ID,
-                    new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L)))
+                    new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L, VIDEO_SHA256)))
         .isInstanceOf(SecurityException.class);
     assertThat(events.savedEvents).isEmpty();
   }
@@ -227,7 +233,9 @@ class EventMediaServiceTest {
     assertThatThrownBy(
             () ->
                 service.issueVideoUploadUrl(
-                    EVENT_ID, OWNER_ID, new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L)))
+                    EVENT_ID,
+                    OWNER_ID,
+                    new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L, VIDEO_SHA256)))
         .isInstanceOf(IllegalStateException.class);
   }
 
@@ -240,11 +248,16 @@ class EventMediaServiceTest {
 
     VideoUploadIssuance issuance =
         service.issueVideoUploadUrl(
-            EVENT_ID, OWNER_ID, new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L));
+            EVENT_ID,
+            OWNER_ID,
+            new IssueVideoUploadUrlCommand("clip.mp4", "video/mp4", 1_000L, VIDEO_SHA256));
 
     Event updated =
         service.confirmVideoUpload(
-            EVENT_ID, OWNER_ID, new ConfirmVideoUploadCommand(URI.create(issuance.videoUrl())));
+            EVENT_ID,
+            OWNER_ID,
+            new ConfirmVideoUploadCommand(
+                URI.create(issuance.videoUrl()), "video/mp4", 1_000L, VIDEO_SHA256));
 
     assertThat(updated.videoUrl()).isEqualTo(issuance.videoUrl());
     assertThat(events.savedEvents).hasSize(1);
@@ -262,7 +275,10 @@ class EventMediaServiceTest {
                     EVENT_ID,
                     OWNER_ID,
                     new ConfirmVideoUploadCommand(
-                        URI.create("https://cdn.example.com/events/other-event/video/x.mp4"))))
+                        URI.create("https://cdn.example.com/events/other-event/video/x.mp4"),
+                        "video/mp4",
+                        1_000L,
+                        VIDEO_SHA256)))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(events.savedEvents).isEmpty();
   }
@@ -383,32 +399,53 @@ class EventMediaServiceTest {
     private String lastPresignKey;
     private String lastPresignContentType;
     private long lastPresignContentLength;
+    private Map<String, String> lastPresignMetadata;
     private URI lastPresignedUploadUrl;
     private URI lastPresignedPublicUrl;
+    private final Map<String, ObjectMetadata> metadataByKey = new java.util.HashMap<>();
     private final List<String> deletedKeys = new ArrayList<>();
 
     @Override
-    public String upload(String key, byte[] data, String contentType, String cacheControl) {
+    public String upload(
+        String key, byte[] data, String contentType, String cacheControl, Map<String, String> metadata) {
       this.lastUploadKey = key;
       this.lastContentType = contentType;
       this.lastCacheControl = cacheControl;
       this.lastUploadedUrl = "https://cdn.example.com/" + key;
+      metadataByKey.put(key, new ObjectMetadata((long) data.length, contentType, metadata));
       return lastUploadedUrl;
     }
 
     @Override
     public PresignedUpload issuePresignedUploadUrl(
-        String key, String contentType, String cacheControl, long contentLength) {
+        String key,
+        String contentType,
+        String cacheControl,
+        long contentLength,
+        Map<String, String> metadata) {
       this.lastPresignKey = key;
       this.lastPresignContentType = contentType;
       this.lastPresignContentLength = contentLength;
+      this.lastPresignMetadata = metadata;
       this.lastPresignedUploadUrl = URI.create("https://bucket.example.com/" + key + "?signature=abc");
       this.lastPresignedPublicUrl = URI.create("https://cdn.example.com/" + key);
+      metadataByKey.put(key, new ObjectMetadata(contentLength, contentType, metadata));
       return new PresignedUpload(
           lastPresignedUploadUrl,
-          Map.of("Content-Type", contentType, "Cache-Control", cacheControl),
+          Map.of(
+              "Content-Type",
+              contentType,
+              "Cache-Control",
+              cacheControl,
+              "x-amz-meta-sha256",
+              metadata.get("sha256")),
           TEST_TIME.plusSeconds(900),
           lastPresignedPublicUrl);
+    }
+
+    @Override
+    public Optional<ObjectMetadata> metadata(String key) {
+      return Optional.ofNullable(metadataByKey.get(key));
     }
 
     @Override

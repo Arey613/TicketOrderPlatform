@@ -56,6 +56,8 @@ class EventMediaControllerIntegrationTest {
       UUID.fromString("00000000-0000-0000-0000-000000000802");
   private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000803");
   private static final UUID EVENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000804");
+  private static final String VIDEO_SHA256 =
+      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
   private static final User MANAGER =
       WebControllerIntegrationTestConfiguration.user(
           MANAGER_ID, "media-manager@example.com", "{noop}secret", UserRole.MANAGER, true);
@@ -190,9 +192,11 @@ class EventMediaControllerIntegrationTest {
                     {
                       "fileName": "clip.mp4",
                       "contentType": "video/mp4",
-                      "fileSizeBytes": 1000
+                      "fileSizeBytes": 1000,
+                      "sha256": "%s"
                     }
-                    """))
+                    """
+                        .formatted(VIDEO_SHA256)))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.event.eventId").value(EVENT_ID.toString()))
         .andExpect(jsonPath("$.event.videoUrl").doesNotExist())
@@ -204,6 +208,7 @@ class EventMediaControllerIntegrationTest {
     assertThat(stubObjectStoragePort.lastPresignContentType()).isEqualTo("video/mp4");
     assertThat(stubObjectStoragePort.lastPresignKey()).startsWith("events/" + EVENT_ID + "/video/");
     assertThat(stubObjectStoragePort.lastPresignContentLength()).isEqualTo(1000L);
+    assertThat(stubObjectStoragePort.lastPresignMetadata()).containsEntry("sha256", VIDEO_SHA256);
   }
 
   @Test
@@ -218,9 +223,11 @@ class EventMediaControllerIntegrationTest {
                     {
                       "fileName": "clip.mp4",
                       "contentType": "video/mp4",
-                      "fileSizeBytes": 999999999
+                      "fileSizeBytes": 999999999,
+                      "sha256": "%s"
                     }
-                    """))
+                    """
+                        .formatted(VIDEO_SHA256)))
         .andExpect(status().isBadRequest());
   }
 
@@ -236,9 +243,11 @@ class EventMediaControllerIntegrationTest {
                     {
                       "fileName": "clip.mp4",
                       "contentType": "video/mp4",
-                      "fileSizeBytes": 1000
+                      "fileSizeBytes": 1000,
+                      "sha256": "%s"
                     }
-                    """))
+                    """
+                        .formatted(VIDEO_SHA256)))
         .andExpect(status().isForbidden());
   }
 
@@ -251,7 +260,16 @@ class EventMediaControllerIntegrationTest {
             withCsrf(post("/events/{eventId}/video-upload-confirmation", EVENT_ID))
                 .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"videoUrl\": \"" + videoUrl + "\"}"))
+                .content(
+                    """
+                    {
+                      "videoUrl": "%s",
+                      "contentType": "video/mp4",
+                      "fileSizeBytes": 1000,
+                      "sha256": "%s"
+                    }
+                    """
+                        .formatted(videoUrl, VIDEO_SHA256)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()))
         .andExpect(jsonPath("$.videoUrl").value(videoUrl));
@@ -265,7 +283,15 @@ class EventMediaControllerIntegrationTest {
                 .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    "{\"videoUrl\": \"https://cdn.example.com/events/unrelated/video/x.mp4\"}"))
+                    """
+                    {
+                      "videoUrl": "https://cdn.example.com/events/unrelated/video/x.mp4",
+                      "contentType": "video/mp4",
+                      "fileSizeBytes": 1000,
+                      "sha256": "%s"
+                    }
+                    """
+                        .formatted(VIDEO_SHA256)))
         .andExpect(status().isBadRequest());
   }
 
@@ -277,7 +303,15 @@ class EventMediaControllerIntegrationTest {
                 .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    "{\"videoUrl\": \"https://cdn.example.com/events/" + EVENT_ID + "/video/x.mp4\"}"))
+                    """
+                    {
+                      "videoUrl": "https://cdn.example.com/events/%s/video/x.mp4",
+                      "contentType": "video/mp4",
+                      "fileSizeBytes": 1000,
+                      "sha256": "%s"
+                    }
+                    """
+                        .formatted(EVENT_ID, VIDEO_SHA256)))
         .andExpect(status().isForbidden());
   }
 
@@ -308,9 +342,11 @@ class EventMediaControllerIntegrationTest {
                     {
                       "fileName": "clip.mp4",
                       "contentType": "video/mp4",
-                      "fileSizeBytes": 1000
+                      "fileSizeBytes": 1000,
+                      "sha256": "%s"
                     }
-                    """))
+                    """
+                        .formatted(VIDEO_SHA256)))
         .andExpect(status().isConflict());
   }
 
@@ -326,9 +362,11 @@ class EventMediaControllerIntegrationTest {
                         {
                           "fileName": "clip.mp4",
                           "contentType": "video/mp4",
-                          "fileSizeBytes": 1000
+                          "fileSizeBytes": 1000,
+                          "sha256": "%s"
                         }
-                        """))
+                        """
+                            .formatted(VIDEO_SHA256)))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()

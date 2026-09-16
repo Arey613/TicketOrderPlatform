@@ -8,11 +8,15 @@ import com.example.ticketplatform.api.application.port.in.IssueVideoUploadUrlCom
 import com.example.ticketplatform.api.application.port.in.VideoUploadIssuance;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
+import com.example.ticketplatform.api.application.port.out.ObjectStoragePort.ObjectMetadata;
 import com.example.ticketplatform.api.application.port.out.ObjectStoragePort.PresignedUpload;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.infrastructure.config.media.MediaProperties;
 import java.net.URI;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -45,6 +49,7 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
   private static final String VIDEO_KEY_INFIX = "/video/";
   private static final String IMAGE_KEY_FORMAT = "events/%s/image/%s.%s";
   private static final String VIDEO_KEY_FORMAT = "events/%s/video/%s.%s";
+  private static final String SHA256_METADATA_KEY = "sha256";
 
   private final EventCommandRepositoryPort eventCommandRepositoryPort;
   private final EventAccessGuard eventAccessGuard;
@@ -75,7 +80,8 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
             key,
             command.imageData(),
             validation.contentType(),
-            mediaProperties.image().cacheControl());
+            mediaProperties.image().cacheControl(),
+            Map.of(SHA256_METADATA_KEY, sha256(command.imageData())));
 
     Instant now = currentTimeSupplier.get();
     try {
@@ -125,7 +131,8 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
             key,
             command.contentType(),
             mediaProperties.video().cacheControl(),
-            command.fileSizeBytes());
+            command.fileSizeBytes(),
+            Map.of(SHA256_METADATA_KEY, command.sha256()));
 
     log.info(
         "event.media.video.upload_url_issued event_id={} content_type={} size_bytes={}",
@@ -145,18 +152,32 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
   public Event confirmVideoUpload(UUID eventId, UUID userId, ConfirmVideoUploadCommand command) {
     Event event = eventAccessGuard.requireOwnedDraftEvent(eventId, userId);
     requireVideoUrlBelongsToEvent(eventId, command.videoUrl());
+    String uploadedKey = storageKey(command.videoUrl());
+    ObjectMetadata uploadedMetadata = requireMetadata(uploadedKey);
+    requireUploadedVideoMetadata(command, uploadedMetadata);
+
+    if (event.videoUrl() != null && hasSameChecksum(event.videoUrl(), command.sha256())) {
+      deleteBestEffort(uploadedKey);
+      log.info("event.media.video.unchanged event_id={}", eventId);
+      return event;
+    }
 
     Instant now = currentTimeSupplier.get();
-    Event updated =
-        inPrimaryTransaction(
-            status ->
-                eventCommandRepositoryPort.save(
-                    eventApplicationMapper.toEventWithVideo(
-                        event, command.videoUrl().toString(), now)));
+    try {
+      Event updated =
+          inPrimaryTransaction(
+              status ->
+                  eventCommandRepositoryPort.save(
+                      eventApplicationMapper.toEventWithVideo(
+                          event, command.videoUrl().toString(), now)));
 
-    log.info("event.media.video.upload_confirmed event_id={}", eventId);
+      log.info("event.media.video.upload_confirmed event_id={}", eventId);
 
-    return updated;
+      return updated;
+    } catch (RuntimeException exception) {
+      deleteBestEffort(uploadedKey);
+      throw exception;
+    }
   }
 
   private void requireVideoUrlBelongsToEvent(UUID eventId, URI videoUrl) {
@@ -176,6 +197,50 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
       // no other signal. Once the platform has an alerting system, wire this into it so an
       // admin can intervene instead of relying on log scraping.
       log.error("event.media.image.compensation_delete_failed key={}", key, exception);
+    }
+  }
+
+  private ObjectMetadata requireMetadata(String key) {
+    return objectStoragePort
+        .metadata(key)
+        .orElseThrow(() -> new IllegalArgumentException("Uploaded media object was not found"));
+  }
+
+  private boolean hasSameChecksum(String videoUrl, String sha256) {
+    return objectStoragePort
+        .metadata(storageKey(URI.create(videoUrl)))
+        .map(ObjectMetadata::metadata)
+        .map(metadata -> metadata.get(SHA256_METADATA_KEY))
+        .map(sha256::equals)
+        .orElse(false);
+  }
+
+  private void requireUploadedVideoMetadata(
+      ConfirmVideoUploadCommand command, ObjectMetadata metadata) {
+    if (!Objects.equals(command.fileSizeBytes(), metadata.contentLength())) {
+      throw new IllegalArgumentException("Uploaded video size does not match issued upload");
+    }
+    if (!Objects.equals(command.contentType(), metadata.contentType())) {
+      throw new IllegalArgumentException("Uploaded video content type does not match issued upload");
+    }
+    if (!Objects.equals(command.sha256(), metadata.metadata().get(SHA256_METADATA_KEY))) {
+      throw new IllegalArgumentException("Uploaded video checksum does not match issued upload");
+    }
+  }
+
+  private String storageKey(URI publicUrl) {
+    String path = publicUrl.getPath();
+    if (path == null || path.isBlank()) {
+      throw new IllegalArgumentException("Media URL does not contain an object key");
+    }
+    return path.startsWith("/") ? path.substring(1) : path;
+  }
+
+  private String sha256(byte[] data) {
+    try {
+      return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(data));
+    } catch (NoSuchAlgorithmException exception) {
+      throw new IllegalStateException("SHA-256 is not available", exception);
     }
   }
 

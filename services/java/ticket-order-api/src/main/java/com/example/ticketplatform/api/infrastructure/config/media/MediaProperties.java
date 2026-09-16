@@ -23,7 +23,7 @@ public record MediaProperties(@DefaultValue Image image, @DefaultValue Video vid
 
   private static Video defaultVideo() {
     return new Video(
-        52_428_800L,
+        104_857_600L,
         List.of("video/mp4", "video/webm", "video/quicktime"),
         "public, max-age=3600");
   }
@@ -34,7 +34,7 @@ public record MediaProperties(@DefaultValue Image image, @DefaultValue Video vid
       @DefaultValue("public, max-age=3600") String cacheControl) {}
 
   public record Video(
-      @DefaultValue("52428800") long maxSizeBytes,
+      @DefaultValue("104857600") long maxSizeBytes,
       @DefaultValue({"video/mp4", "video/webm", "video/quicktime"}) List<String> allowedContentTypes,
       @DefaultValue("public, max-age=3600") String cacheControl) {}
 }

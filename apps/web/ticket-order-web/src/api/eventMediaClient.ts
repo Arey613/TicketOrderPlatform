@@ -2,6 +2,7 @@ import { ALLOWED_VIDEO_TYPES } from '../features/events/mediaLimits';
 import type { EventResponse, IssueVideoUploadUrlResponse } from '../generated/api';
 import {
   Configuration,
+  type ConfirmVideoUploadRequestContentTypeEnum,
   EventsApi,
   type IssueVideoUploadUrlRequestContentTypeEnum,
 } from '../generated/api';
@@ -24,6 +25,12 @@ function toVideoContentType(type: string): IssueVideoUploadUrlRequestContentType
   throw new Error(`Unsupported video content type: ${type}`);
 }
 
+async function sha256(file: File): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 export async function attachEventImage(eventId: string, image: File): Promise<EventResponse> {
   await prepareCsrfToken();
 
@@ -33,30 +40,44 @@ export async function attachEventImage(eventId: string, image: File): Promise<Ev
 export async function issueEventVideoUploadUrl(
   eventId: string,
   video: File,
-): Promise<IssueVideoUploadUrlResponse> {
+): Promise<IssueVideoUploadUrlResponse & { sha256: string }> {
   await prepareCsrfToken();
+  const checksum = await sha256(video);
 
-  return eventsApi.issueEventVideoUploadUrl(
+  const response = await eventsApi.issueEventVideoUploadUrl(
     {
       eventId,
       issueVideoUploadUrlRequest: {
         fileName: video.name,
         contentType: toVideoContentType(video.type),
         fileSizeBytes: video.size,
+        sha256: checksum,
       },
     },
     withCsrfHeader,
   );
+
+  return { ...response, sha256: checksum };
 }
 
 export async function confirmEventVideoUpload(
   eventId: string,
   videoUrl: string,
+  video: File,
+  sha256: string,
 ): Promise<EventResponse> {
   await prepareCsrfToken();
 
   return eventsApi.confirmEventVideoUpload(
-    { eventId, confirmVideoUploadRequest: { videoUrl } },
+    {
+      eventId,
+      confirmVideoUploadRequest: {
+        videoUrl,
+        contentType: toVideoContentType(video.type) as ConfirmVideoUploadRequestContentTypeEnum,
+        fileSizeBytes: video.size,
+        sha256,
+      },
+    },
     withCsrfHeader,
   );
 }

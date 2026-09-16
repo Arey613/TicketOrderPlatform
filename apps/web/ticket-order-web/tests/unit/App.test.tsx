@@ -8,7 +8,11 @@ import {
   getAuthenticatedEvent,
   getPublishedEvent,
   listMyEventOrders,
+  listMyEvents,
   listPublishedEvents,
+  patchEvent,
+  publishEvent,
+  unpublishEvent,
 } from '../../src/api/eventsClient';
 import { notifySessionExpired } from '../../src/api/sessionEvents';
 import { submitLoginForm, submitRegistrationForm } from '../support/appTestActions';
@@ -19,7 +23,13 @@ import {
   newBuyerUser,
   storedUserKey,
 } from '../support/authTestData';
-import { bookedEvent, myEventOrder, pageMetadata, publishedEvent } from '../support/eventTestData';
+import {
+  bookedEvent,
+  draftEvent,
+  myEventOrder,
+  pageMetadata,
+  publishedEvent,
+} from '../support/eventTestData';
 import { renderApp } from '../support/renderApp';
 
 vi.mock('../../src/api/authClient', () => ({
@@ -34,8 +44,12 @@ vi.mock('../../src/api/eventsClient', () => ({
   createEventOrders: vi.fn(),
   getAuthenticatedEvent: vi.fn(),
   getPublishedEvent: vi.fn(),
+  listMyEvents: vi.fn(),
   listPublishedEvents: vi.fn(),
   listMyEventOrders: vi.fn(),
+  patchEvent: vi.fn(),
+  publishEvent: vi.fn(),
+  unpublishEvent: vi.fn(),
   toEventUserMessage: vi.fn(),
 }));
 
@@ -47,8 +61,12 @@ const mockedCreateEvent = vi.mocked(createEvent);
 const mockedCreateEventOrders = vi.mocked(createEventOrders);
 const mockedGetAuthenticatedEvent = vi.mocked(getAuthenticatedEvent);
 const mockedGetPublishedEvent = vi.mocked(getPublishedEvent);
+const mockedListMyEvents = vi.mocked(listMyEvents);
 const mockedListPublishedEvents = vi.mocked(listPublishedEvents);
 const mockedListMyEventOrders = vi.mocked(listMyEventOrders);
+const mockedPatchEvent = vi.mocked(patchEvent);
+const mockedPublishEvent = vi.mocked(publishEvent);
+const mockedUnpublishEvent = vi.mocked(unpublishEvent);
 
 describe('App', () => {
   beforeEach(() => {
@@ -65,6 +83,11 @@ describe('App', () => {
     mockedGetAuthenticatedEvent.mockResolvedValue(publishedEvent);
     mockedGetPublishedEvent.mockReset();
     mockedGetPublishedEvent.mockResolvedValue(publishedEvent);
+    mockedListMyEvents.mockReset();
+    mockedListMyEvents.mockResolvedValue({
+      items: [draftEvent, publishedEvent],
+      page: pageMetadata(10, 2),
+    });
     mockedListPublishedEvents.mockReset();
     mockedListPublishedEvents.mockResolvedValue({
       items: [publishedEvent],
@@ -75,6 +98,12 @@ describe('App', () => {
       items: [],
       page: pageMetadata(20, 0),
     });
+    mockedPatchEvent.mockReset();
+    mockedPatchEvent.mockResolvedValue(draftEvent);
+    mockedPublishEvent.mockReset();
+    mockedPublishEvent.mockResolvedValue({ ...draftEvent, status: 'PUBLISHED' });
+    mockedUnpublishEvent.mockReset();
+    mockedUnpublishEvent.mockResolvedValue({ ...publishedEvent, status: 'DRAFT' });
   });
 
   it('renders the public ticketing page with published events', async () => {
@@ -384,6 +413,66 @@ describe('App', () => {
 
     it('redirects a logged-out visitor away from the create-event route', async () => {
       window.history.pushState(null, '', '/events/create');
+
+      renderApp();
+
+      expect(
+        await screen.findByRole('heading', { name: 'Order tickets without queues' }),
+      ).toBeVisible();
+      expect(window.location.pathname).toBe('/');
+    });
+  });
+
+  describe('owned event management access', () => {
+    afterEach(() => {
+      window.history.pushState(null, '', '/');
+    });
+
+    it('shows a working "My events" nav link for managers and admins only', () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+      const { unmount } = renderApp();
+
+      expect(screen.getByRole('link', { name: 'My events' })).toHaveAttribute(
+        'href',
+        '/events/mine',
+      );
+      unmount();
+
+      localStorage.setItem(storedUserKey, JSON.stringify(adminUser));
+      const { unmount: unmountAdmin } = renderApp();
+
+      expect(screen.getByRole('link', { name: 'My events' })).toHaveAttribute(
+        'href',
+        '/events/mine',
+      );
+      unmountAdmin();
+
+      localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
+      renderApp();
+
+      expect(screen.queryByRole('link', { name: 'My events' })).not.toBeInTheDocument();
+    });
+
+    it('lists owned events with draft edit and publish controls', async () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+      window.history.pushState(null, '', '/events/mine');
+
+      renderApp();
+
+      expect(await screen.findByRole('heading', { name: 'My events' })).toBeVisible();
+      expect(await screen.findByRole('heading', { name: 'Draft acoustic night' })).toBeVisible();
+      expect(screen.getByRole('link', { name: 'Edit Draft acoustic night' })).toHaveAttribute(
+        'href',
+        '/events/mine/event-draft-1/edit',
+      );
+      expect(screen.getByRole('button', { name: 'Publish Draft acoustic night' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Unpublish The Horizon Live' })).toBeVisible();
+      expect(mockedListMyEvents).toHaveBeenCalledWith({ page: 0, size: 10 });
+    });
+
+    it('redirects a customer away from the owned-event route', async () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
+      window.history.pushState(null, '', '/events/mine');
 
       renderApp();
 

@@ -142,6 +142,28 @@ class WebControllerIntegrationTestConfiguration {
     }
 
     @Override
+    public Event patchEvent(UUID eventId, UUID userId, com.example.ticketplatform.api.application.port.in.PatchEventCommand command) {
+      lastCommandUserId = userId;
+      Event existing = getEvent(eventId, userId);
+      Event updated =
+          Event.builder()
+              .id(existing.id())
+              .ownerId(existing.ownerId())
+              .date(command.date() == null ? existing.date() : command.date())
+              .name(command.name() == null ? existing.name() : command.name())
+              .place(command.place() == null ? existing.place() : command.place())
+              .type(command.type() == null ? existing.type() : command.type())
+              .status(existing.status())
+              .details(existing.details())
+              .orders(existing.orders())
+              .createdAt(existing.createdAt())
+              .updatedAt(TEST_TIME)
+              .build();
+      eventsById.put(updated.id(), updated);
+      return updated;
+    }
+
+    @Override
     public Event markEventAsPublished(UUID eventId, UUID userId) {
       lastCommandUserId = userId;
       return withStatus(eventId, EventStatus.PUBLISHED);

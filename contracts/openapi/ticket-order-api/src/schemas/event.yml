@@ -113,6 +113,80 @@ CreateEventRequest:
 UpdateEventRequest:
   allOf:
     - "$ref": "#/components/schemas/CreateEventRequest"
+PatchEventDetailsRequest:
+  type: object
+  description: >-
+    Partial event detail update. Omitted fields and explicit null values keep
+    the existing value; clearing optional fields is out of scope.
+  properties:
+    description:
+      type: string
+      nullable: true
+      minLength: 1
+    numberOfPlaces:
+      type: integer
+      nullable: true
+      minimum: 1
+    numberOfRows:
+      type: integer
+      nullable: true
+      minimum: 1
+    seatsPerRow:
+      type: integer
+      nullable: true
+      minimum: 1
+    placeTypes:
+      type: array
+      nullable: true
+      items:
+        "$ref": "#/components/schemas/EventPlaceTypeRequest"
+  additionalProperties: false
+PatchEventRequest:
+  type: object
+  description: >-
+    Partial event update. Omitted fields and explicit null values keep the
+    existing value; clearing optional fields is out of scope.
+  properties:
+    name:
+      type: string
+      nullable: true
+      minLength: 1
+      maxLength: 200
+    date:
+      type: string
+      nullable: true
+      format: date-time
+    place:
+      type: string
+      nullable: true
+      minLength: 1
+      maxLength: 200
+    city:
+      type: string
+      nullable: true
+      maxLength: 120
+    type:
+      type: string
+      nullable: true
+      minLength: 1
+      maxLength: 100
+    summary:
+      type: string
+      nullable: true
+      maxLength: 500
+    price:
+      type: string
+      nullable: true
+      pattern: "^\\d+(\\.\\d{1,2})?$"
+    currency:
+      type: string
+      nullable: true
+      minLength: 3
+      maxLength: 3
+    details:
+      nullable: true
+      "$ref": "#/components/schemas/PatchEventDetailsRequest"
+  additionalProperties: false
 BookedPlaceResponse:
   type: object
   required:
@@ -218,6 +292,7 @@ IssueVideoUploadUrlRequest:
     - fileName
     - contentType
     - fileSizeBytes
+    - sha256
   properties:
     fileName:
       type: string
@@ -233,9 +308,14 @@ IssueVideoUploadUrlRequest:
       type: integer
       format: int64
       minimum: 1
+      maximum: 104857600
       description: >-
         Exact byte size of the video file. Signed into the presigned upload URL so
         object storage rejects an upload whose actual size does not match.
+    sha256:
+      type: string
+      pattern: "^[a-f0-9]{64}$"
+      description: Lowercase hexadecimal SHA-256 checksum of the video file.
   additionalProperties: false
 IssueVideoUploadUrlResponse:
   type: object
@@ -273,6 +353,9 @@ ConfirmVideoUploadRequest:
   type: object
   required:
     - videoUrl
+    - contentType
+    - fileSizeBytes
+    - sha256
   properties:
     videoUrl:
       type: string
@@ -280,4 +363,19 @@ ConfirmVideoUploadRequest:
       description: >-
         The videoUrl previously returned by issueEventVideoUploadUrl, confirming
         the upload to that object completed successfully.
+    contentType:
+      type: string
+      enum:
+        - video/mp4
+        - video/webm
+        - video/quicktime
+    fileSizeBytes:
+      type: integer
+      format: int64
+      minimum: 1
+      maximum: 104857600
+    sha256:
+      type: string
+      pattern: "^[a-f0-9]{64}$"
+      description: Lowercase hexadecimal SHA-256 checksum expected on the uploaded object.
   additionalProperties: false

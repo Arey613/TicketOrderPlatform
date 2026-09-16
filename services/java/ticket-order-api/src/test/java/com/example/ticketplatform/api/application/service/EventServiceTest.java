@@ -9,6 +9,8 @@ import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.PageMetadata;
 import com.example.ticketplatform.api.application.port.in.PageRequest;
 import com.example.ticketplatform.api.application.port.in.PageResult;
+import com.example.ticketplatform.api.application.port.in.PatchEventCommand;
+import com.example.ticketplatform.api.application.port.in.PatchEventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
@@ -214,6 +216,49 @@ class EventServiceTest {
     assertThat(updated.status()).isEqualTo(EventStatus.DRAFT);
     assertThat(updated.details().description()).isEqualTo("Updated details");
     assertThat(updated.updatedAt()).isEqualTo(TEST_TIME);
+  }
+
+  @Test
+  void patchesOnlyProvidedDraftEventFields() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.DRAFT));
+    EventService service = newService(events, List.of(user(MANAGER_ID, UserRole.MANAGER)));
+
+    Event patched =
+        service.patchEvent(
+            EVENT_ID,
+            MANAGER_ID,
+            new PatchEventCommand(
+                null,
+                "Updated concert",
+                null,
+                null,
+                new PatchEventDetailsCommand("Updated details", null, null, null)));
+
+    assertThat(patched.name()).isEqualTo("Updated concert");
+    assertThat(patched.date()).isEqualTo(TEST_TIME);
+    assertThat(patched.place()).isEqualTo("Main hall");
+    assertThat(patched.type()).isEqualTo("MUSIC");
+    assertThat(patched.details().description()).isEqualTo("Updated details");
+    assertThat(patched.details().numberOfPlaces()).isEqualTo(100);
+    assertThat(patched.details().numberOfRows()).isEqualTo(10);
+    assertThat(patched.details().seatsPerRow()).isEqualTo(10);
+    assertThat(patched.updatedAt()).isEqualTo(TEST_TIME);
+  }
+
+  @Test
+  void rejectsPatchWhenEventIsNotDraft() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.PUBLISHED));
+    EventService service = newService(events, List.of(user(MANAGER_ID, UserRole.MANAGER)));
+
+    assertThatThrownBy(
+            () ->
+                service.patchEvent(
+                    EVENT_ID,
+                    MANAGER_ID,
+                    new PatchEventCommand(null, "Updated concert", null, null, null)))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   @Test

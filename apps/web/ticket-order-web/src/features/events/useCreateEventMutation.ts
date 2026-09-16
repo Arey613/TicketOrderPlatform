@@ -36,12 +36,12 @@ export function useCreateEventMutation() {
 
       if (values.video) {
         try {
-          const { uploadUrl, videoUrl, requiredHeaders } = await issueEventVideoUploadUrl(
+          const { uploadUrl, videoUrl, requiredHeaders, sha256 } = await issueEventVideoUploadUrl(
             event.eventId,
             values.video,
           );
           await uploadEventVideo(uploadUrl, values.video, requiredHeaders);
-          await confirmEventVideoUpload(event.eventId, videoUrl);
+          await confirmEventVideoUpload(event.eventId, videoUrl, values.video, sha256);
         } catch {
           failedMedia.push('video');
         }

@@ -22,6 +22,7 @@ import com.example.ticketplatform.api.generated.contract.model.EventResponse;
 import com.example.ticketplatform.api.generated.contract.model.IssueVideoUploadUrlRequest;
 import com.example.ticketplatform.api.generated.contract.model.IssueVideoUploadUrlResponse;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrdersResponse;
+import com.example.ticketplatform.api.generated.contract.model.PatchEventRequest;
 import com.example.ticketplatform.api.generated.contract.model.UpdateEventRequest;
 import java.io.IOException;
 import java.net.URI;
@@ -189,6 +190,17 @@ class EventController implements EventsApi, PublicApi {
     return ResponseEntity.ok(
         eventResponseAssembler.toEventResponse(
             eventCommandUseCase.markEventAsDraft(eventId, currentUserProvider.currentUser().id())));
+  }
+
+  @Override
+  @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+  public ResponseEntity<EventResponse> patchEvent(UUID eventId, PatchEventRequest patchEventRequest) {
+    return ResponseEntity.ok(
+        eventResponseAssembler.toEventResponse(
+            eventCommandUseCase.patchEvent(
+                eventId,
+                currentUserProvider.currentUser().id(),
+                eventContractMapper.toCommand(patchEventRequest))));
   }
 
   @Override

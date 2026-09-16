@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,10 @@ import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -75,7 +79,8 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
   }
 
   @Override
-  public String upload(String key, byte[] data, String contentType, String cacheControl) {
+  public String upload(
+      String key, byte[] data, String contentType, String cacheControl, Map<String, String> metadata) {
     ensureBucketExists();
     s3Client.putObject(
         PutObjectRequest.builder()
@@ -83,6 +88,7 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
             .key(key)
             .contentType(contentType)
             .cacheControl(cacheControl)
+            .metadata(metadata)
             .build(),
         RequestBody.fromBytes(data));
     return buildPublicUrl(key).toString();
@@ -90,7 +96,11 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
 
   @Override
   public PresignedUpload issuePresignedUploadUrl(
-      String key, String contentType, String cacheControl, long contentLength) {
+      String key,
+      String contentType,
+      String cacheControl,
+      long contentLength,
+      Map<String, String> metadata) {
     ensureBucketExists();
     PutObjectRequest putObjectRequest =
         PutObjectRequest.builder()
@@ -99,6 +109,7 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
             .contentType(contentType)
             .cacheControl(cacheControl)
             .contentLength(contentLength)
+            .metadata(metadata)
             .build();
 
     PresignedPutObjectRequest presignedRequest =
@@ -113,6 +124,25 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
         toRequiredHeaders(presignedRequest),
         currentTimeSupplier.get().plus(s3StorageProperties.presignTtl()),
         buildPublicUrl(key));
+  }
+
+  @Override
+  public Optional<ObjectMetadata> metadata(String key) {
+    ensureBucketExists();
+    try {
+      HeadObjectResponse response =
+          s3Client.headObject(
+              HeadObjectRequest.builder().bucket(s3StorageProperties.bucket()).key(key).build());
+      return Optional.of(
+          new ObjectMetadata(response.contentLength(), response.contentType(), response.metadata()));
+    } catch (NoSuchKeyException exception) {
+      return Optional.empty();
+    } catch (S3Exception exception) {
+      if (exception.statusCode() == NOT_FOUND_STATUS_CODE) {
+        return Optional.empty();
+      }
+      throw exception;
+    }
   }
 
   @Override
