@@ -882,28 +882,11 @@ components:
           nullable: true
           minLength: 1
           maxLength: 200
-        city:
-          type: string
-          nullable: true
-          maxLength: 120
         type:
           type: string
           nullable: true
           minLength: 1
           maxLength: 100
-        summary:
-          type: string
-          nullable: true
-          maxLength: 500
-        price:
-          type: string
-          nullable: true
-          pattern: "^\\d+(\\.\\d{1,2})?$"
-        currency:
-          type: string
-          nullable: true
-          minLength: 3
-          maxLength: 3
         details:
           nullable: true
           "$ref": "#/components/schemas/PatchEventDetailsRequest"
