@@ -8,8 +8,9 @@ import com.example.ticketplatform.api.application.port.in.ConfirmVideoUploadComm
 import com.example.ticketplatform.api.application.port.in.IssueVideoUploadUrlCommand;
 import com.example.ticketplatform.api.application.port.in.VideoUploadIssuance;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.ObjectMetadata;
 import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
-import com.example.ticketplatform.api.application.port.out.ObjectStoragePort.ObjectMetadata;
+import com.example.ticketplatform.api.application.port.out.PresignedUpload;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;

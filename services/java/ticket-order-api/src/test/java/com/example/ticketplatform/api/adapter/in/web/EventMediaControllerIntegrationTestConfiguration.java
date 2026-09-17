@@ -1,7 +1,8 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
+import com.example.ticketplatform.api.application.port.out.ObjectMetadata;
 import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
-import com.example.ticketplatform.api.application.port.out.ObjectStoragePort.ObjectMetadata;
+import com.example.ticketplatform.api.application.port.out.PresignedUpload;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;

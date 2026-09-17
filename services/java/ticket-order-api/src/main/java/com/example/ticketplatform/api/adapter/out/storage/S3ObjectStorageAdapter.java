@@ -1,6 +1,8 @@
 package com.example.ticketplatform.api.adapter.out.storage;
 
+import com.example.ticketplatform.api.application.port.out.ObjectMetadata;
 import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
+import com.example.ticketplatform.api.application.port.out.PresignedUpload;
 import com.example.ticketplatform.api.infrastructure.config.storage.S3StorageProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -80,7 +82,11 @@ class S3ObjectStorageAdapter implements ObjectStoragePort {
 
   @Override
   public String upload(
-      String key, byte[] data, String contentType, String cacheControl, Map<String, String> metadata) {
+      String key,
+      byte[] data,
+      String contentType,
+      String cacheControl,
+      Map<String, String> metadata) {
     ensureBucketExists();
     s3Client.putObject(
         PutObjectRequest.builder()

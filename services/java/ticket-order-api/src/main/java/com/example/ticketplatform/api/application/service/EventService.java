@@ -181,10 +181,10 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
     return Event.builder()
         .id(event.id())
         .ownerId(event.ownerId())
-        .date(valueOrExisting(command.date(), event.date()))
-        .name(valueOrExisting(command.name(), event.name()))
-        .place(valueOrExisting(command.place(), event.place()))
-        .type(valueOrExisting(command.type(), event.type()))
+        .date(patchedValueOrExisting(command.date(), event.date()))
+        .name(patchedValueOrExisting(command.name(), event.name()))
+        .place(patchedValueOrExisting(command.place(), event.place()))
+        .type(patchedValueOrExisting(command.type(), event.type()))
         .status(event.status())
         .details(toPatchedDetails(event.details(), command.details()))
         .orders(event.orders())
@@ -201,15 +201,16 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
     }
     return EventDetails.builder()
         .id(existing.id())
-        .description(valueOrExisting(command.description(), existing.description()))
-        .numberOfPlaces(valueOrExisting(command.numberOfPlaces(), existing.numberOfPlaces()))
-        .numberOfRows(valueOrExisting(command.numberOfRows(), existing.numberOfRows()))
-        .seatsPerRow(valueOrExisting(command.seatsPerRow(), existing.seatsPerRow()))
+        .description(patchedValueOrExisting(command.description(), existing.description()))
+        .numberOfPlaces(
+            patchedValueOrExisting(command.numberOfPlaces(), existing.numberOfPlaces()))
+        .numberOfRows(patchedValueOrExisting(command.numberOfRows(), existing.numberOfRows()))
+        .seatsPerRow(patchedValueOrExisting(command.seatsPerRow(), existing.seatsPerRow()))
         .build();
   }
 
-  private <T> T valueOrExisting(T value, T existing) {
-    return value == null ? existing : value;
+  private <T> T patchedValueOrExisting(T patchValue, T existingValue) {
+    return patchValue == null ? existingValue : patchValue;
   }
 
   private Event getEventForOrdering(UUID eventId) {
