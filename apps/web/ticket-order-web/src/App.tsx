@@ -28,11 +28,23 @@ const CreateEventPage = lazy(() =>
   })),
 );
 
+const MyEventsPage = lazy(() =>
+  import('./features/events/MyEventsPage').then((module) => ({
+    default: module.MyEventsPage,
+  })),
+);
+
+const EditEventPage = lazy(() =>
+  import('./features/events/EditEventPage').then((module) => ({
+    default: module.EditEventPage,
+  })),
+);
+
 type AuthMode = 'login' | 'register';
 
 const navItemsByRole = {
-  ADMIN: ['Users', 'Operations', 'Events', 'Create event'],
-  MANAGER: ['Create event'],
+  ADMIN: ['Users', 'Operations', 'Events', 'My events', 'Create event'],
+  MANAGER: ['My events', 'Create event'],
   CUSTOMER: ['Events', 'My orders', 'My tickets'],
 } as const;
 
@@ -77,6 +89,10 @@ function Layout({ currentUser, statusMessage, setStatusMessage, onLogin, onLogou
               (item) =>
                 item === 'Create event' ? (
                   <Link className="transition hover:text-teal-800" key={item} to="/events/create">
+                    {item}
+                  </Link>
+                ) : item === 'My events' ? (
+                  <Link className="transition hover:text-teal-800" key={item} to="/events/mine">
                     {item}
                   </Link>
                 ) : (
@@ -209,6 +225,30 @@ function App() {
               currentUser && (currentUser.role === 'MANAGER' || currentUser.role === 'ADMIN') ? (
                 <Suspense fallback={null}>
                   <CreateEventPage />
+                </Suspense>
+              ) : (
+                <Navigate replace to="/" />
+              )
+            }
+          />
+          <Route
+            path="events/mine"
+            element={
+              currentUser && (currentUser.role === 'MANAGER' || currentUser.role === 'ADMIN') ? (
+                <Suspense fallback={null}>
+                  <MyEventsPage />
+                </Suspense>
+              ) : (
+                <Navigate replace to="/" />
+              )
+            }
+          />
+          <Route
+            path="events/mine/:eventId/edit"
+            element={
+              currentUser && (currentUser.role === 'MANAGER' || currentUser.role === 'ADMIN') ? (
+                <Suspense fallback={null}>
+                  <EditEventPage />
                 </Suspense>
               ) : (
                 <Navigate replace to="/" />

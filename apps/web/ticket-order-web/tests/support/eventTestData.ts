@@ -22,6 +22,16 @@ export const publishedEvent = {
   takenPlaces: [{ row: 1, place: 1 }],
 } as const satisfies EventResponse;
 
+export const draftEvent = {
+  ...publishedEvent,
+  eventId: 'event-draft-1',
+  name: 'Draft acoustic night',
+  status: 'DRAFT',
+  ordersTaken: 0,
+  availablePlaces: 4,
+  takenPlaces: [],
+} as const satisfies EventResponse;
+
 export const bookedEvent = {
   ...publishedEvent,
   availablePlaces: 2,

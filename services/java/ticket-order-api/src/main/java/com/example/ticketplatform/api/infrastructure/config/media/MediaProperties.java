@@ -7,6 +7,8 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @ConfigurationProperties("ticket-order-platform.media")
 public record MediaProperties(@DefaultValue Image image, @DefaultValue Video video) {
 
+  private static final long DEFAULT_MAX_VIDEO_SIZE_BYTES = 100L * 1024L * 1024L;
+
   public MediaProperties {
     if (image == null) {
       image = defaultImage();
@@ -23,7 +25,7 @@ public record MediaProperties(@DefaultValue Image image, @DefaultValue Video vid
 
   private static Video defaultVideo() {
     return new Video(
-        52_428_800L,
+        DEFAULT_MAX_VIDEO_SIZE_BYTES,
         List.of("video/mp4", "video/webm", "video/quicktime"),
         "public, max-age=3600");
   }
@@ -34,7 +36,7 @@ public record MediaProperties(@DefaultValue Image image, @DefaultValue Video vid
       @DefaultValue("public, max-age=3600") String cacheControl) {}
 
   public record Video(
-      @DefaultValue("52428800") long maxSizeBytes,
+      @DefaultValue("104857600") long maxSizeBytes,
       @DefaultValue({"video/mp4", "video/webm", "video/quicktime"}) List<String> allowedContentTypes,
       @DefaultValue("public, max-age=3600") String cacheControl) {}
 }

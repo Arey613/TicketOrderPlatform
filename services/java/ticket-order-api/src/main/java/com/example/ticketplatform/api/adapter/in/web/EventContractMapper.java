@@ -6,6 +6,8 @@ import com.example.ticketplatform.api.application.port.in.CreateEventOrderComman
 import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.IssueVideoUploadUrlCommand;
 import com.example.ticketplatform.api.application.port.in.PageResult;
+import com.example.ticketplatform.api.application.port.in.PatchEventCommand;
+import com.example.ticketplatform.api.application.port.in.PatchEventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.domain.model.event.BookedPlace;
 import com.example.ticketplatform.api.domain.model.event.Event;
@@ -25,6 +27,8 @@ import com.example.ticketplatform.api.generated.contract.model.IssueVideoUploadU
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrderResponse;
 import com.example.ticketplatform.api.generated.contract.model.MyEventOrdersResponse;
 import com.example.ticketplatform.api.generated.contract.model.PageMetadata;
+import com.example.ticketplatform.api.generated.contract.model.PatchEventDetailsRequest;
+import com.example.ticketplatform.api.generated.contract.model.PatchEventRequest;
 import com.example.ticketplatform.api.generated.contract.model.UpdateEventRequest;
 import java.net.URI;
 import java.time.Instant;
@@ -49,12 +53,18 @@ interface EventContractMapper {
 
   UpdateEventCommand toCommand(UpdateEventRequest request);
 
+  PatchEventCommand toCommand(PatchEventRequest request);
+
   @Mapping(
       target = "contentType",
       expression =
           "java(request.getContentType() == null ? null : request.getContentType().getValue())")
   IssueVideoUploadUrlCommand toCommand(IssueVideoUploadUrlRequest request);
 
+  @Mapping(
+      target = "contentType",
+      expression =
+          "java(request.getContentType() == null ? null : request.getContentType().getValue())")
   ConfirmVideoUploadCommand toCommand(ConfirmVideoUploadRequest request);
 
   @Mapping(target = "rowNumber", source = "row")
@@ -62,6 +72,8 @@ interface EventContractMapper {
   CreateEventOrderCommand toCommand(CreateEventOrderItem item);
 
   EventDetailsCommand toCommand(EventDetailsRequest details);
+
+  PatchEventDetailsCommand toCommand(PatchEventDetailsRequest details);
 
   @Mapping(target = "eventId", source = "id")
   @Mapping(target = "ordersTaken", expression = "java(event.orders().size())")

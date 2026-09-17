@@ -248,6 +248,7 @@ describe('CreateEventPage', () => {
         uploadUrl: 'https://storage.example/upload',
         requiredHeaders: { 'x-amz-signature': 'abc' },
         expiresAt: new Date('2026-09-10T20:00:00Z'),
+        sha256: 'video-sha-256',
       });
       mockedUploadEventVideo.mockResolvedValue(undefined);
       mockedConfirmEventVideoUpload.mockResolvedValue({
@@ -283,6 +284,8 @@ describe('CreateEventPage', () => {
           expect(mockedConfirmEventVideoUpload).toHaveBeenCalledWith(
             'event-1',
             'https://cdn/video',
+            video,
+            'video-sha-256',
           );
         });
         expect(await screen.findByText('Home page')).toBeVisible();

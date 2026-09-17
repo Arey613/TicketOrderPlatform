@@ -16,6 +16,7 @@ TICKET_CONTRACTS#123 - short description
 - TICKET_CONTRACTS#3 - add event management contract
 - TICKET_CONTRACTS#4 - add UI-facing event and auth contract fields
 - TICKET_CONTRACTS#11 - add event image and video attachment contract
+- TICKET_PORTAL#12 - add my events management patch contract
 
 ### Changed
 
@@ -24,3 +25,4 @@ TICKET_CONTRACTS#123 - short description
 - TICKET_SERVICE#6 - address event management review comments
 - TICKET_PORTAL#3 - add booked-place ownership hints
 - TICKET_SERVICE#9 - add pagination parameters and response metadata
+- TICKET_PORTAL#12 - require video checksum metadata for upload confirmation

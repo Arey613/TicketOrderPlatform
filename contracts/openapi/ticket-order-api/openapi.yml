@@ -222,6 +222,42 @@ paths:
           "$ref": "#/components/responses/Forbidden"
         "404":
           "$ref": "#/components/responses/NotFound"
+    patch:
+      operationId: patchEvent
+      tags:
+        - Events
+      summary: Patch a draft event
+      description: >-
+        Partially updates scalar event fields and details for an owned draft event.
+        Omitted fields and explicit null values keep the existing value; clearing
+        optional fields is not supported by this operation.
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PatchEventRequest"
+      responses:
+        "200":
+          description: Event was patched
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EventResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
   "/public/events":
     get:
       operationId: listPublishedEvents
@@ -798,6 +834,63 @@ components:
     UpdateEventRequest:
       allOf:
         - "$ref": "#/components/schemas/CreateEventRequest"
+    PatchEventDetailsRequest:
+      type: object
+      description: >-
+        Partial event detail update. Omitted fields and explicit null values keep
+        the existing value; clearing optional fields is out of scope.
+      properties:
+        description:
+          type: string
+          nullable: true
+          minLength: 1
+        numberOfPlaces:
+          type: integer
+          nullable: true
+          minimum: 1
+        numberOfRows:
+          type: integer
+          nullable: true
+          minimum: 1
+        seatsPerRow:
+          type: integer
+          nullable: true
+          minimum: 1
+        placeTypes:
+          type: array
+          nullable: true
+          items:
+            "$ref": "#/components/schemas/EventPlaceTypeRequest"
+      additionalProperties: false
+    PatchEventRequest:
+      type: object
+      description: >-
+        Partial event update. Omitted fields and explicit null values keep the
+        existing value; clearing optional fields is out of scope.
+      properties:
+        name:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+        date:
+          type: string
+          nullable: true
+          format: date-time
+        place:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+        type:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 100
+        details:
+          nullable: true
+          "$ref": "#/components/schemas/PatchEventDetailsRequest"
+      additionalProperties: false
     BookedPlaceResponse:
       type: object
       required:
@@ -903,6 +996,7 @@ components:
         - fileName
         - contentType
         - fileSizeBytes
+        - sha256
       properties:
         fileName:
           type: string
@@ -918,9 +1012,14 @@ components:
           type: integer
           format: int64
           minimum: 1
+          maximum: 104857600
           description: >-
             Exact byte size of the video file. Signed into the presigned upload URL so
             object storage rejects an upload whose actual size does not match.
+        sha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          description: Lowercase hexadecimal SHA-256 checksum of the video file.
       additionalProperties: false
     IssueVideoUploadUrlResponse:
       type: object
@@ -958,6 +1057,9 @@ components:
       type: object
       required:
         - videoUrl
+        - contentType
+        - fileSizeBytes
+        - sha256
       properties:
         videoUrl:
           type: string
@@ -965,6 +1067,21 @@ components:
           description: >-
             The videoUrl previously returned by issueEventVideoUploadUrl, confirming
             the upload to that object completed successfully.
+        contentType:
+          type: string
+          enum:
+            - video/mp4
+            - video/webm
+            - video/quicktime
+        fileSizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 104857600
+        sha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          description: Lowercase hexadecimal SHA-256 checksum expected on the uploaded object.
       additionalProperties: false
     CreateEventOrderItem:
       type: object

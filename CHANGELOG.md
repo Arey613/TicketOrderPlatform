@@ -45,6 +45,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#9 - add API pagination specification
 - TICKET_SERVICE#10 - add security hardening across auth, authorization, and actuator access
 - TICKET_SERVICE#11 - add event image and video attachment endpoints
+- TICKET_PORTAL#12 - add draft event patching and checksum-aware video replacement
 
 ### Changed
 
@@ -65,6 +66,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_CONTRACTS#3 - add event management contract
 - TICKET_SERVICE#9 - add pagination contract specification
 - TICKET_CONTRACTS#11 - add event image and video attachment contract
+- TICKET_PORTAL#12 - add my events management patch contract
 
 ### Changed
 
@@ -72,6 +74,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#5 - add registration authentication flow
 - TICKET_SERVICE#6 - address event management review comments
 - TICKET_PORTAL#3 - add booked-place ownership hints to event contract
+- TICKET_PORTAL#12 - require video checksum metadata for upload confirmation
 
 ## ticket-order-db-migrations
 
@@ -99,6 +102,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PORTAL#4 - add public functional access specification
 - TICKET_PORTAL#6 - add event creation page for managers and admins
 - TICKET_PORTAL#11 - add event image and video attachment UI
+- TICKET_PORTAL#12 - add my events page for managers and admins
 
 ### Changed
 

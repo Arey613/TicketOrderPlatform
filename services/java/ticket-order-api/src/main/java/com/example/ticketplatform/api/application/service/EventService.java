@@ -6,11 +6,14 @@ import com.example.ticketplatform.api.application.port.in.EventCommandUseCase;
 import com.example.ticketplatform.api.application.port.in.EventQueryUseCase;
 import com.example.ticketplatform.api.application.port.in.PageRequest;
 import com.example.ticketplatform.api.application.port.in.PageResult;
+import com.example.ticketplatform.api.application.port.in.PatchEventCommand;
+import com.example.ticketplatform.api.application.port.in.PatchEventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
+import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.domain.model.event.EventStatus;
 import com.example.ticketplatform.api.domain.model.user.User;
@@ -69,6 +72,15 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
             command,
             eventApplicationMapper.toDetails(command.details(), event.details().id()),
             now));
+  }
+
+  @Override
+  @Transactional
+  public Event patchEvent(UUID eventId, UUID userId, PatchEventCommand command) {
+    Event event = eventAccessGuard.requireOwnedDraftEvent(eventId, userId);
+    Instant now = currentTimeSupplier.get();
+
+    return eventCommandRepositoryPort.save(toPatchedEvent(event, command, now));
   }
 
   @Override
@@ -163,6 +175,42 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   private Event updateStatus(Event event, EventStatus status) {
     return eventCommandRepositoryPort.save(
         eventApplicationMapper.toEventWithStatus(event, status, currentTimeSupplier.get()));
+  }
+
+  private Event toPatchedEvent(Event event, PatchEventCommand command, Instant now) {
+    return Event.builder()
+        .id(event.id())
+        .ownerId(event.ownerId())
+        .date(patchedValueOrExisting(command.date(), event.date()))
+        .name(patchedValueOrExisting(command.name(), event.name()))
+        .place(patchedValueOrExisting(command.place(), event.place()))
+        .type(patchedValueOrExisting(command.type(), event.type()))
+        .status(event.status())
+        .details(toPatchedDetails(event.details(), command.details()))
+        .orders(event.orders())
+        .imageUrl(event.imageUrl())
+        .videoUrl(event.videoUrl())
+        .createdAt(event.createdAt())
+        .updatedAt(now)
+        .build();
+  }
+
+  private EventDetails toPatchedDetails(EventDetails existing, PatchEventDetailsCommand command) {
+    if (command == null) {
+      return existing;
+    }
+    return EventDetails.builder()
+        .id(existing.id())
+        .description(patchedValueOrExisting(command.description(), existing.description()))
+        .numberOfPlaces(
+            patchedValueOrExisting(command.numberOfPlaces(), existing.numberOfPlaces()))
+        .numberOfRows(patchedValueOrExisting(command.numberOfRows(), existing.numberOfRows()))
+        .seatsPerRow(patchedValueOrExisting(command.seatsPerRow(), existing.seatsPerRow()))
+        .build();
+  }
+
+  private <T> T patchedValueOrExisting(T patchValue, T existingValue) {
+    return patchValue == null ? existingValue : patchValue;
   }
 
   private Event getEventForOrdering(UUID eventId) {

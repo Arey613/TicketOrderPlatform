@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { ALLOWED_IMAGE_TYPES, ALLOWED_VIDEO_TYPES, MAX_IMAGE_SIZE_BYTES } from './mediaLimits';
+import {
+  ALLOWED_IMAGE_TYPES,
+  ALLOWED_VIDEO_TYPES,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_VIDEO_SIZE_BYTES,
+} from './mediaLimits';
 
 const MAX_VIDEO_DURATION_SECONDS = 180;
 const VIDEO_METADATA_TIMEOUT_MS = 10_000;
@@ -67,6 +72,9 @@ const eventVideoSchema = z
   .transform(extractFile)
   .refine((file) => !file || ALLOWED_VIDEO_TYPES.includes(file.type), {
     message: 'Use an MP4, WebM, or QuickTime video.',
+  })
+  .refine((file) => !file || file.size <= MAX_VIDEO_SIZE_BYTES, {
+    message: 'Video must be 100MB or smaller.',
   })
   .refine(
     async (file) => {

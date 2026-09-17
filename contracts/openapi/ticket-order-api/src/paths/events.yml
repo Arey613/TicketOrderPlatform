@@ -158,6 +158,42 @@
         "$ref": "#/components/responses/Forbidden"
       "404":
         "$ref": "#/components/responses/NotFound"
+  patch:
+    operationId: patchEvent
+    tags:
+      - Events
+    summary: Patch a draft event
+    description: >-
+      Partially updates scalar event fields and details for an owned draft event.
+      Omitted fields and explicit null values keep the existing value; clearing
+      optional fields is not supported by this operation.
+    security:
+      - sessionAuth: []
+    parameters:
+      - "$ref": "#/components/parameters/EventId"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/PatchEventRequest"
+    responses:
+      "200":
+        description: Event was patched
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/EventResponse"
+      "400":
+        "$ref": "#/components/responses/BadRequest"
+      "401":
+        "$ref": "#/components/responses/Unauthorized"
+      "403":
+        "$ref": "#/components/responses/Forbidden"
+      "404":
+        "$ref": "#/components/responses/NotFound"
+      "409":
+        "$ref": "#/components/responses/Conflict"
 "/events/{eventId}/image":
   post:
     operationId: attachEventImage
