@@ -168,8 +168,9 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
   }
 
   @Override
-  public PageResult<EventOrder> listUserOrders(UUID userId, PageRequest pageRequest) {
-    return eventQueryRepositoryPort.findOrdersByCustomerId(userId, pageRequest);
+  public PageResult<EventOrder> listMyOrders(UUID userId, PageRequest pageRequest) {
+    return eventQueryRepositoryPort.findUpcomingOrdersByCustomerId(
+        userId, currentTimeSupplier.get(), pageRequest);
   }
 
   private Event updateStatus(Event event, EventStatus status) {

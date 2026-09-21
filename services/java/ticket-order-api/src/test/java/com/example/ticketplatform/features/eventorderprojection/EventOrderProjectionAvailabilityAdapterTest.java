@@ -296,7 +296,10 @@ class EventOrderProjectionAvailabilityAdapterTest {
     }
 
     @Override
-    public PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest) {
+    public PageResult<EventOrder> findUpcomingOrdersByCustomerId(
+        UUID customerId,
+        Instant currentTime,
+        PageRequest pageRequest) {
       throw new UnsupportedOperationException();
     }
   }

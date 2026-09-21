@@ -1,4 +1,4 @@
-import type { EventResponse, MyEventOrderResponse, PageMetadata } from '../../src/generated/api';
+import type { EventResponse, MyOrderResponse, PageMetadata } from '../../src/generated/api';
 
 export const publishedEvent = {
   eventId: 'event-1',
@@ -43,11 +43,12 @@ export const myEventOrder = {
   eventId: publishedEvent.eventId,
   eventName: publishedEvent.name,
   eventDate: publishedEvent.date,
+  eventPlace: publishedEvent.place,
   row: 1,
   place: 2,
   placeType: 'STANDARD',
   reservationDate: new Date('2026-08-24T10:00:00.000Z'),
-} as const satisfies MyEventOrderResponse;
+} as const satisfies MyOrderResponse;
 
 export function pageMetadata(size: number, totalElements: number): PageMetadata {
   return {

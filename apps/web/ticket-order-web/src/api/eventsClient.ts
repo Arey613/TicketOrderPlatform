@@ -4,7 +4,6 @@ import type {
   CreateEventRequest,
   EventListResponse,
   EventResponse,
-  MyEventOrdersResponse,
   PatchEventRequest,
 } from '../generated/api';
 import { Configuration, EventListScope, EventsApi, ResponseError } from '../generated/api';
@@ -65,10 +64,6 @@ export async function createEventOrders(selection: SeatSelection): Promise<void>
     },
     withCsrfHeader,
   );
-}
-
-export async function listMyEventOrders(query: PageQuery): Promise<MyEventOrdersResponse> {
-  return eventsApi.listMyEventOrders(query);
 }
 
 export async function createEvent(command: CreateEventFormValues): Promise<EventResponse> {

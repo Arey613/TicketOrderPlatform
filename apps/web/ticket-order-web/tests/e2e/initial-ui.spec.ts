@@ -80,5 +80,9 @@ test('books an available place after login and refreshes owned orders', async ({
 
   await expect(page.getByText('Place booked.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Row 1, place 2' })).toBeDisabled();
+  await page.getByRole('link', { name: 'My orders' }).click();
+
+  await expect(page).toHaveURL('/orders/mine');
+  await expect(page.getByRole('heading', { name: 'My orders' })).toBeVisible();
   await expect(page.getByText('Row 1, place 2')).toBeVisible();
 });

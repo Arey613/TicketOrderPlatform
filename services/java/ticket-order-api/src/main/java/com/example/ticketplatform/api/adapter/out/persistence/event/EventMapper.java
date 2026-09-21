@@ -49,6 +49,7 @@ interface EventMapper {
   @Mapping(target = "eventId", source = "event.id")
   @Mapping(target = "eventName", source = "event.name")
   @Mapping(target = "eventDate", source = "event.date")
+  @Mapping(target = "eventPlace", source = "event.place")
   EventOrder toDomain(EventOrderEntity entity);
 
   @Mapping(target = "eventId", source = "event.id")

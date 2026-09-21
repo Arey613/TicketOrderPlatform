@@ -7,13 +7,13 @@ import {
   createEventOrders,
   getAuthenticatedEvent,
   getPublishedEvent,
-  listMyEventOrders,
   listMyEvents,
   listPublishedEvents,
   patchEvent,
   publishEvent,
   unpublishEvent,
 } from '../../src/api/eventsClient';
+import { listMyOrders } from '../../src/api/ordersClient';
 import { notifySessionExpired } from '../../src/api/sessionEvents';
 import { submitLoginForm, submitRegistrationForm } from '../support/appTestActions';
 import {
@@ -46,11 +46,14 @@ vi.mock('../../src/api/eventsClient', () => ({
   getPublishedEvent: vi.fn(),
   listMyEvents: vi.fn(),
   listPublishedEvents: vi.fn(),
-  listMyEventOrders: vi.fn(),
   patchEvent: vi.fn(),
   publishEvent: vi.fn(),
   unpublishEvent: vi.fn(),
   toEventUserMessage: vi.fn(),
+}));
+
+vi.mock('../../src/api/ordersClient', () => ({
+  listMyOrders: vi.fn(),
 }));
 
 const mockedLogin = vi.mocked(login);
@@ -63,7 +66,7 @@ const mockedGetAuthenticatedEvent = vi.mocked(getAuthenticatedEvent);
 const mockedGetPublishedEvent = vi.mocked(getPublishedEvent);
 const mockedListMyEvents = vi.mocked(listMyEvents);
 const mockedListPublishedEvents = vi.mocked(listPublishedEvents);
-const mockedListMyEventOrders = vi.mocked(listMyEventOrders);
+const mockedListMyOrders = vi.mocked(listMyOrders);
 const mockedPatchEvent = vi.mocked(patchEvent);
 const mockedPublishEvent = vi.mocked(publishEvent);
 const mockedUnpublishEvent = vi.mocked(unpublishEvent);
@@ -93,8 +96,8 @@ describe('App', () => {
       items: [publishedEvent],
       page: pageMetadata(10, 1),
     });
-    mockedListMyEventOrders.mockReset();
-    mockedListMyEventOrders.mockResolvedValue({
+    mockedListMyOrders.mockReset();
+    mockedListMyOrders.mockResolvedValue({
       items: [],
       page: pageMetadata(20, 0),
     });
@@ -126,7 +129,7 @@ describe('App', () => {
     expect(screen.getAllByRole('button', { name: 'Login' })[0]).toBeVisible();
     expect(mockedListPublishedEvents).toHaveBeenCalledWith({ page: 0, size: 10 });
     expect(mockedGetAuthenticatedEvent).not.toHaveBeenCalled();
-    expect(mockedListMyEventOrders).not.toHaveBeenCalled();
+    expect(mockedListMyOrders).not.toHaveBeenCalled();
   });
 
   it('loads selected event details through the public endpoint for public users', async () => {
@@ -161,7 +164,7 @@ describe('App', () => {
     mockedGetAuthenticatedEvent
       .mockResolvedValueOnce(publishedEvent)
       .mockResolvedValue(bookedEvent);
-    mockedListMyEventOrders.mockResolvedValue({
+    mockedListMyOrders.mockResolvedValue({
       items: [myEventOrder],
       page: pageMetadata(20, 1),
     });
@@ -181,8 +184,18 @@ describe('App', () => {
       });
     });
     expect(await screen.findByText('Place booked.')).toBeVisible();
-    expect(screen.getByText('Row 1, place 2')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Row 1, place 2' })).toBeDisabled();
+
+    await user.click(screen.getByRole('link', { name: 'My orders' }));
+
+    expect(await screen.findByRole('heading', { name: 'My orders' })).toBeVisible();
+    expect(await screen.findByText('The Horizon Live')).toBeVisible();
+    expect(screen.getByText('Row 1, place 2')).toBeVisible();
+    expect(mockedListMyOrders).toHaveBeenCalledWith({
+      page: 0,
+      size: 20,
+      sort: 'eventDate,asc',
+    });
   });
 
   it('opens and closes the lazy login panel', async () => {
@@ -474,6 +487,86 @@ describe('App', () => {
       localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
       window.history.pushState(null, '', '/events/mine');
 
+      renderApp();
+
+      expect(
+        await screen.findByRole('heading', { name: 'Order tickets without queues' }),
+      ).toBeVisible();
+      expect(window.location.pathname).toBe('/');
+    });
+  });
+
+  describe('owned order access', () => {
+    afterEach(() => {
+      window.history.pushState(null, '', '/');
+    });
+
+    it('shows a working "My orders" nav link for customers only', () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
+      const { unmount } = renderApp();
+
+      expect(screen.getByRole('link', { name: 'My orders' })).toHaveAttribute(
+        'href',
+        '/orders/mine',
+      );
+      unmount();
+
+      localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+      const { unmount: unmountManager } = renderApp();
+
+      expect(screen.queryByRole('link', { name: 'My orders' })).not.toBeInTheDocument();
+      unmountManager();
+
+      localStorage.setItem(storedUserKey, JSON.stringify(adminUser));
+      const { unmount: unmountAdmin } = renderApp();
+
+      expect(screen.queryByRole('link', { name: 'My orders' })).not.toBeInTheDocument();
+      unmountAdmin();
+
+      localStorage.clear();
+      renderApp();
+
+      expect(screen.queryByRole('link', { name: 'My orders' })).not.toBeInTheDocument();
+    });
+
+    it('renders the my-orders page for a customer visiting the route directly', async () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(buyerUser));
+      mockedListMyOrders.mockResolvedValue({
+        items: [myEventOrder],
+        page: pageMetadata(20, 1),
+      });
+      window.history.pushState(null, '', '/orders/mine');
+
+      renderApp();
+
+      expect(await screen.findByRole('heading', { name: 'My orders' })).toBeVisible();
+      expect(await screen.findByText('The Horizon Live')).toBeVisible();
+    });
+
+    it('redirects logged-out users away from the my-orders route', async () => {
+      window.history.pushState(null, '', '/orders/mine');
+
+      renderApp();
+
+      expect(
+        await screen.findByRole('heading', { name: 'Order tickets without queues' }),
+      ).toBeVisible();
+      expect(window.location.pathname).toBe('/');
+    });
+
+    it('redirects managers and admins away from the my-orders route', async () => {
+      localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+      window.history.pushState(null, '', '/orders/mine');
+      const { unmount } = renderApp();
+
+      expect(
+        await screen.findByRole('heading', { name: 'Order tickets without queues' }),
+      ).toBeVisible();
+      expect(window.location.pathname).toBe('/');
+      unmount();
+
+      localStorage.setItem(storedUserKey, JSON.stringify(adminUser));
+      window.history.pushState(null, '', '/orders/mine');
       renderApp();
 
       expect(

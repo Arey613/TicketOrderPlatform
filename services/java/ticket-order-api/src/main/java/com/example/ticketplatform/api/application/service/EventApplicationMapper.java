@@ -72,5 +72,6 @@ interface EventApplicationMapper {
   @Mapping(target = "reservationDate", source = "now")
   @Mapping(target = "eventName", ignore = true)
   @Mapping(target = "eventDate", ignore = true)
+  @Mapping(target = "eventPlace", ignore = true)
   EventOrder toOrder(CreateEventOrderCommand command, UUID eventOrderId, Instant now);
 }

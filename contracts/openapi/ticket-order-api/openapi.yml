@@ -14,6 +14,8 @@ tags:
     description: User resources
   - name: Events
     description: Event management and event order resources
+  - name: Orders
+    description: Customer order resources
 paths:
   "/auth/csrf":
     get:
@@ -508,12 +510,12 @@ paths:
           "$ref": "#/components/responses/Forbidden"
         "404":
           "$ref": "#/components/responses/NotFound"
-  "/events/orders/mine":
+  "/orders/mine":
     get:
-      operationId: listMyEventOrders
+      operationId: listMyOrders
       tags:
-        - Events
-      summary: List event orders for the current user
+        - Orders
+      summary: List orders for the current customer
       security:
         - sessionAuth: []
       parameters:
@@ -530,13 +532,15 @@ paths:
         - "$ref": "#/components/parameters/SortParameter"
       responses:
         "200":
-          description: Event orders response
+          description: Customer orders response
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/MyEventOrdersResponse"
+                "$ref": "#/components/schemas/MyOrdersResponse"
         "401":
           "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
 components:
   parameters:
     EventId:
@@ -1162,13 +1166,14 @@ components:
           items:
             type: string
             format: uuid
-    MyEventOrderResponse:
+    MyOrderResponse:
       type: object
       required:
         - eventOrderId
         - eventId
         - eventName
         - eventDate
+        - eventPlace
         - row
         - place
         - placeType
@@ -1186,6 +1191,9 @@ components:
         eventDate:
           type: string
           format: date-time
+        eventPlace:
+          type: string
+          maxLength: 200
         row:
           type: integer
           minimum: 1
@@ -1198,7 +1206,7 @@ components:
         reservationDate:
           type: string
           format: date-time
-    MyEventOrdersResponse:
+    MyOrdersResponse:
       type: object
       required:
         - items
@@ -1207,7 +1215,7 @@ components:
         items:
           type: array
           items:
-            "$ref": "#/components/schemas/MyEventOrderResponse"
+            "$ref": "#/components/schemas/MyOrderResponse"
         page:
           "$ref": "#/components/schemas/PageMetadata"
     UserResponse:

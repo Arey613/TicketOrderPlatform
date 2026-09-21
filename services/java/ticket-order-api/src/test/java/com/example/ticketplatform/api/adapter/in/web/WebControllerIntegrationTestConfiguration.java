@@ -90,6 +90,8 @@ class WebControllerIntegrationTestConfiguration {
     private UUID lastCommandUserId;
     private int createdOrderCount;
     private int deletedOrderCount;
+    private UUID lastQueryUserId;
+    private PageRequest lastOrderPageRequest;
 
     @Override
     public Event createEvent(CreateEventCommand command) {
@@ -226,7 +228,9 @@ class WebControllerIntegrationTestConfiguration {
     }
 
     @Override
-    public PageResult<EventOrder> listUserOrders(UUID userId, PageRequest pageRequest) {
+    public PageResult<EventOrder> listMyOrders(UUID userId, PageRequest pageRequest) {
+      lastQueryUserId = userId;
+      lastOrderPageRequest = pageRequest;
       return page(orders.stream().filter(order -> userId.equals(order.customerId())).toList(), pageRequest);
     }
 
@@ -238,6 +242,8 @@ class WebControllerIntegrationTestConfiguration {
       lastCommandUserId = null;
       createdOrderCount = 0;
       deletedOrderCount = 0;
+      lastQueryUserId = null;
+      lastOrderPageRequest = null;
     }
 
     UUID lastCommandUserId() {
@@ -250,6 +256,14 @@ class WebControllerIntegrationTestConfiguration {
 
     int deletedOrderCount() {
       return deletedOrderCount;
+    }
+
+    UUID lastQueryUserId() {
+      return lastQueryUserId;
+    }
+
+    PageRequest lastOrderPageRequest() {
+      return lastOrderPageRequest;
     }
 
     private Event withStatus(UUID eventId, EventStatus status) {

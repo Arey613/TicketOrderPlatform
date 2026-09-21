@@ -52,32 +52,3 @@
         "$ref": "#/components/responses/Forbidden"
       "404":
         "$ref": "#/components/responses/NotFound"
-"/events/orders/mine":
-  get:
-    operationId: listMyEventOrders
-    tags:
-      - Events
-    summary: List event orders for the current user
-    security:
-      - sessionAuth: []
-    parameters:
-      - "$ref": "#/components/parameters/PageParameter"
-      - name: size
-        in: query
-        required: false
-        schema:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 100
-          default: 20
-      - "$ref": "#/components/parameters/SortParameter"
-    responses:
-      "200":
-        description: Event orders response
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/MyEventOrdersResponse"
-      "401":
-        "$ref": "#/components/responses/Unauthorized"

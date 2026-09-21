@@ -21,7 +21,6 @@ import com.example.ticketplatform.api.generated.contract.model.EventListScope;
 import com.example.ticketplatform.api.generated.contract.model.EventResponse;
 import com.example.ticketplatform.api.generated.contract.model.IssueVideoUploadUrlRequest;
 import com.example.ticketplatform.api.generated.contract.model.IssueVideoUploadUrlResponse;
-import com.example.ticketplatform.api.generated.contract.model.MyEventOrdersResponse;
 import com.example.ticketplatform.api.generated.contract.model.PatchEventRequest;
 import com.example.ticketplatform.api.generated.contract.model.UpdateEventRequest;
 import java.io.IOException;
@@ -122,18 +121,6 @@ class EventController implements EventsApi, PublicApi {
     }
     return ResponseEntity.ok(
         eventResponseAssembler.toEventListResponse(eventQueryUseCase.listPublishedEvents(pageRequest)));
-  }
-
-  @Override
-  public ResponseEntity<MyEventOrdersResponse> listMyEventOrders(
-      Integer page,
-      Integer size,
-      String sort) {
-    return ResponseEntity.ok(
-        eventContractMapper.toMyOrdersResponse(
-            eventQueryUseCase.listUserOrders(
-                currentUserProvider.currentUser().id(),
-                paginationRequestFactory.orderPage(page, size, sort))));
   }
 
   @Override

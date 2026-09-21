@@ -4,6 +4,7 @@ import com.example.ticketplatform.api.application.port.in.PageRequest;
 import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -24,5 +25,8 @@ public interface EventQueryRepositoryPort {
 
   List<EventOrder> findOrdersByIdsAndCustomerId(Collection<UUID> ids, UUID customerId);
 
-  PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest);
+  PageResult<EventOrder> findUpcomingOrdersByCustomerId(
+      UUID customerId,
+      Instant currentTime,
+      PageRequest pageRequest);
 }

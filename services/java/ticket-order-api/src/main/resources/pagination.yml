@@ -20,9 +20,11 @@ ticket-order-platform:
         - name,desc
     orders:
       default-size: 20
-      default-sort: reservationDate,desc
+      default-sort: eventDate,asc
       allowed-sorts:
         - reservationDate,asc
         - reservationDate,desc
         - eventDate,asc
         - eventDate,desc
+        - eventName,asc
+        - eventName,desc

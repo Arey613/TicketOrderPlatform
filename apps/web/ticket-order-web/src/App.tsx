@@ -34,6 +34,12 @@ const MyEventsPage = lazy(() =>
   })),
 );
 
+const MyOrdersPage = lazy(() =>
+  import('./features/orders/MyOrdersPage').then((module) => ({
+    default: module.MyOrdersPage,
+  })),
+);
+
 const EditEventPage = lazy(() =>
   import('./features/events/EditEventPage').then((module) => ({
     default: module.EditEventPage,
@@ -93,6 +99,10 @@ function Layout({ currentUser, statusMessage, setStatusMessage, onLogin, onLogou
                   </Link>
                 ) : item === 'My events' ? (
                   <Link className="transition hover:text-teal-800" key={item} to="/events/mine">
+                    {item}
+                  </Link>
+                ) : item === 'My orders' ? (
+                  <Link className="transition hover:text-teal-800" key={item} to="/orders/mine">
                     {item}
                   </Link>
                 ) : (
@@ -237,6 +247,18 @@ function App() {
               currentUser && (currentUser.role === 'MANAGER' || currentUser.role === 'ADMIN') ? (
                 <Suspense fallback={null}>
                   <MyEventsPage />
+                </Suspense>
+              ) : (
+                <Navigate replace to="/" />
+              )
+            }
+          />
+          <Route
+            path="orders/mine"
+            element={
+              currentUser?.role === 'CUSTOMER' ? (
+                <Suspense fallback={null}>
+                  <MyOrdersPage />
                 </Suspense>
               ) : (
                 <Navigate replace to="/" />

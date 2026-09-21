@@ -17,6 +17,7 @@ TICKET_CONTRACTS#123 - short description
 - TICKET_CONTRACTS#4 - add UI-facing event and auth contract fields
 - TICKET_CONTRACTS#11 - add event image and video attachment contract
 - TICKET_PORTAL#12 - add my events management patch contract
+- TICKET_PLATFORM#13 - add customer my orders contract
 
 ### Changed
 

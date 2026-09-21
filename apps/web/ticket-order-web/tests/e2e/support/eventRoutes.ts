@@ -49,12 +49,14 @@ export async function mockMyOrders(
   page: Page,
   state: EventBookingRouteState = { bookedAfterCreate: true },
 ): Promise<void> {
-  await page.route('**/events/orders/mine**', async (route) => {
+  await page.route('**/orders/mine**', async (route) => {
     const url = new URL(route.request().url());
-    if (route.request().method() !== 'GET' || url.pathname !== '/events/orders/mine') {
+    if (route.request().method() !== 'GET' || url.pathname !== '/orders/mine') {
       await route.fallback();
       return;
     }
+
+    await expect(url.searchParams.get('sort')).toBe('eventDate,asc');
 
     await route.fulfill({
       contentType: 'application/json',
@@ -125,6 +127,7 @@ function ownedOrderResponse() {
     eventId,
     eventName: 'The Horizon Live',
     eventDate: '2026-09-12T19:30:00Z',
+    eventPlace: 'Riverside Arena',
     row: 1,
     place: 2,
     placeType: 'STANDARD',

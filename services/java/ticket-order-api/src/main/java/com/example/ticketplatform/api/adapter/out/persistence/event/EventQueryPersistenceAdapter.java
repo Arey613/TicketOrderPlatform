@@ -7,6 +7,7 @@ import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryP
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.infrastructure.config.persistence.ReadQueryExecutor;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -92,15 +93,19 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   }
 
   @Override
-  public PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest) {
+  public PageResult<EventOrder> findUpcomingOrdersByCustomerId(
+      UUID customerId,
+      Instant currentTime,
+      PageRequest pageRequest) {
     return readQueryExecutor.execute(
         () ->
             toOrderPageResult(
-                readReplicaEventOrderRepository.findByCustomerId(
-                    customerId, toPageable(pageRequest))),
+                readReplicaEventOrderRepository.findUpcomingByCustomerId(
+                    customerId, currentTime, toPageable(pageRequest))),
         () ->
             toOrderPageResult(
-                primaryEventOrderRepository.findByCustomerId(customerId, toPageable(pageRequest))));
+                primaryEventOrderRepository.findUpcomingByCustomerId(
+                    customerId, currentTime, toPageable(pageRequest))));
   }
 
   private PageResult<Event> toPageResult(Page<EventEntity> page) {
@@ -130,6 +135,7 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
   private String toPersistenceSortField(String apiSortField) {
     return switch (apiSortField) {
       case "eventDate" -> "event.date";
+      case "eventName" -> "event.name";
       default -> apiSortField;
     };
   }

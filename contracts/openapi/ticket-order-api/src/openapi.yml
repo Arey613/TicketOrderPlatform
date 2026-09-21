@@ -14,6 +14,8 @@ tags:
     description: User resources
   - name: Events
     description: Event management and event order resources
+  - name: Orders
+    description: Customer order resources
 paths:
   "/auth/csrf":
     "$ref": "./paths/auth.yml#/~1auth~1csrf"
@@ -45,8 +47,8 @@ paths:
     "$ref": "./paths/events.yml#/~1events~1{eventId}~1video-upload-confirmation"
   "/events/orders":
     "$ref": "./paths/event-orders.yml#/~1events~1orders"
-  "/events/orders/mine":
-    "$ref": "./paths/event-orders.yml#/~1events~1orders~1mine"
+  "/orders/mine":
+    "$ref": "./paths/orders.yml#/~1orders~1mine"
 components:
   parameters:
     EventId:
@@ -155,9 +157,9 @@ components:
       "$ref": "./schemas/event-order.yml#/CreatedEventOrdersResponse"
     DeleteEventOrdersRequest:
       "$ref": "./schemas/event-order.yml#/DeleteEventOrdersRequest"
-    MyEventOrderResponse:
-      "$ref": "./schemas/event-order.yml#/MyEventOrderResponse"
-    MyEventOrdersResponse:
-      "$ref": "./schemas/event-order.yml#/MyEventOrdersResponse"
+    MyOrderResponse:
+      "$ref": "./schemas/order.yml#/MyOrderResponse"
+    MyOrdersResponse:
+      "$ref": "./schemas/order.yml#/MyOrdersResponse"
     UserResponse:
       "$ref": "./schemas/user.yml#/UserResponse"
