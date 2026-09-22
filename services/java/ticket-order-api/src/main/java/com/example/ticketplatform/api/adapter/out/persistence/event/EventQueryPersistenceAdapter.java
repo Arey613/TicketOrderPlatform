@@ -46,12 +46,12 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
             toPageResult(
                 readReplicaEventRepository.findByStatus(
                     EventStatusEntity.PUBLISHED, toPageable(pageRequest)),
-                readReplicaEventOrderRepository::findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc),
+                readReplicaEventOrderRepository::findByEventIdsOrderBySeatPosition),
         () ->
             toPageResult(
                 primaryEventRepository.findByStatus(
                     EventStatusEntity.PUBLISHED, toPageable(pageRequest)),
-                primaryEventOrderRepository::findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc));
+                primaryEventOrderRepository::findByEventIdsOrderBySeatPosition));
   }
 
   @Override
@@ -60,11 +60,11 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
         () ->
             toPageResult(
                 readReplicaEventRepository.findByOwnerId(ownerId, toPageable(pageRequest)),
-                readReplicaEventOrderRepository::findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc),
+                readReplicaEventOrderRepository::findByEventIdsOrderBySeatPosition),
         () ->
             toPageResult(
                 primaryEventRepository.findByOwnerId(ownerId, toPageable(pageRequest)),
-                primaryEventOrderRepository::findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc));
+                primaryEventOrderRepository::findByEventIdsOrderBySeatPosition));
   }
 
   @Override
