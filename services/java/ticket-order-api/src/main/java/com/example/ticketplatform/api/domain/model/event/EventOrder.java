@@ -14,4 +14,5 @@ public record EventOrder(
     String placeType,
     Instant reservationDate,
     String eventName,
-    Instant eventDate) {}
+    Instant eventDate,
+    String eventPlace) {}

@@ -12,5 +12,5 @@ public interface EventQueryUseCase {
 
   PageResult<Event> listOwnerEvents(UUID ownerId, PageRequest pageRequest);
 
-  PageResult<EventOrder> listUserOrders(UUID userId, PageRequest pageRequest);
+  PageResult<EventOrder> listMyOrders(UUID userId, PageRequest pageRequest);
 }

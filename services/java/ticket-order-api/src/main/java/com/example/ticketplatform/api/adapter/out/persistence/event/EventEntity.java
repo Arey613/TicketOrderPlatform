@@ -54,8 +54,14 @@ class EventEntity {
   @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
   private EventDetailsEntity details;
 
-  @OneToMany(mappedBy = "event", fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
   private List<EventOrderEntity> orders = new ArrayList<>();
+
+  @Column(name = "image_url", length = 2048)
+  private String imageUrl;
+
+  @Column(name = "video_url", length = 2048)
+  private String videoUrl;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;

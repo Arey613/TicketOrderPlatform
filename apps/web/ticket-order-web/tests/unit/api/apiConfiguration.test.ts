@@ -11,7 +11,7 @@ const mockedNotifySessionExpired = vi.mocked(notifySessionExpired);
 function responseContext(status: number) {
   return {
     fetch,
-    url: 'http://localhost:8080/events/orders/mine',
+    url: 'http://localhost:8080/orders/mine',
     init: {},
     response: new Response(null, { status }),
   };

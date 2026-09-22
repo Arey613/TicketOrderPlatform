@@ -9,6 +9,8 @@ import com.example.ticketplatform.api.application.port.in.EventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.PageMetadata;
 import com.example.ticketplatform.api.application.port.in.PageRequest;
 import com.example.ticketplatform.api.application.port.in.PageResult;
+import com.example.ticketplatform.api.application.port.in.PatchEventCommand;
+import com.example.ticketplatform.api.application.port.in.PatchEventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
@@ -189,6 +191,19 @@ class EventServiceTest {
   }
 
   @Test
+  void listsMyOrdersThroughUpcomingCustomerQuery() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    EventService service = newService(events, List.of(user(CUSTOMER_ID, UserRole.CUSTOMER)));
+    PageRequest pageRequest = new PageRequest(0, 20, "eventDate,asc");
+
+    service.listMyOrders(CUSTOMER_ID, pageRequest);
+
+    assertThat(events.lastUpcomingOrderCustomerId).isEqualTo(CUSTOMER_ID);
+    assertThat(events.lastUpcomingOrderCurrentTime).isEqualTo(TEST_TIME);
+    assertThat(events.lastUpcomingOrderPageRequest).isEqualTo(pageRequest);
+  }
+
+  @Test
   void updatesOnlyOwnedEvents() {
     TestEventRepositoryPort events = new TestEventRepositoryPort();
     events.events.add(event(EventStatus.DRAFT));
@@ -214,6 +229,49 @@ class EventServiceTest {
     assertThat(updated.status()).isEqualTo(EventStatus.DRAFT);
     assertThat(updated.details().description()).isEqualTo("Updated details");
     assertThat(updated.updatedAt()).isEqualTo(TEST_TIME);
+  }
+
+  @Test
+  void patchesOnlyProvidedDraftEventFields() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.DRAFT));
+    EventService service = newService(events, List.of(user(MANAGER_ID, UserRole.MANAGER)));
+
+    Event patched =
+        service.patchEvent(
+            EVENT_ID,
+            MANAGER_ID,
+            new PatchEventCommand(
+                null,
+                "Updated concert",
+                null,
+                null,
+                new PatchEventDetailsCommand("Updated details", null, null, null)));
+
+    assertThat(patched.name()).isEqualTo("Updated concert");
+    assertThat(patched.date()).isEqualTo(TEST_TIME);
+    assertThat(patched.place()).isEqualTo("Main hall");
+    assertThat(patched.type()).isEqualTo("MUSIC");
+    assertThat(patched.details().description()).isEqualTo("Updated details");
+    assertThat(patched.details().numberOfPlaces()).isEqualTo(100);
+    assertThat(patched.details().numberOfRows()).isEqualTo(10);
+    assertThat(patched.details().seatsPerRow()).isEqualTo(10);
+    assertThat(patched.updatedAt()).isEqualTo(TEST_TIME);
+  }
+
+  @Test
+  void rejectsPatchWhenEventIsNotDraft() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.PUBLISHED));
+    EventService service = newService(events, List.of(user(MANAGER_ID, UserRole.MANAGER)));
+
+    assertThatThrownBy(
+            () ->
+                service.patchEvent(
+                    EVENT_ID,
+                    MANAGER_ID,
+                    new PatchEventCommand(null, "Updated concert", null, null, null)))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   @Test
@@ -319,11 +377,13 @@ class EventServiceTest {
   }
 
   private EventService newService(TestEventRepositoryPort events, List<User> users) {
+    TestUserRepositoryPort userRepositoryPort = new TestUserRepositoryPort(users);
     return new EventService(
         events,
         events,
-        new TestUserRepositoryPort(users),
+        userRepositoryPort,
         Mappers.getMapper(EventApplicationMapper.class),
+        new EventAccessGuard(events, userRepositoryPort),
         Clock.fixed(TEST_TIME, ZoneOffset.UTC)::instant);
   }
 
@@ -447,14 +507,25 @@ class EventServiceTest {
                           .reservationDate(order.reservationDate())
                           .eventName(order.eventName())
                           .eventDate(order.eventDate())
+                          .eventPlace(order.eventPlace())
                           .build())
               .toList();
       savedOrders.addAll(ownedOrders);
       return ownedOrders;
     }
 
+    private UUID lastUpcomingOrderCustomerId;
+    private Instant lastUpcomingOrderCurrentTime;
+    private PageRequest lastUpcomingOrderPageRequest;
+
     @Override
-    public PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest) {
+    public PageResult<EventOrder> findUpcomingOrdersByCustomerId(
+        UUID customerId,
+        Instant currentTime,
+        PageRequest pageRequest) {
+      lastUpcomingOrderCustomerId = customerId;
+      lastUpcomingOrderCurrentTime = currentTime;
+      lastUpcomingOrderPageRequest = pageRequest;
       return page(
           savedOrders.stream().filter(order -> customerId.equals(order.customerId())).toList(),
           pageRequest);

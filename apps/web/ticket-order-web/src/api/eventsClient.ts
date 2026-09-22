@@ -4,9 +4,9 @@ import type {
   CreateEventRequest,
   EventListResponse,
   EventResponse,
-  MyEventOrdersResponse,
+  PatchEventRequest,
 } from '../generated/api';
-import { Configuration, EventsApi, ResponseError } from '../generated/api';
+import { Configuration, EventListScope, EventsApi, ResponseError } from '../generated/api';
 import { resolveApiBaseUrl, sessionAwareMiddleware } from './apiConfiguration';
 import { prepareCsrfToken, withCsrfHeader } from './authClient';
 
@@ -32,6 +32,10 @@ export type PageQuery = {
 
 export async function listPublishedEvents(query: PageQuery): Promise<EventListResponse> {
   return eventsApi.listPublishedEvents(query);
+}
+
+export async function listMyEvents(query: PageQuery): Promise<EventListResponse> {
+  return eventsApi.listEvents({ ...query, scope: EventListScope.Mine });
 }
 
 export async function getAuthenticatedEvent(eventId: string): Promise<EventResponse> {
@@ -62,10 +66,6 @@ export async function createEventOrders(selection: SeatSelection): Promise<void>
   );
 }
 
-export async function listMyEventOrders(query: PageQuery): Promise<MyEventOrdersResponse> {
-  return eventsApi.listMyEventOrders(query);
-}
-
 export async function createEvent(command: CreateEventFormValues): Promise<EventResponse> {
   await prepareCsrfToken();
 
@@ -76,7 +76,6 @@ export async function createEvent(command: CreateEventFormValues): Promise<Event
     city: command.city || undefined,
     type: command.type,
     summary: command.summary || undefined,
-    imageUrl: command.imageUrl || undefined,
     price: command.price || undefined,
     currency: command.currency || undefined,
     details: {
@@ -89,6 +88,40 @@ export async function createEvent(command: CreateEventFormValues): Promise<Event
   };
 
   return eventsApi.createEvent({ createEventRequest }, withCsrfHeader);
+}
+
+export async function patchEvent(
+  eventId: string,
+  command: CreateEventFormValues,
+): Promise<EventResponse> {
+  await prepareCsrfToken();
+
+  const patchEventRequest: PatchEventRequest = {
+    name: command.name,
+    date: new Date(command.date),
+    place: command.place,
+    type: command.type,
+    details: {
+      description: command.details.description,
+      numberOfPlaces: command.details.numberOfPlaces,
+      numberOfRows: command.details.numberOfRows,
+      seatsPerRow: command.details.seatsPerRow,
+    },
+  };
+
+  return eventsApi.patchEvent({ eventId, patchEventRequest }, withCsrfHeader);
+}
+
+export async function publishEvent(eventId: string): Promise<EventResponse> {
+  await prepareCsrfToken();
+
+  return eventsApi.publishEvent({ eventId }, withCsrfHeader);
+}
+
+export async function unpublishEvent(eventId: string): Promise<EventResponse> {
+  await prepareCsrfToken();
+
+  return eventsApi.unpublishEvent({ eventId }, withCsrfHeader);
 }
 
 export function toEventUserMessage(error: unknown): string {

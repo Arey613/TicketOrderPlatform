@@ -127,8 +127,12 @@ class EventOrderProjectionAvailabilityAdapter implements EventQueryRepositoryPor
   }
 
   @Override
-  public PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest) {
-    return coreEventQueryRepositoryPort.findOrdersByCustomerId(customerId, pageRequest);
+  public PageResult<EventOrder> findUpcomingOrdersByCustomerId(
+      UUID customerId,
+      Instant currentTime,
+      PageRequest pageRequest) {
+    return coreEventQueryRepositoryPort.findUpcomingOrdersByCustomerId(
+        customerId, currentTime, pageRequest);
   }
 
   private Optional<Event> findByIdFromCoreAndFillProjection(UUID id) {

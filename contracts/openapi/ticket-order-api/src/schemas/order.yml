@@ -1,0 +1,53 @@
+---
+MyOrderResponse:
+  type: object
+  required:
+    - eventOrderId
+    - eventId
+    - eventName
+    - eventDate
+    - eventPlace
+    - row
+    - place
+    - placeType
+    - reservationDate
+  properties:
+    eventOrderId:
+      type: string
+      format: uuid
+    eventId:
+      type: string
+      format: uuid
+    eventName:
+      type: string
+      maxLength: 200
+    eventDate:
+      type: string
+      format: date-time
+    eventPlace:
+      type: string
+      maxLength: 200
+    row:
+      type: integer
+      minimum: 1
+    place:
+      type: integer
+      minimum: 1
+    placeType:
+      type: string
+      maxLength: 100
+    reservationDate:
+      type: string
+      format: date-time
+MyOrdersResponse:
+  type: object
+  required:
+    - items
+    - page
+  properties:
+    items:
+      type: array
+      items:
+        "$ref": "#/components/schemas/MyOrderResponse"
+    page:
+      "$ref": "#/components/schemas/PageMetadata"

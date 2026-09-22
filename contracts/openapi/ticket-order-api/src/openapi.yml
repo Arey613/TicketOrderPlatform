@@ -14,6 +14,8 @@ tags:
     description: User resources
   - name: Events
     description: Event management and event order resources
+  - name: Orders
+    description: Customer order resources
 paths:
   "/auth/csrf":
     "$ref": "./paths/auth.yml#/~1auth~1csrf"
@@ -37,10 +39,16 @@ paths:
     "$ref": "./paths/events.yml#/~1events~1{eventId}~1publish"
   "/events/{eventId}/unpublish":
     "$ref": "./paths/events.yml#/~1events~1{eventId}~1unpublish"
+  "/events/{eventId}/image":
+    "$ref": "./paths/events.yml#/~1events~1{eventId}~1image"
+  "/events/{eventId}/video-upload-url":
+    "$ref": "./paths/events.yml#/~1events~1{eventId}~1video-upload-url"
+  "/events/{eventId}/video-upload-confirmation":
+    "$ref": "./paths/events.yml#/~1events~1{eventId}~1video-upload-confirmation"
   "/events/orders":
     "$ref": "./paths/event-orders.yml#/~1events~1orders"
-  "/events/orders/mine":
-    "$ref": "./paths/event-orders.yml#/~1events~1orders~1mine"
+  "/orders/mine":
+    "$ref": "./paths/orders.yml#/~1orders~1mine"
 components:
   parameters:
     EventId:
@@ -80,6 +88,15 @@ components:
         application/json:
           schema:
             "$ref": "#/components/schemas/ErrorResponse"
+    # TODO: review these shared error responses (BadRequest, Unauthorized, Forbidden, NotFound,
+    # Conflict, PayloadTooLarge) to make them more generic/consistent across the whole API,
+    # rather than growing new one-off response definitions per endpoint.
+    PayloadTooLarge:
+      description: Uploaded file exceeds the allowed size limit
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
   securitySchemes:
     sessionAuth:
       type: apiKey
@@ -114,12 +131,22 @@ components:
       "$ref": "./schemas/event.yml#/CreateEventRequest"
     UpdateEventRequest:
       "$ref": "./schemas/event.yml#/UpdateEventRequest"
+    PatchEventDetailsRequest:
+      "$ref": "./schemas/event.yml#/PatchEventDetailsRequest"
+    PatchEventRequest:
+      "$ref": "./schemas/event.yml#/PatchEventRequest"
     BookedPlaceResponse:
       "$ref": "./schemas/event.yml#/BookedPlaceResponse"
     EventResponse:
       "$ref": "./schemas/event.yml#/EventResponse"
     EventListResponse:
       "$ref": "./schemas/event.yml#/EventListResponse"
+    IssueVideoUploadUrlRequest:
+      "$ref": "./schemas/event.yml#/IssueVideoUploadUrlRequest"
+    IssueVideoUploadUrlResponse:
+      "$ref": "./schemas/event.yml#/IssueVideoUploadUrlResponse"
+    ConfirmVideoUploadRequest:
+      "$ref": "./schemas/event.yml#/ConfirmVideoUploadRequest"
     CreateEventOrderItem:
       "$ref": "./schemas/event-order.yml#/CreateEventOrderItem"
     CreateEventOrdersRequest:
@@ -130,9 +157,9 @@ components:
       "$ref": "./schemas/event-order.yml#/CreatedEventOrdersResponse"
     DeleteEventOrdersRequest:
       "$ref": "./schemas/event-order.yml#/DeleteEventOrdersRequest"
-    MyEventOrderResponse:
-      "$ref": "./schemas/event-order.yml#/MyEventOrderResponse"
-    MyEventOrdersResponse:
-      "$ref": "./schemas/event-order.yml#/MyEventOrdersResponse"
+    MyOrderResponse:
+      "$ref": "./schemas/order.yml#/MyOrderResponse"
+    MyOrdersResponse:
+      "$ref": "./schemas/order.yml#/MyOrdersResponse"
     UserResponse:
       "$ref": "./schemas/user.yml#/UserResponse"

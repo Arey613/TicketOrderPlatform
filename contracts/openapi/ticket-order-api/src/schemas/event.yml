@@ -100,9 +100,6 @@ CreateEventRequest:
     summary:
       type: string
       maxLength: 500
-    imageUrl:
-      type: string
-      format: uri
     price:
       type: string
       pattern: "^\\d+(\\.\\d{1,2})?$"
@@ -116,6 +113,63 @@ CreateEventRequest:
 UpdateEventRequest:
   allOf:
     - "$ref": "#/components/schemas/CreateEventRequest"
+PatchEventDetailsRequest:
+  type: object
+  description: >-
+    Partial event detail update. Omitted fields and explicit null values keep
+    the existing value; clearing optional fields is out of scope.
+  properties:
+    description:
+      type: string
+      nullable: true
+      minLength: 1
+    numberOfPlaces:
+      type: integer
+      nullable: true
+      minimum: 1
+    numberOfRows:
+      type: integer
+      nullable: true
+      minimum: 1
+    seatsPerRow:
+      type: integer
+      nullable: true
+      minimum: 1
+    placeTypes:
+      type: array
+      nullable: true
+      items:
+        "$ref": "#/components/schemas/EventPlaceTypeRequest"
+  additionalProperties: false
+PatchEventRequest:
+  type: object
+  description: >-
+    Partial event update. Omitted fields and explicit null values keep the
+    existing value; clearing optional fields is out of scope.
+  properties:
+    name:
+      type: string
+      nullable: true
+      minLength: 1
+      maxLength: 200
+    date:
+      type: string
+      nullable: true
+      format: date-time
+    place:
+      type: string
+      nullable: true
+      minLength: 1
+      maxLength: 200
+    type:
+      type: string
+      nullable: true
+      minLength: 1
+      maxLength: 100
+    details:
+      nullable: true
+      "$ref": "#/components/schemas/PatchEventDetailsRequest"
+  additionalProperties: false
 BookedPlaceResponse:
   type: object
   required:
@@ -173,6 +227,15 @@ EventResponse:
     imageUrl:
       type: string
       format: uri
+      description: >-
+        Public object URL for the event's attached image, present only once
+        an image has been uploaded.
+    videoUrl:
+      type: string
+      format: uri
+      description: >-
+        Public object URL for the event's attached video, present only once
+        a video has been uploaded.
     price:
       type: string
       pattern: "^\\d+(\\.\\d{1,2})?$"
@@ -206,3 +269,96 @@ EventListResponse:
         "$ref": "#/components/schemas/EventResponse"
     page:
       "$ref": "#/components/schemas/PageMetadata"
+IssueVideoUploadUrlRequest:
+  type: object
+  required:
+    - fileName
+    - contentType
+    - fileSizeBytes
+    - sha256
+  properties:
+    fileName:
+      type: string
+      minLength: 1
+      maxLength: 255
+    contentType:
+      type: string
+      enum:
+        - video/mp4
+        - video/webm
+        - video/quicktime
+    fileSizeBytes:
+      type: integer
+      format: int64
+      minimum: 1
+      maximum: 104857600
+      description: >-
+        Exact byte size of the video file. Signed into the presigned upload URL so
+        object storage rejects an upload whose actual size does not match.
+    sha256:
+      type: string
+      pattern: "^[a-f0-9]{64}$"
+      description: Lowercase hexadecimal SHA-256 checksum of the video file.
+  additionalProperties: false
+IssueVideoUploadUrlResponse:
+  type: object
+  required:
+    - event
+    - videoUrl
+    - uploadUrl
+    - requiredHeaders
+    - expiresAt
+  properties:
+    event:
+      "$ref": "#/components/schemas/EventResponse"
+    videoUrl:
+      type: string
+      format: uri
+      description: >-
+        Public object URL the video will be reachable at once uploaded. Not yet
+        persisted on the event - pass it back to the video-upload-confirmation
+        endpoint after the upload succeeds.
+    uploadUrl:
+      type: string
+      format: uri
+      description: Presigned S3 PUT URL the client uploads the video bytes to directly.
+    requiredHeaders:
+      type: object
+      additionalProperties:
+        type: string
+      description: >-
+        Headers the client must send exactly as given on the PUT request, or
+        the upload will fail signature validation.
+    expiresAt:
+      type: string
+      format: date-time
+ConfirmVideoUploadRequest:
+  type: object
+  required:
+    - videoUrl
+    - contentType
+    - fileSizeBytes
+    - sha256
+  properties:
+    videoUrl:
+      type: string
+      format: uri
+      description: >-
+        The videoUrl previously returned by issueEventVideoUploadUrl, confirming
+        the upload to that object completed successfully.
+    contentType:
+      type: string
+      enum:
+        - video/mp4
+        - video/webm
+        - video/quicktime
+    fileSizeBytes:
+      type: integer
+      format: int64
+      minimum: 1
+      maximum: 104857600
+    sha256:
+      type: string
+      pattern: "^[a-f0-9]{64}$"
+      description: Lowercase hexadecimal SHA-256 checksum expected on the uploaded object.
+  additionalProperties: false

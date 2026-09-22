@@ -55,7 +55,7 @@ public record ObservabilityProperties(
   }
 
   private static Metrics defaultMetrics() {
-    return new Metrics(true, true);
+    return new Metrics(true, true, true);
   }
 
   public record Logging(
@@ -111,5 +111,7 @@ public record ObservabilityProperties(
   }
 
   public record Metrics(
-      @DefaultValue("true") boolean enabled, @DefaultValue("true") boolean authMetricsEnabled) {}
+      @DefaultValue("true") boolean enabled,
+      @DefaultValue("true") boolean authMetricsEnabled,
+      @DefaultValue("true") boolean eventMediaMetricsEnabled) {}
 }

@@ -22,6 +22,9 @@ TICKET_SERVICE#123 - short description
 - TICKET_SERVICE#7 - add backend observability
 - TICKET_SERVICE#8 - add read-replica CQRS datasource split
 - TICKET_SERVICE#10 - add security hardening across auth, authorization, and actuator access
+- TICKET_SERVICE#11 - add event image and video attachment endpoints
+- TICKET_PORTAL#12 - add draft event patching and checksum-aware video replacement
+- TICKET_PLATFORM#13 - add customer my orders endpoint
 
 ### Changed
 

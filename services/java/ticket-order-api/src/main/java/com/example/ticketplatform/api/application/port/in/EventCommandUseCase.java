@@ -11,6 +11,8 @@ public interface EventCommandUseCase {
 
   Event updateEvent(UUID eventId, UUID userId, UpdateEventCommand command);
 
+  Event patchEvent(UUID eventId, UUID userId, PatchEventCommand command);
+
   Event markEventAsPublished(UUID eventId, UUID userId);
 
   Event markEventAsDraft(UUID eventId, UUID userId);

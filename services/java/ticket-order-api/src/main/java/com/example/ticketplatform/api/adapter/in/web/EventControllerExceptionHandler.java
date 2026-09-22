@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice(assignableTypes = EventController.class)
 @Slf4j
@@ -30,5 +31,10 @@ class EventControllerExceptionHandler {
   @ExceptionHandler(IllegalStateException.class)
   ResponseEntity<Void> conflict() {
     return ResponseEntity.status(HttpStatus.CONFLICT).build();
+  }
+
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  ResponseEntity<Void> payloadTooLarge() {
+    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
   }
 }

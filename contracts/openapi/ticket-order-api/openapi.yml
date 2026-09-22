@@ -14,6 +14,8 @@ tags:
     description: User resources
   - name: Events
     description: Event management and event order resources
+  - name: Orders
+    description: Customer order resources
 paths:
   "/auth/csrf":
     get:
@@ -222,6 +224,42 @@ paths:
           "$ref": "#/components/responses/Forbidden"
         "404":
           "$ref": "#/components/responses/NotFound"
+    patch:
+      operationId: patchEvent
+      tags:
+        - Events
+      summary: Patch a draft event
+      description: >-
+        Partially updates scalar event fields and details for an owned draft event.
+        Omitted fields and explicit null values keep the existing value; clearing
+        optional fields is not supported by this operation.
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PatchEventRequest"
+      responses:
+        "200":
+          description: Event was patched
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EventResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
   "/public/events":
     get:
       operationId: listPublishedEvents
@@ -316,6 +354,109 @@ paths:
           "$ref": "#/components/responses/NotFound"
         "409":
           "$ref": "#/components/responses/Conflict"
+  "/events/{eventId}/image":
+    post:
+      operationId: attachEventImage
+      tags:
+        - Events
+      summary: Attach an image to an event
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Image was attached
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EventResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "413":
+          "$ref": "#/components/responses/PayloadTooLarge"
+  "/events/{eventId}/video-upload-url":
+    post:
+      operationId: issueEventVideoUploadUrl
+      tags:
+        - Events
+      summary: Issue a presigned URL for uploading an event video directly to storage
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/IssueVideoUploadUrlRequest"
+      responses:
+        "201":
+          description: Upload URL was issued
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/IssueVideoUploadUrlResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+  "/events/{eventId}/video-upload-confirmation":
+    post:
+      operationId: confirmEventVideoUpload
+      tags:
+        - Events
+      summary: Confirm a previously issued event video upload completed successfully
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ConfirmVideoUploadRequest"
+      responses:
+        "200":
+          description: Video upload was confirmed
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EventResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
   "/events/orders":
     post:
       operationId: createEventOrders
@@ -369,12 +510,12 @@ paths:
           "$ref": "#/components/responses/Forbidden"
         "404":
           "$ref": "#/components/responses/NotFound"
-  "/events/orders/mine":
+  "/orders/mine":
     get:
-      operationId: listMyEventOrders
+      operationId: listMyOrders
       tags:
-        - Events
-      summary: List event orders for the current user
+        - Orders
+      summary: List orders for the current customer
       security:
         - sessionAuth: []
       parameters:
@@ -391,13 +532,15 @@ paths:
         - "$ref": "#/components/parameters/SortParameter"
       responses:
         "200":
-          description: Event orders response
+          description: Customer orders response
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/MyEventOrdersResponse"
+                "$ref": "#/components/schemas/MyOrdersResponse"
         "401":
           "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
 components:
   parameters:
     EventId:
@@ -450,6 +593,15 @@ components:
             "$ref": "#/components/schemas/ErrorResponse"
     Conflict:
       description: Request conflicts with current resource state
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/ErrorResponse"
+    # TODO: review these shared error responses (BadRequest, Unauthorized, Forbidden, NotFound,
+    # Conflict, PayloadTooLarge) to make them more generic/consistent across the whole API,
+    # rather than growing new one-off response definitions per endpoint.
+    PayloadTooLarge:
+      description: Uploaded file exceeds the allowed size limit
       content:
         application/json:
           schema:
@@ -673,9 +825,6 @@ components:
         summary:
           type: string
           maxLength: 500
-        imageUrl:
-          type: string
-          format: uri
         price:
           type: string
           pattern: "^\\d+(\\.\\d{1,2})?$"
@@ -689,6 +838,63 @@ components:
     UpdateEventRequest:
       allOf:
         - "$ref": "#/components/schemas/CreateEventRequest"
+    PatchEventDetailsRequest:
+      type: object
+      description: >-
+        Partial event detail update. Omitted fields and explicit null values keep
+        the existing value; clearing optional fields is out of scope.
+      properties:
+        description:
+          type: string
+          nullable: true
+          minLength: 1
+        numberOfPlaces:
+          type: integer
+          nullable: true
+          minimum: 1
+        numberOfRows:
+          type: integer
+          nullable: true
+          minimum: 1
+        seatsPerRow:
+          type: integer
+          nullable: true
+          minimum: 1
+        placeTypes:
+          type: array
+          nullable: true
+          items:
+            "$ref": "#/components/schemas/EventPlaceTypeRequest"
+      additionalProperties: false
+    PatchEventRequest:
+      type: object
+      description: >-
+        Partial event update. Omitted fields and explicit null values keep the
+        existing value; clearing optional fields is out of scope.
+      properties:
+        name:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+        date:
+          type: string
+          nullable: true
+          format: date-time
+        place:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+        type:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 100
+        details:
+          nullable: true
+          "$ref": "#/components/schemas/PatchEventDetailsRequest"
+      additionalProperties: false
     BookedPlaceResponse:
       type: object
       required:
@@ -746,6 +952,15 @@ components:
         imageUrl:
           type: string
           format: uri
+          description: >-
+            Public object URL for the event's attached image, present only once
+            an image has been uploaded.
+        videoUrl:
+          type: string
+          format: uri
+          description: >-
+            Public object URL for the event's attached video, present only once
+            a video has been uploaded.
         price:
           type: string
           pattern: "^\\d+(\\.\\d{1,2})?$"
@@ -779,6 +994,99 @@ components:
             "$ref": "#/components/schemas/EventResponse"
         page:
           "$ref": "#/components/schemas/PageMetadata"
+    IssueVideoUploadUrlRequest:
+      type: object
+      required:
+        - fileName
+        - contentType
+        - fileSizeBytes
+        - sha256
+      properties:
+        fileName:
+          type: string
+          minLength: 1
+          maxLength: 255
+        contentType:
+          type: string
+          enum:
+            - video/mp4
+            - video/webm
+            - video/quicktime
+        fileSizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 104857600
+          description: >-
+            Exact byte size of the video file. Signed into the presigned upload URL so
+            object storage rejects an upload whose actual size does not match.
+        sha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          description: Lowercase hexadecimal SHA-256 checksum of the video file.
+      additionalProperties: false
+    IssueVideoUploadUrlResponse:
+      type: object
+      required:
+        - event
+        - videoUrl
+        - uploadUrl
+        - requiredHeaders
+        - expiresAt
+      properties:
+        event:
+          "$ref": "#/components/schemas/EventResponse"
+        videoUrl:
+          type: string
+          format: uri
+          description: >-
+            Public object URL the video will be reachable at once uploaded. Not yet
+            persisted on the event - pass it back to the video-upload-confirmation
+            endpoint after the upload succeeds.
+        uploadUrl:
+          type: string
+          format: uri
+          description: Presigned S3 PUT URL the client uploads the video bytes to directly.
+        requiredHeaders:
+          type: object
+          additionalProperties:
+            type: string
+          description: >-
+            Headers the client must send exactly as given on the PUT request, or
+            the upload will fail signature validation.
+        expiresAt:
+          type: string
+          format: date-time
+    ConfirmVideoUploadRequest:
+      type: object
+      required:
+        - videoUrl
+        - contentType
+        - fileSizeBytes
+        - sha256
+      properties:
+        videoUrl:
+          type: string
+          format: uri
+          description: >-
+            The videoUrl previously returned by issueEventVideoUploadUrl, confirming
+            the upload to that object completed successfully.
+        contentType:
+          type: string
+          enum:
+            - video/mp4
+            - video/webm
+            - video/quicktime
+        fileSizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 104857600
+        sha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          description: Lowercase hexadecimal SHA-256 checksum expected on the uploaded object.
+      additionalProperties: false
     CreateEventOrderItem:
       type: object
       required:
@@ -858,13 +1166,14 @@ components:
           items:
             type: string
             format: uuid
-    MyEventOrderResponse:
+    MyOrderResponse:
       type: object
       required:
         - eventOrderId
         - eventId
         - eventName
         - eventDate
+        - eventPlace
         - row
         - place
         - placeType
@@ -882,6 +1191,9 @@ components:
         eventDate:
           type: string
           format: date-time
+        eventPlace:
+          type: string
+          maxLength: 200
         row:
           type: integer
           minimum: 1
@@ -894,7 +1206,7 @@ components:
         reservationDate:
           type: string
           format: date-time
-    MyEventOrdersResponse:
+    MyOrdersResponse:
       type: object
       required:
         - items
@@ -903,7 +1215,7 @@ components:
         items:
           type: array
           items:
-            "$ref": "#/components/schemas/MyEventOrderResponse"
+            "$ref": "#/components/schemas/MyOrderResponse"
         page:
           "$ref": "#/components/schemas/PageMetadata"
     UserResponse:

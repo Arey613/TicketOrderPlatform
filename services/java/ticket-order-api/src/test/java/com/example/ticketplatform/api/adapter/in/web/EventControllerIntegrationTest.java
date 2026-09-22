@@ -276,11 +276,12 @@ class EventControllerIntegrationTest {
   void listsCurrentUserOrders() throws Exception {
     mockMvc
         .perform(
-            get("/events/orders/mine")
+            get("/orders/mine")
                 .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.items[0].eventOrderId").value(EVENT_ORDER_ID.toString()))
         .andExpect(jsonPath("$.items[0].eventName").value("Published concert"))
+        .andExpect(jsonPath("$.items[0].eventPlace").value("Main hall"))
         .andExpect(jsonPath("$.items[0].row").value(3))
         .andExpect(jsonPath("$.items[0].place").value(7))
         .andExpect(jsonPath("$.items[0].placeType").value("VIP"))
@@ -288,6 +289,30 @@ class EventControllerIntegrationTest {
         .andExpect(jsonPath("$.page.size").value(20))
         .andExpect(jsonPath("$.page.totalElements").value(1))
         .andExpect(jsonPath("$.page.totalPages").value(1));
+
+    assertThat(testEvents.lastQueryUserId()).isEqualTo(CUSTOMER_ID);
+    assertThat(testEvents.lastOrderPageRequest().sort()).isEqualTo("eventDate,asc");
+  }
+
+  @Test
+  void rejectsMyOrdersForAnonymousViewer() throws Exception {
+    mockMvc.perform(get("/orders/mine")).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void rejectsMyOrdersForManagerRole() throws Exception {
+    mockMvc
+        .perform(get("/orders/mine").session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER")))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void removesOldMyEventOrdersRoute() throws Exception {
+    mockMvc
+        .perform(
+            get("/events/orders/mine")
+                .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER")))
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -417,6 +442,7 @@ class EventControllerIntegrationTest {
         .reservationDate(RESERVATION_TIME)
         .eventName("Published concert")
         .eventDate(EVENT_TIME)
+        .eventPlace("Main hall")
         .build();
   }
 

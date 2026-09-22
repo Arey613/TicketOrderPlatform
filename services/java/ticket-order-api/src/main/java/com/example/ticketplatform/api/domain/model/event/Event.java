@@ -16,5 +16,7 @@ public record Event(
     EventStatus status,
     EventDetails details,
     List<BookedPlace> orders,
+    String imageUrl,
+    String videoUrl,
     Instant createdAt,
     Instant updatedAt) {}

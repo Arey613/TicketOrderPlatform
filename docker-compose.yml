@@ -49,6 +49,20 @@ services:
       transactional-migrations:
         condition: service_completed_successfully
 
+  localstack:
+    image: localstack/localstack:3
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: s3
+      DEFAULT_REGION: us-east-1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+
   api:
     image: ticket-order-api
     build:
@@ -64,11 +78,25 @@ services:
       SPRING_DATASOURCE_READ_REPLICA_URL: jdbc:postgresql://postgres:5432/ticket_order
       SPRING_DATASOURCE_READ_REPLICA_USERNAME: ticket_order
       SPRING_DATASOURCE_READ_REPLICA_PASSWORD: ticket_order
+      TICKET_ORDER_STORAGE_S3_ENDPOINT: http://localstack:4566
+      # Presigned URLs and public object URLs are handed to the browser running on the host,
+      # which cannot resolve the "localstack" Docker network hostname - only the host-published
+      # port is reachable from there. Server-side calls (bucket-ensure, image upload) run inside
+      # this container and use TICKET_ORDER_STORAGE_S3_ENDPOINT above instead.
+      TICKET_ORDER_STORAGE_S3_PRESIGN_ENDPOINT: http://localhost:4566
+      TICKET_ORDER_STORAGE_S3_PUBLIC_BASE_URL: http://localhost:4566/ticket-order-event-media
+      TICKET_ORDER_STORAGE_S3_BUCKET: ticket-order-event-media
+      TICKET_ORDER_STORAGE_S3_REGION: us-east-1
+      TICKET_ORDER_STORAGE_S3_PATH_STYLE_ACCESS: "true"
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
     depends_on:
       transactional-migrations:
         condition: service_completed_successfully
       analytical-migrations:
         condition: service_completed_successfully
+      localstack:
+        condition: service_healthy
 
   web:
     image: ticket-order-web

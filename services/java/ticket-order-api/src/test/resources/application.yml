@@ -28,6 +28,10 @@ spring:
   sql:
     init:
       mode: never
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 management:
   endpoints:

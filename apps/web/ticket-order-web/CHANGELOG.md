@@ -17,6 +17,9 @@ TICKET_PORTAL#123 - short description
 - TICKET_PORTAL#2 - add initial TypeScript Tailwind ticketing UI, startup fixes, and review guidance
 - TICKET_PORTAL#4 - add public functional access specification
 - TICKET_PORTAL#6 - add event creation page for managers and admins
+- TICKET_PORTAL#11 - add event image and video attachment UI
+- TICKET_PORTAL#12 - add my events page for managers and admins
+- TICKET_PLATFORM#13 - add routed customer my orders page
 
 ### Changed
 

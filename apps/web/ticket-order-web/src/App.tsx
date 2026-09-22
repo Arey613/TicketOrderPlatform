@@ -28,11 +28,29 @@ const CreateEventPage = lazy(() =>
   })),
 );
 
+const MyEventsPage = lazy(() =>
+  import('./features/events/MyEventsPage').then((module) => ({
+    default: module.MyEventsPage,
+  })),
+);
+
+const MyOrdersPage = lazy(() =>
+  import('./features/orders/MyOrdersPage').then((module) => ({
+    default: module.MyOrdersPage,
+  })),
+);
+
+const EditEventPage = lazy(() =>
+  import('./features/events/EditEventPage').then((module) => ({
+    default: module.EditEventPage,
+  })),
+);
+
 type AuthMode = 'login' | 'register';
 
 const navItemsByRole = {
-  ADMIN: ['Users', 'Operations', 'Events', 'Create event'],
-  MANAGER: ['Create event'],
+  ADMIN: ['Users', 'Operations', 'Events', 'My events', 'Create event'],
+  MANAGER: ['My events', 'Create event'],
   CUSTOMER: ['Events', 'My orders', 'My tickets'],
 } as const;
 
@@ -49,10 +67,10 @@ function Layout({ currentUser, statusMessage, setStatusMessage, onLogin, onLogou
   const navigate = useNavigate();
 
   useEffect(() => {
-    const state = location.state as { eventCreated?: boolean } | null;
+    const state = location.state as { eventCreated?: boolean; mediaWarning?: string } | null;
 
     if (state?.eventCreated) {
-      setStatusMessage('Event created as a draft.');
+      setStatusMessage(state.mediaWarning ?? 'Event created as a draft.');
       navigate(location.pathname, { replace: true, state: null });
     }
   }, [location, navigate, setStatusMessage]);
@@ -77,6 +95,14 @@ function Layout({ currentUser, statusMessage, setStatusMessage, onLogin, onLogou
               (item) =>
                 item === 'Create event' ? (
                   <Link className="transition hover:text-teal-800" key={item} to="/events/create">
+                    {item}
+                  </Link>
+                ) : item === 'My events' ? (
+                  <Link className="transition hover:text-teal-800" key={item} to="/events/mine">
+                    {item}
+                  </Link>
+                ) : item === 'My orders' ? (
+                  <Link className="transition hover:text-teal-800" key={item} to="/orders/mine">
                     {item}
                   </Link>
                 ) : (
@@ -209,6 +235,42 @@ function App() {
               currentUser && (currentUser.role === 'MANAGER' || currentUser.role === 'ADMIN') ? (
                 <Suspense fallback={null}>
                   <CreateEventPage />
+                </Suspense>
+              ) : (
+                <Navigate replace to="/" />
+              )
+            }
+          />
+          <Route
+            path="events/mine"
+            element={
+              currentUser && (currentUser.role === 'MANAGER' || currentUser.role === 'ADMIN') ? (
+                <Suspense fallback={null}>
+                  <MyEventsPage />
+                </Suspense>
+              ) : (
+                <Navigate replace to="/" />
+              )
+            }
+          />
+          <Route
+            path="orders/mine"
+            element={
+              currentUser?.role === 'CUSTOMER' ? (
+                <Suspense fallback={null}>
+                  <MyOrdersPage />
+                </Suspense>
+              ) : (
+                <Navigate replace to="/" />
+              )
+            }
+          />
+          <Route
+            path="events/mine/:eventId/edit"
+            element={
+              currentUser && (currentUser.role === 'MANAGER' || currentUser.role === 'ADMIN') ? (
+                <Suspense fallback={null}>
+                  <EditEventPage />
                 </Suspense>
               ) : (
                 <Navigate replace to="/" />

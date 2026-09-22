@@ -20,6 +20,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#6 - add formatter validation
 - BUGFIX#2 - add auth schema and role-aware UI correction spec
 - GLOBAL_CONFIG#8 - add CLAUDE.md and module-scoped rules importing AGENTS.md files
+- TICKET_PLATFORM#13 - add my orders cross-component specification
 
 ### Changed
 
@@ -44,6 +45,9 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#8 - add read-replica CQRS datasource split
 - TICKET_SERVICE#9 - add API pagination specification
 - TICKET_SERVICE#10 - add security hardening across auth, authorization, and actuator access
+- TICKET_SERVICE#11 - add event image and video attachment endpoints
+- TICKET_PORTAL#12 - add draft event patching and checksum-aware video replacement
+- TICKET_PLATFORM#13 - add customer my orders endpoint
 
 ### Changed
 
@@ -63,6 +67,9 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_CONTRACTS#4 - add UI-facing event and auth contract fields
 - TICKET_CONTRACTS#3 - add event management contract
 - TICKET_SERVICE#9 - add pagination contract specification
+- TICKET_CONTRACTS#11 - add event image and video attachment contract
+- TICKET_PORTAL#12 - add my events management patch contract
+- TICKET_PLATFORM#13 - add customer my orders contract
 
 ### Changed
 
@@ -70,6 +77,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#5 - add registration authentication flow
 - TICKET_SERVICE#6 - address event management review comments
 - TICKET_PORTAL#3 - add booked-place ownership hints to event contract
+- TICKET_PORTAL#12 - require video checksum metadata for upload confirmation
 
 ## ticket-order-db-migrations
 
@@ -77,6 +85,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 
 - DATABASE_MIGRATIONS#1 - add Java database migration modules
 - DATABASE_MIGRATIONS#3 - add event management schema
+- DATABASE_MIGRATIONS#11 - add event image and video URL columns
 
 ### Changed
 
@@ -95,6 +104,9 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#9 - add UI pagination specification
 - TICKET_PORTAL#4 - add public functional access specification
 - TICKET_PORTAL#6 - add event creation page for managers and admins
+- TICKET_PORTAL#11 - add event image and video attachment UI
+- TICKET_PORTAL#12 - add my events page for managers and admins
+- TICKET_PLATFORM#13 - add routed customer my orders page
 
 ### Changed
 
