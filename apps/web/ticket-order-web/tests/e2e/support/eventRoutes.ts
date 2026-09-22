@@ -4,6 +4,10 @@ type EventRouteOptions = {
   bookedAfterCreate?: boolean;
 };
 
+type MyOrdersRouteOptions = {
+  fail?: boolean;
+};
+
 const eventId = '00000000-0000-0000-0000-000000000603';
 
 export type EventBookingRouteState = {
@@ -48,6 +52,7 @@ export async function mockPublishedEvents(
 export async function mockMyOrders(
   page: Page,
   state: EventBookingRouteState = { bookedAfterCreate: true },
+  options: MyOrdersRouteOptions = {},
 ): Promise<void> {
   await page.route('**/orders/mine**', async (route) => {
     const url = new URL(route.request().url());
@@ -55,8 +60,17 @@ export async function mockMyOrders(
       await route.fallback();
       return;
     }
+    if (route.request().headers().accept?.includes('text/html')) {
+      await route.fallback();
+      return;
+    }
 
     await expect(url.searchParams.get('sort')).toBe('eventDate,asc');
+
+    if (options.fail) {
+      await route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+      return;
+    }
 
     await route.fulfill({
       contentType: 'application/json',
