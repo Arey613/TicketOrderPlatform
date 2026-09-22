@@ -44,6 +44,25 @@ interface EventMapper {
   @Mapping(target = "orders", expression = "java(java.util.List.of())")
   Event toDomainWithoutOrders(EventEntity entity);
 
+  default Event toDomain(EventEntity entity, List<EventOrderEntity> orderEntities) {
+    Event event = toDomainWithoutOrders(entity);
+    return Event.builder()
+        .id(event.id())
+        .ownerId(event.ownerId())
+        .date(event.date())
+        .name(event.name())
+        .place(event.place())
+        .type(event.type())
+        .status(event.status())
+        .details(event.details())
+        .orders(toBookedPlaces(orderEntities))
+        .imageUrl(event.imageUrl())
+        .videoUrl(event.videoUrl())
+        .createdAt(event.createdAt())
+        .updatedAt(event.updatedAt())
+        .build();
+  }
+
   EventDetails toDomain(EventDetailsEntity entity);
 
   @Mapping(target = "eventId", source = "event.id")

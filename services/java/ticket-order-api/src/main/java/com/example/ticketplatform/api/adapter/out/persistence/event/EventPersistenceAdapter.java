@@ -25,7 +25,7 @@ class EventPersistenceAdapter implements EventCommandRepositoryPort {
 
   @Override
   public Optional<Event> findById(UUID id) {
-    return eventRepository.findById(id).map(eventMapper::toDomain);
+    return eventRepository.findByIdWithOrders(id).map(eventMapper::toDomain);
   }
 
   @Override

@@ -10,8 +10,11 @@ import com.example.ticketplatform.api.infrastructure.config.persistence.ReadQuer
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,11 +45,13 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
         () ->
             toPageResult(
                 readReplicaEventRepository.findByStatus(
-                    EventStatusEntity.PUBLISHED, toPageable(pageRequest))),
+                    EventStatusEntity.PUBLISHED, toPageable(pageRequest)),
+                readReplicaEventOrderRepository::findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc),
         () ->
             toPageResult(
                 primaryEventRepository.findByStatus(
-                    EventStatusEntity.PUBLISHED, toPageable(pageRequest))));
+                    EventStatusEntity.PUBLISHED, toPageable(pageRequest)),
+                primaryEventOrderRepository::findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc));
   }
 
   @Override
@@ -54,9 +59,12 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
     return readQueryExecutor.execute(
         () ->
             toPageResult(
-                readReplicaEventRepository.findByOwnerId(ownerId, toPageable(pageRequest))),
+                readReplicaEventRepository.findByOwnerId(ownerId, toPageable(pageRequest)),
+                readReplicaEventOrderRepository::findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc),
         () ->
-            toPageResult(primaryEventRepository.findByOwnerId(ownerId, toPageable(pageRequest))));
+            toPageResult(
+                primaryEventRepository.findByOwnerId(ownerId, toPageable(pageRequest)),
+                primaryEventOrderRepository::findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc));
   }
 
   @Override
@@ -108,10 +116,26 @@ class EventQueryPersistenceAdapter implements EventQueryRepositoryPort {
                     customerId, currentTime, toPageable(pageRequest))));
   }
 
-  private PageResult<Event> toPageResult(Page<EventEntity> page) {
+  private PageResult<Event> toPageResult(
+      Page<EventEntity> page,
+      Function<Collection<UUID>, List<EventOrderEntity>> orderLoader) {
+    Map<UUID, List<EventOrderEntity>> ordersByEventId =
+        loadOrdersByEventId(page.getContent(), orderLoader);
     return new PageResult<>(
-        page.getContent().stream().map(eventMapper::toDomainWithoutOrders).toList(),
+        page.getContent().stream()
+            .map(event -> eventMapper.toDomain(event, ordersByEventId.getOrDefault(event.getId(), List.of())))
+            .toList(),
         PageMetadata.of(page.getNumber(), page.getSize(), page.getTotalElements()));
+  }
+
+  private Map<UUID, List<EventOrderEntity>> loadOrdersByEventId(
+      List<EventEntity> events,
+      Function<Collection<UUID>, List<EventOrderEntity>> orderLoader) {
+    if (events.isEmpty()) {
+      return Map.of();
+    }
+    return orderLoader.apply(events.stream().map(EventEntity::getId).toList()).stream()
+        .collect(Collectors.groupingBy(order -> order.getEvent().getId()));
   }
 
   private PageResult<EventOrder> toOrderPageResult(Page<EventOrderEntity> page) {

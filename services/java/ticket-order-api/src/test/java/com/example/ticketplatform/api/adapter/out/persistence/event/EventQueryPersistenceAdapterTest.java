@@ -8,19 +8,23 @@ import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.domain.model.event.EventStatus;
+import jakarta.persistence.EntityManagerFactory;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import javax.sql.DataSource;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 class EventQueryPersistenceAdapterTest {
 
   private static final UUID OWNER_ID = UUID.fromString("00000000-0000-0000-0000-000000000801");
@@ -52,6 +56,10 @@ class EventQueryPersistenceAdapterTest {
   @Autowired
   private EventQueryPersistenceAdapter queryAdapter;
 
+  @Autowired
+  @Qualifier("readReplicaEntityManagerFactory")
+  private EntityManagerFactory readReplicaEntityManagerFactory;
+
   @BeforeEach
   void setUp() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(primaryDataSource);
@@ -78,6 +86,27 @@ class EventQueryPersistenceAdapterTest {
   }
 
   @Test
+  void readsPublishedEventOrdersForPageWithoutPerEventQueries() {
+    UUID secondEventId = UUID.fromString("00000000-0000-0000-0000-000000000813");
+    save(event(EVENT_ID, EventStatus.PUBLISHED, NOW.plusSeconds(3600), "First event"));
+    save(event(secondEventId, EventStatus.PUBLISHED, NOW.plusSeconds(7200), "Second event"));
+    saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID)));
+    saveOrders(OTHER_CUSTOMER_ID, List.of(eventOrder(OTHER_EVENT_ORDER_ID, secondEventId)));
+    Statistics statistics = resetReadReplicaStatistics();
+
+    PageResult<Event> page = queryAdapter.findPublished(new PageRequest(0, 1, "date,asc"));
+
+    assertThat(page.items())
+        .singleElement()
+        .satisfies(
+            event -> {
+              assertThat(event.id()).isEqualTo(EVENT_ID);
+              assertThat(event.orders()).singleElement().satisfies(order -> assertThat(order.placeNumber()).isEqualTo(7));
+            });
+    assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(3);
+  }
+
+  @Test
   void readsEventByIdWithOrders() {
     save(event(EVENT_ID, EventStatus.PUBLISHED));
     saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID)));
@@ -99,6 +128,27 @@ class EventQueryPersistenceAdapterTest {
               assertThat(event.id()).isEqualTo(EVENT_ID);
               assertThat(event.details()).isNotNull();
             });
+  }
+
+  @Test
+  void readsOwnerEventOrdersForPageWithoutPerEventQueries() {
+    UUID secondEventId = UUID.fromString("00000000-0000-0000-0000-000000000814");
+    save(event(EVENT_ID, EventStatus.PUBLISHED, NOW.plusSeconds(3600), "First owned event"));
+    save(event(secondEventId, EventStatus.DRAFT, NOW.plusSeconds(7200), "Second owned event"));
+    saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID)));
+    saveOrders(OTHER_CUSTOMER_ID, List.of(eventOrder(OTHER_EVENT_ORDER_ID, secondEventId)));
+    Statistics statistics = resetReadReplicaStatistics();
+
+    PageResult<Event> page = queryAdapter.findByOwnerId(OWNER_ID, new PageRequest(0, 1, "date,asc"));
+
+    assertThat(page.items())
+        .singleElement()
+        .satisfies(
+            event -> {
+              assertThat(event.id()).isEqualTo(EVENT_ID);
+              assertThat(event.orders()).singleElement().satisfies(order -> assertThat(order.placeNumber()).isEqualTo(7));
+            });
+    assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(3);
   }
 
   @Test
@@ -204,6 +254,12 @@ class EventQueryPersistenceAdapterTest {
   private void saveOrders(UUID customerId, List<EventOrder> orders) {
     new TransactionTemplate(primaryTransactionManager)
         .executeWithoutResult(status -> commandAdapter.saveOrders(customerId, orders));
+  }
+
+  private Statistics resetReadReplicaStatistics() {
+    Statistics statistics = readReplicaEntityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+    statistics.clear();
+    return statistics;
   }
 
   private void insertUser(JdbcTemplate jdbcTemplate, UUID id, String email, String role) {

@@ -17,6 +17,9 @@ interface EventOrderJpaRepository extends JpaRepository<EventOrderEntity, UUID> 
       Instant currentTime,
       Pageable pageable);
 
+  List<EventOrderEntity> findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc(
+      Collection<UUID> eventIds);
+
   List<EventOrderEntity> findByIdIn(Collection<UUID> ids);
 
   List<EventOrderEntity> findByIdInAndCustomerId(Collection<UUID> ids, UUID customerId);

@@ -17,6 +17,9 @@ interface ReadReplicaEventOrderJpaRepository extends JpaRepository<EventOrderEnt
       Instant currentTime,
       Pageable pageable);
 
+  List<EventOrderEntity> findByEvent_IdInOrderByRowNumberAscPlaceNumberAsc(
+      Collection<UUID> eventIds);
+
   boolean existsByEventIdAndRowNumberAndPlaceNumber(UUID eventId, int rowNumber, int placeNumber);
 
   List<EventOrderEntity> findByIdIn(Collection<UUID> ids);
