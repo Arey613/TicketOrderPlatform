@@ -16,6 +16,16 @@ export type OrdersPageQuery = {
   sort?: string;
 };
 
-export async function listMyOrders(query: OrdersPageQuery): Promise<MyOrdersResponse> {
-  return ordersApi.listMyOrders(query);
+const DEFAULT_ORDERS_PAGE = 0;
+const DEFAULT_ORDERS_PAGE_SIZE = 20;
+const DEFAULT_ORDERS_SORT = 'eventDate,asc';
+
+export async function listMyOrders(
+  query: Partial<OrdersPageQuery> = {},
+): Promise<MyOrdersResponse> {
+  return ordersApi.listMyOrders({
+    page: query.page ?? DEFAULT_ORDERS_PAGE,
+    size: query.size ?? DEFAULT_ORDERS_PAGE_SIZE,
+    sort: query.sort ?? DEFAULT_ORDERS_SORT,
+  });
 }
