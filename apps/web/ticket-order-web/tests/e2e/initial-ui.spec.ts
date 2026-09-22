@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { mockSuccessfulLogin, setCsrfCookie } from './support/authRoutes';
+import {
+  adminLoginUser,
+  buyerLoginUser,
+  managerLoginUser,
+  mockSuccessfulLogin,
+  setCsrfCookie,
+} from './support/authRoutes';
 import { mockEventBookingFlow, mockMyOrders, mockPublishedEvents } from './support/eventRoutes';
 
 test('shows published events and public booked places', async ({ page }) => {
@@ -80,5 +86,74 @@ test('books an available place after login and refreshes owned orders', async ({
 
   await expect(page.getByText('Place booked.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Row 1, place 2' })).toBeDisabled();
+  await page.getByRole('link', { name: 'My orders' }).click();
+
+  await expect(page).toHaveURL('/orders/mine');
+  await expect(page.getByRole('heading', { name: 'My orders' })).toBeVisible();
   await expect(page.getByText('Row 1, place 2')).toBeVisible();
 });
+
+test('shows an empty state for customers with no upcoming orders', async ({ page }) => {
+  await mockPublishedEvents(page);
+  await mockMyOrders(page, { bookedAfterCreate: false });
+  await seedCurrentUser(page, buyerLoginUser);
+
+  await page.goto('/orders/mine');
+
+  await expect(page).toHaveURL('/orders/mine');
+  await expect(page.getByRole('heading', { name: 'My orders' })).toBeVisible();
+  await expect(page.getByText('No upcoming orders yet.')).toBeVisible();
+});
+
+test('shows a retry path when my-orders loading fails', async ({ page }) => {
+  await mockPublishedEvents(page);
+  await mockMyOrders(page, { bookedAfterCreate: true }, { fail: true });
+  await seedCurrentUser(page, buyerLoginUser);
+
+  await page.goto('/orders/mine');
+
+  await expect(page).toHaveURL('/orders/mine');
+  await expect(page.getByText('Orders are unavailable. Try again in a moment.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
+});
+
+test('redirects logged-out users away from the my-orders route', async ({ page }) => {
+  await mockPublishedEvents(page);
+
+  await page.goto('/orders/mine');
+
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('heading', { name: 'Order tickets without queues' })).toBeVisible();
+});
+
+test('redirects managers and admins away from the my-orders route', async ({ page }) => {
+  await mockPublishedEvents(page);
+  await seedCurrentUser(page, managerLoginUser);
+
+  await page.goto('/orders/mine');
+
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('heading', { name: 'Order tickets without queues' })).toBeVisible();
+
+  await seedCurrentUser(page, adminLoginUser);
+  await page.goto('/orders/mine');
+
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('heading', { name: 'Order tickets without queues' })).toBeVisible();
+});
+
+async function seedCurrentUser(
+  page: Parameters<typeof setCsrfCookie>[0],
+  user: typeof buyerLoginUser,
+): Promise<void> {
+  await page.addInitScript(
+    (currentUser) => {
+      localStorage.setItem('ticketOrderPlatform.currentUser', JSON.stringify(currentUser));
+    },
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
+  );
+}

@@ -24,8 +24,8 @@ import com.example.ticketplatform.api.generated.contract.model.EventDetailsRespo
 import com.example.ticketplatform.api.generated.contract.model.EventListResponse;
 import com.example.ticketplatform.api.generated.contract.model.EventResponse;
 import com.example.ticketplatform.api.generated.contract.model.IssueVideoUploadUrlRequest;
-import com.example.ticketplatform.api.generated.contract.model.MyEventOrderResponse;
-import com.example.ticketplatform.api.generated.contract.model.MyEventOrdersResponse;
+import com.example.ticketplatform.api.generated.contract.model.MyOrderResponse;
+import com.example.ticketplatform.api.generated.contract.model.MyOrdersResponse;
 import com.example.ticketplatform.api.generated.contract.model.PageMetadata;
 import com.example.ticketplatform.api.generated.contract.model.PatchEventDetailsRequest;
 import com.example.ticketplatform.api.generated.contract.model.PatchEventRequest;
@@ -97,7 +97,7 @@ interface EventContractMapper {
   @Mapping(target = "eventOrderId", source = "id")
   @Mapping(target = "row", source = "rowNumber")
   @Mapping(target = "place", source = "placeNumber")
-  MyEventOrderResponse toMyOrderResponse(EventOrder order);
+  MyOrderResponse toMyOrderResponse(EventOrder order);
 
   @Named("toListResponse")
   default EventListResponse toListResponse(PageResult<Event> events) {
@@ -107,8 +107,8 @@ interface EventContractMapper {
   }
 
   @Named("toMyOrdersResponse")
-  default MyEventOrdersResponse toMyOrdersResponse(PageResult<EventOrder> orders) {
-    return new MyEventOrdersResponse()
+  default MyOrdersResponse toMyOrdersResponse(PageResult<EventOrder> orders) {
+    return new MyOrdersResponse()
         .items(orders.items().stream().map(this::toMyOrderResponse).toList())
         .page(toPageMetadata(orders.page()));
   }

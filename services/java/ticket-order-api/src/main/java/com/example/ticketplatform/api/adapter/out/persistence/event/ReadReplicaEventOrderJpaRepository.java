@@ -1,6 +1,7 @@
 package com.example.ticketplatform.api.adapter.out.persistence.event;
 
 import com.example.ticketplatform.api.infrastructure.config.persistence.ReadReplicaRepository;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +12,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 @ReadReplicaRepository
 interface ReadReplicaEventOrderJpaRepository extends JpaRepository<EventOrderEntity, UUID> {
 
-  Page<EventOrderEntity> findByCustomerId(UUID customerId, Pageable pageable);
+  Page<EventOrderEntity> findUpcomingByCustomerId(
+      UUID customerId,
+      Instant currentTime,
+      Pageable pageable);
+
+  List<EventOrderEntity> findByEventIdsOrderBySeatPosition(
+      Collection<UUID> eventIds);
 
   boolean existsByEventIdAndRowNumberAndPlaceNumber(UUID eventId, int rowNumber, int placeNumber);
 

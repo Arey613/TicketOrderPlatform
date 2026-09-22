@@ -1,5 +1,6 @@
 package com.example.ticketplatform.api.adapter.out.persistence.event;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +12,13 @@ interface EventOrderJpaRepository extends JpaRepository<EventOrderEntity, UUID> 
 
   boolean existsByEventIdAndRowNumberAndPlaceNumber(UUID eventId, int rowNumber, int placeNumber);
 
-  Page<EventOrderEntity> findByCustomerId(UUID customerId, Pageable pageable);
+  Page<EventOrderEntity> findUpcomingByCustomerId(
+      UUID customerId,
+      Instant currentTime,
+      Pageable pageable);
+
+  List<EventOrderEntity> findByEventIdsOrderBySeatPosition(
+      Collection<UUID> eventIds);
 
   List<EventOrderEntity> findByIdIn(Collection<UUID> ids);
 

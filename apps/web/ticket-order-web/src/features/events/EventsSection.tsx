@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { AuthenticatedUser } from '../../api/authClient';
-import { MyOrdersPanel } from '../orders/MyOrdersPanel';
 import { EventDetailsPanel } from './EventDetailsPanel';
 import { EventList } from './EventList';
 
@@ -24,8 +23,6 @@ export function EventsSection({ currentUser, onLogin }: EventsSectionProps) {
           onLogin={onLogin}
         />
       </div>
-
-      {currentUser && <MyOrdersPanel />}
     </section>
   );
 }

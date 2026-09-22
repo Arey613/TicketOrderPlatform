@@ -191,6 +191,19 @@ class EventServiceTest {
   }
 
   @Test
+  void listsMyOrdersThroughUpcomingCustomerQuery() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    EventService service = newService(events, List.of(user(CUSTOMER_ID, UserRole.CUSTOMER)));
+    PageRequest pageRequest = new PageRequest(0, 20, "eventDate,asc");
+
+    service.listMyOrders(CUSTOMER_ID, pageRequest);
+
+    assertThat(events.lastUpcomingOrderCustomerId).isEqualTo(CUSTOMER_ID);
+    assertThat(events.lastUpcomingOrderCurrentTime).isEqualTo(TEST_TIME);
+    assertThat(events.lastUpcomingOrderPageRequest).isEqualTo(pageRequest);
+  }
+
+  @Test
   void updatesOnlyOwnedEvents() {
     TestEventRepositoryPort events = new TestEventRepositoryPort();
     events.events.add(event(EventStatus.DRAFT));
@@ -494,14 +507,25 @@ class EventServiceTest {
                           .reservationDate(order.reservationDate())
                           .eventName(order.eventName())
                           .eventDate(order.eventDate())
+                          .eventPlace(order.eventPlace())
                           .build())
               .toList();
       savedOrders.addAll(ownedOrders);
       return ownedOrders;
     }
 
+    private UUID lastUpcomingOrderCustomerId;
+    private Instant lastUpcomingOrderCurrentTime;
+    private PageRequest lastUpcomingOrderPageRequest;
+
     @Override
-    public PageResult<EventOrder> findOrdersByCustomerId(UUID customerId, PageRequest pageRequest) {
+    public PageResult<EventOrder> findUpcomingOrdersByCustomerId(
+        UUID customerId,
+        Instant currentTime,
+        PageRequest pageRequest) {
+      lastUpcomingOrderCustomerId = customerId;
+      lastUpcomingOrderCurrentTime = currentTime;
+      lastUpcomingOrderPageRequest = pageRequest;
       return page(
           savedOrders.stream().filter(order -> customerId.equals(order.customerId())).toList(),
           pageRequest);

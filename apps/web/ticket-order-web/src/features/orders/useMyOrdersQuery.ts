@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import type { PageQuery } from '../../api/eventsClient';
-import { listMyEventOrders } from '../../api/eventsClient';
+import type { OrdersPageQuery } from '../../api/ordersClient';
+import { listMyOrders } from '../../api/ordersClient';
 
-export function useMyOrdersQuery(query: PageQuery, enabled: boolean) {
+export function useMyOrdersQuery(query: OrdersPageQuery, enabled: boolean) {
   return useQuery({
-    queryKey: ['orders', 'mine', query.page, query.size],
-    queryFn: () => listMyEventOrders(query),
+    queryKey: ['orders', 'mine', query.page, query.size, query.sort],
+    queryFn: () => listMyOrders(query),
     enabled,
     placeholderData: (previousData) => previousData,
   });
