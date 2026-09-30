@@ -38,6 +38,16 @@ class EventPersistenceAdapter implements EventCommandRepositoryPort {
   }
 
   @Override
+  public boolean existsOrdersByEventId(UUID eventId) {
+    return eventOrderRepository.existsByEventId(eventId);
+  }
+
+  @Override
+  public void deleteEvent(UUID eventId) {
+    eventRepository.deleteById(eventId);
+  }
+
+  @Override
   public long deleteOrders(Collection<UUID> ids) {
     return eventOrderRepository.deleteByIdIn(ids);
   }

@@ -5,12 +5,14 @@ import { login, logout, register, toUserMessage } from '../../src/api/authClient
 import {
   createEvent,
   createEventOrders,
+  deleteEvent,
   getAuthenticatedEvent,
   getPublishedEvent,
   listMyEvents,
   listPublishedEvents,
   patchEvent,
   publishEvent,
+  toEventUserMessage,
   unpublishEvent,
 } from '../../src/api/eventsClient';
 import { listMyOrders } from '../../src/api/ordersClient';
@@ -42,6 +44,7 @@ vi.mock('../../src/api/authClient', () => ({
 vi.mock('../../src/api/eventsClient', () => ({
   createEvent: vi.fn(),
   createEventOrders: vi.fn(),
+  deleteEvent: vi.fn(),
   getAuthenticatedEvent: vi.fn(),
   getPublishedEvent: vi.fn(),
   listMyEvents: vi.fn(),
@@ -62,6 +65,7 @@ const mockedRegister = vi.mocked(register);
 const mockedToUserMessage = vi.mocked(toUserMessage);
 const mockedCreateEvent = vi.mocked(createEvent);
 const mockedCreateEventOrders = vi.mocked(createEventOrders);
+const mockedDeleteEvent = vi.mocked(deleteEvent);
 const mockedGetAuthenticatedEvent = vi.mocked(getAuthenticatedEvent);
 const mockedGetPublishedEvent = vi.mocked(getPublishedEvent);
 const mockedListMyEvents = vi.mocked(listMyEvents);
@@ -69,6 +73,7 @@ const mockedListPublishedEvents = vi.mocked(listPublishedEvents);
 const mockedListMyOrders = vi.mocked(listMyOrders);
 const mockedPatchEvent = vi.mocked(patchEvent);
 const mockedPublishEvent = vi.mocked(publishEvent);
+const mockedToEventUserMessage = vi.mocked(toEventUserMessage);
 const mockedUnpublishEvent = vi.mocked(unpublishEvent);
 
 describe('App', () => {
@@ -79,9 +84,13 @@ describe('App', () => {
     mockedRegister.mockReset();
     mockedToUserMessage.mockReset();
     mockedToUserMessage.mockReturnValue('The email or password is not valid.');
+    mockedToEventUserMessage.mockReset();
+    mockedToEventUserMessage.mockReturnValue('Events are unavailable. Try again in a moment.');
     mockedCreateEvent.mockReset();
     mockedCreateEventOrders.mockReset();
     mockedCreateEventOrders.mockResolvedValue();
+    mockedDeleteEvent.mockReset();
+    mockedDeleteEvent.mockResolvedValue();
     mockedGetAuthenticatedEvent.mockReset();
     mockedGetAuthenticatedEvent.mockResolvedValue(publishedEvent);
     mockedGetPublishedEvent.mockReset();
@@ -479,8 +488,56 @@ describe('App', () => {
         '/events/mine/event-draft-1/edit',
       );
       expect(screen.getByRole('button', { name: 'Publish Draft acoustic night' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Delete Draft acoustic night' })).toBeVisible();
       expect(screen.getByRole('button', { name: 'Unpublish The Horizon Live' })).toBeVisible();
+      expect(
+        screen.queryByRole('button', { name: 'Delete The Horizon Live' }),
+      ).not.toBeInTheDocument();
       expect(mockedListMyEvents).toHaveBeenCalledWith({ page: 0, size: 10 });
+    });
+
+    it('deletes a draft event after confirmation and refreshes owned events', async () => {
+      const user = userEvent.setup();
+      localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+      window.history.pushState(null, '', '/events/mine');
+
+      renderApp();
+
+      await user.click(await screen.findByRole('button', { name: 'Delete Draft acoustic night' }));
+      const dialog = screen.getByRole('dialog', { name: 'Delete draft event?' });
+      expect(dialog).toBeVisible();
+      expect(within(dialog).getByRole('button', { name: 'Keep event' })).toBeVisible();
+      await user.click(within(dialog).getByRole('button', { name: 'Delete event' }));
+
+      await waitFor(() => {
+        expect(mockedDeleteEvent).toHaveBeenCalled();
+      });
+      expect(mockedDeleteEvent.mock.calls[0][0]).toBe('event-draft-1');
+      await waitFor(() => {
+        expect(mockedListMyEvents).toHaveBeenCalledTimes(2);
+      });
+      expect(screen.queryByRole('dialog', { name: 'Delete draft event?' })).not.toBeInTheDocument();
+    });
+
+    it('shows an accessible message when draft event deletion fails', async () => {
+      const user = userEvent.setup();
+      mockedDeleteEvent.mockRejectedValue(new Error('Delete failed'));
+      localStorage.setItem(storedUserKey, JSON.stringify(managerUser));
+      window.history.pushState(null, '', '/events/mine');
+
+      renderApp();
+
+      await user.click(await screen.findByRole('button', { name: 'Delete Draft acoustic night' }));
+      await user.click(
+        within(screen.getByRole('dialog', { name: 'Delete draft event?' })).getByRole('button', {
+          name: 'Delete event',
+        }),
+      );
+
+      expect(
+        await screen.findByText('Events are unavailable. Try again in a moment.'),
+      ).toBeVisible();
+      expect(screen.getByRole('dialog', { name: 'Delete draft event?' })).toBeVisible();
     });
 
     it('redirects a customer away from the owned-event route', async () => {

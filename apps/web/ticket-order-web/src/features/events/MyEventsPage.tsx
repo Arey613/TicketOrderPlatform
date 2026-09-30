@@ -1,11 +1,26 @@
-import { CalendarDays, Edit3, EyeOff, Plus, RefreshCw, Send, Ticket } from 'lucide-react';
+import {
+  CalendarDays,
+  Edit3,
+  EyeOff,
+  Plus,
+  RefreshCw,
+  Send,
+  Ticket,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { toEventUserMessage } from '../../api/eventsClient';
 import { PaginationToolbar } from '../../components/PaginationToolbar';
 import { type EventResponse, EventStatus } from '../../generated/api';
 import { usePagination } from '../../hooks/usePagination';
 import { formatDateTime } from '../../utils/formatters';
-import { usePublishEventMutation, useUnpublishEventMutation } from './useEventManagementMutations';
+import {
+  useDeleteEventMutation,
+  usePublishEventMutation,
+  useUnpublishEventMutation,
+} from './useEventManagementMutations';
 import { useMyEventsQuery } from './useMyEventsQuery';
 
 const EVENT_PAGE_SIZES = [5, 10, 20, 50];
@@ -95,15 +110,25 @@ export function MyEventsPage() {
 }
 
 function MyEventRow({ event }: { event: EventResponse }) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const deleteDraft = useDeleteEventMutation();
   const publish = usePublishEventMutation();
   const unpublish = useUnpublishEventMutation();
   const isDraft = event.status === EventStatus.Draft;
   const isPublished = event.status === EventStatus.Published;
+  const isDeletePending = deleteDraft.isPending && deleteDraft.variables === event.eventId;
   const isPublishPending = publish.isPending && publish.variables === event.eventId;
   const isUnpublishPending = unpublish.isPending && unpublish.variables === event.eventId;
   const rowError =
+    (deleteDraft.isError && deleteDraft.variables === event.eventId && deleteDraft.error) ||
     (publish.isError && publish.variables === event.eventId && publish.error) ||
     (unpublish.isError && unpublish.variables === event.eventId && unpublish.error);
+
+  function handleConfirmDelete() {
+    deleteDraft.mutate(event.eventId, {
+      onSuccess: () => setIsDeleteDialogOpen(false),
+    });
+  }
 
   return (
     <article className="grid gap-4 border-t border-slate-200 p-4 first:border-t-0 md:grid-cols-[96px_1fr_auto] md:items-center">
@@ -143,6 +168,16 @@ function MyEventRow({ event }: { event: EventResponse }) {
               Edit
             </Link>
             <button
+              aria-label={`Delete ${event.name}`}
+              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-red-700 hover:text-red-700 disabled:cursor-not-allowed disabled:bg-slate-100"
+              disabled={isDeletePending}
+              onClick={() => setIsDeleteDialogOpen(true)}
+              type="button"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Delete
+            </button>
+            <button
               aria-label={`Publish ${event.name}`}
               className="flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"
               disabled={isPublishPending}
@@ -168,6 +203,60 @@ function MyEventRow({ event }: { event: EventResponse }) {
           </button>
         )}
       </div>
+
+      {isDeleteDialogOpen && (
+        <div
+          aria-labelledby={`delete-event-title-${event.eventId}`}
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4"
+          role="dialog"
+        >
+          <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3
+                  className="text-lg font-black text-slate-950"
+                  id={`delete-event-title-${event.eventId}`}
+                >
+                  Delete draft event?
+                </h3>
+                <p className="mt-2 text-sm text-slate-700">
+                  This removes the draft event from your event list. Published events cannot be
+                  deleted.
+                </p>
+              </div>
+              <button
+                aria-label="Close delete confirmation"
+                className="rounded-md p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-700"
+                disabled={isDeletePending}
+                onClick={() => setIsDeleteDialogOpen(false)}
+                type="button"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-teal-700 hover:text-teal-800 disabled:cursor-not-allowed disabled:bg-slate-100"
+                disabled={isDeletePending}
+                onClick={() => setIsDeleteDialogOpen(false)}
+                type="button"
+              >
+                Keep event
+              </button>
+              <button
+                className="rounded-md bg-red-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                disabled={isDeletePending}
+                onClick={handleConfirmDelete}
+                type="button"
+              >
+                Delete event
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

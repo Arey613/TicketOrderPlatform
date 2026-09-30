@@ -15,5 +15,9 @@ public interface EventCommandRepositoryPort {
 
   List<EventOrder> saveOrders(UUID customerId, List<EventOrder> orders);
 
+  boolean existsOrdersByEventId(UUID eventId);
+
+  void deleteEvent(UUID eventId);
+
   long deleteOrders(Collection<UUID> ids);
 }

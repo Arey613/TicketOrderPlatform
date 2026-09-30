@@ -178,6 +178,25 @@ class WebControllerIntegrationTestConfiguration {
     }
 
     @Override
+    public void deleteEvent(UUID eventId, UUID userId) {
+      lastCommandUserId = userId;
+      Event event = eventsById.get(eventId);
+      if (event == null) {
+        throw new java.util.NoSuchElementException("Event not found: " + eventId);
+      }
+      if (!event.ownerId().equals(userId)) {
+        throw new SecurityException("User cannot access event: " + eventId);
+      }
+      if (event.status() != EventStatus.DRAFT) {
+        throw new IllegalStateException("Event cannot be deleted from status " + event.status());
+      }
+      if (orders.stream().anyMatch(order -> eventId.equals(order.eventId()))) {
+        throw new IllegalStateException("Event cannot be deleted with existing orders");
+      }
+      eventsById.remove(eventId);
+    }
+
+    @Override
     public List<EventOrder> createEventOrders(UUID userId, List<CreateEventOrderCommand> commands) {
       lastCommandUserId = userId;
       createdOrderCount = commands.size();

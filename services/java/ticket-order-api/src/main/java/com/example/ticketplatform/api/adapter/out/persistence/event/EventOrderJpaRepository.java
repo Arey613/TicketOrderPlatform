@@ -12,6 +12,8 @@ interface EventOrderJpaRepository extends JpaRepository<EventOrderEntity, UUID> 
 
   boolean existsByEventIdAndRowNumberAndPlaceNumber(UUID eventId, int rowNumber, int placeNumber);
 
+  boolean existsByEventId(UUID eventId);
+
   Page<EventOrderEntity> findUpcomingByCustomerId(
       UUID customerId,
       Instant currentTime,

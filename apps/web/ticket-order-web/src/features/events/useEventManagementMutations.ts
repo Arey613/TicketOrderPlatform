@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { patchEvent, publishEvent, unpublishEvent } from '../../api/eventsClient';
+import { deleteEvent, patchEvent, publishEvent, unpublishEvent } from '../../api/eventsClient';
+import type { EventListResponse } from '../../generated/api';
 import type { CreateEventFormValues } from './createEventSchema';
 
 function useRefreshEventQueries() {
@@ -27,6 +28,28 @@ export function usePublishEventMutation() {
   return useMutation({
     mutationFn: publishEvent,
     onSuccess: (event) => refresh(event.eventId),
+  });
+}
+
+export function useDeleteEventMutation() {
+  const refresh = useRefreshEventQueries();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteEvent,
+    onSuccess: (_result, eventId) => {
+      queryClient.setQueriesData<EventListResponse>({ queryKey: ['events', 'mine'] }, (data) => {
+        if (!data) {
+          return data;
+        }
+
+        return {
+          ...data,
+          items: data.items.filter((event) => event.eventId !== eventId),
+        };
+      });
+      refresh(eventId);
+    },
   });
 }
 

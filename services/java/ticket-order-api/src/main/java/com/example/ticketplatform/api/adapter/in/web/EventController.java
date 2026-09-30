@@ -83,6 +83,13 @@ class EventController implements EventsApi, PublicApi {
   }
 
   @Override
+  @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+  public ResponseEntity<Void> deleteEvent(UUID eventId) {
+    eventCommandUseCase.deleteEvent(eventId, currentUserProvider.currentUser().id());
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
   @PreAuthorize("hasRole('CUSTOMER')")
   public ResponseEntity<Void> deleteEventOrders(DeleteEventOrdersRequest deleteEventOrdersRequest) {
     eventCommandUseCase.deleteEventOrders(

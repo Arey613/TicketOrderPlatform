@@ -363,6 +363,16 @@ class EventMediaServiceTest {
     }
 
     @Override
+    public boolean existsOrdersByEventId(UUID eventId) {
+      return false;
+    }
+
+    @Override
+    public void deleteEvent(UUID eventId) {
+      events.removeIf(event -> event.id().equals(eventId));
+    }
+
+    @Override
     public long deleteOrders(Collection<UUID> ids) {
       return ids.size();
     }

@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,6 +102,23 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
       throw new IllegalStateException("Event cannot be unpublished from status " + event.status());
     }
     return updateStatus(event, EventStatus.DRAFT);
+  }
+
+  @Override
+  @Transactional
+  public void deleteEvent(UUID eventId, UUID userId) {
+    Event event = eventAccessGuard.requireOwnedEvent(eventId, userId);
+    if (event.status() != EventStatus.DRAFT) {
+      throw new IllegalStateException("Event cannot be deleted from status " + event.status());
+    }
+    if (eventCommandRepositoryPort.existsOrdersByEventId(eventId)) {
+      throw new IllegalStateException("Event cannot be deleted with existing orders");
+    }
+    try {
+      eventCommandRepositoryPort.deleteEvent(eventId);
+    } catch (DataIntegrityViolationException exception) {
+      throw new IllegalStateException("Event cannot be deleted with existing orders", exception);
+    }
   }
 
   @Override

@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.dao.DataIntegrityViolationException;
 
 class EventServiceTest {
 
@@ -343,6 +344,78 @@ class EventServiceTest {
   }
 
   @Test
+  void deletesOwnedDraftEvent() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.DRAFT));
+    EventService service = newService(events, List.of(user(MANAGER_ID, UserRole.MANAGER)));
+
+    service.deleteEvent(EVENT_ID, MANAGER_ID);
+
+    assertThat(events.events).isEmpty();
+    assertThat(events.deletedEventIds).containsExactly(EVENT_ID);
+  }
+
+  @Test
+  void rejectsEventDeleteWhenUserDoesNotOwnEvent() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.DRAFT));
+    EventService service =
+        newService(
+            events,
+            List.of(
+                user(MANAGER_ID, UserRole.MANAGER), user(OTHER_MANAGER_ID, UserRole.MANAGER)));
+
+    assertThatThrownBy(() -> service.deleteEvent(EVENT_ID, OTHER_MANAGER_ID))
+        .isInstanceOf(SecurityException.class);
+
+    assertThat(events.events).hasSize(1);
+    assertThat(events.deletedEventIds).isEmpty();
+  }
+
+  @Test
+  void rejectsEventDeleteWhenEventIsNotDraft() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.PUBLISHED));
+    EventService service = newService(events, List.of(user(MANAGER_ID, UserRole.MANAGER)));
+
+    assertThatThrownBy(() -> service.deleteEvent(EVENT_ID, MANAGER_ID))
+        .isInstanceOf(IllegalStateException.class);
+
+    assertThat(events.events).hasSize(1);
+    assertThat(events.deletedEventIds).isEmpty();
+  }
+
+  @Test
+  void rejectsEventDeleteWhenEventHasOrders() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.DRAFT));
+    events.savedOrders.add(eventOrder(EVENT_ORDER_ID, CUSTOMER_ID, 1, 1));
+    EventService service =
+        newService(
+            events,
+            List.of(user(MANAGER_ID, UserRole.MANAGER), user(CUSTOMER_ID, UserRole.CUSTOMER)));
+
+    assertThatThrownBy(() -> service.deleteEvent(EVENT_ID, MANAGER_ID))
+        .isInstanceOf(IllegalStateException.class);
+
+    assertThat(events.events).hasSize(1);
+    assertThat(events.deletedEventIds).isEmpty();
+  }
+
+  @Test
+  void mapsEventDeleteIntegrityFailureToConflict() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.DRAFT));
+    events.failNextDelete = true;
+    EventService service = newService(events, List.of(user(MANAGER_ID, UserRole.MANAGER)));
+
+    assertThatThrownBy(() -> service.deleteEvent(EVENT_ID, MANAGER_ID))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Event cannot be deleted with existing orders")
+        .hasCauseInstanceOf(DataIntegrityViolationException.class);
+  }
+
+  @Test
   void rejectsPublishWhenUserDoesNotOwnEvent() {
     TestEventRepositoryPort events = new TestEventRepositoryPort();
     events.events.add(event(EventStatus.DRAFT));
@@ -453,6 +526,8 @@ class EventServiceTest {
     private final List<Event> events = new ArrayList<>();
     private final List<Event> savedEvents = new ArrayList<>();
     private final List<EventOrder> savedOrders = new ArrayList<>();
+    private final List<UUID> deletedEventIds = new ArrayList<>();
+    private boolean failNextDelete;
 
     @Override
     public Event save(Event event) {
@@ -512,6 +587,21 @@ class EventServiceTest {
               .toList();
       savedOrders.addAll(ownedOrders);
       return ownedOrders;
+    }
+
+    @Override
+    public boolean existsOrdersByEventId(UUID eventId) {
+      return savedOrders.stream().anyMatch(order -> eventId.equals(order.eventId()));
+    }
+
+    @Override
+    public void deleteEvent(UUID eventId) {
+      if (failNextDelete) {
+        failNextDelete = false;
+        throw new DataIntegrityViolationException("Simulated foreign-key race");
+      }
+      deletedEventIds.add(eventId);
+      events.removeIf(event -> event.id().equals(eventId));
     }
 
     private UUID lastUpcomingOrderCustomerId;

@@ -46,9 +46,20 @@ class EventControllerIntegrationTest {
   private static final UUID CUSTOMER_ID = UUID.fromString("00000000-0000-0000-0000-000000000602");
   private static final UUID EVENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000603");
   private static final UUID EVENT_ORDER_ID = UUID.fromString("00000000-0000-0000-0000-000000000604");
+  private static final UUID ADMIN_ID = UUID.fromString("00000000-0000-0000-0000-000000000606");
+  private static final UUID OTHER_MANAGER_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000607");
+  private static final UUID OTHER_EVENT_ID =
+      UUID.fromString("00000000-0000-0000-0000-000000000608");
   private static final User MANAGER =
       WebControllerIntegrationTestConfiguration.user(
           MANAGER_ID, "manager@example.com", "{noop}secret", UserRole.MANAGER, true);
+  private static final User ADMIN =
+      WebControllerIntegrationTestConfiguration.user(
+          ADMIN_ID, "admin.events@example.com", "{noop}secret", UserRole.ADMIN, true);
+  private static final User OTHER_MANAGER =
+      WebControllerIntegrationTestConfiguration.user(
+          OTHER_MANAGER_ID, "other.manager@example.com", "{noop}secret", UserRole.MANAGER, true);
   private static final User CUSTOMER =
       WebControllerIntegrationTestConfiguration.user(
           CUSTOMER_ID, "customer.events@example.com", "{noop}secret", UserRole.CUSTOMER, true);
@@ -64,7 +75,7 @@ class EventControllerIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    testUsers.reset(List.of(MANAGER, CUSTOMER));
+    testUsers.reset(List.of(MANAGER, ADMIN, OTHER_MANAGER, CUSTOMER));
     Event event = event(EventStatus.PUBLISHED, List.of(bookedPlace()));
     testEvents.reset(List.of(event), List.of(order()));
   }
@@ -394,10 +405,112 @@ class EventControllerIntegrationTest {
     assertThat(testEvents.deletedOrderCount()).isEqualTo(1);
   }
 
+  @Test
+  void deletesOwnedDraftEventForManagerRole() throws Exception {
+    Event draft = event(EventStatus.DRAFT, List.of());
+    testEvents.reset(List.of(draft), List.of());
+
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/events/{eventId}", EVENT_ID)
+                    .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))))
+        .andExpect(status().isNoContent());
+
+    assertThat(testEvents.lastCommandUserId()).isEqualTo(MANAGER_ID);
+  }
+
+  @Test
+  void deletesOwnedDraftEventForAdminRole() throws Exception {
+    Event draft =
+        event(
+            OTHER_EVENT_ID,
+            ADMIN_ID,
+            EventStatus.DRAFT,
+            List.of());
+    testEvents.reset(List.of(draft), List.of());
+
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/events/{eventId}", OTHER_EVENT_ID)
+                    .session(authenticatedSession(ADMIN.email(), "ROLE_ADMIN"))))
+        .andExpect(status().isNoContent());
+
+    assertThat(testEvents.lastCommandUserId()).isEqualTo(ADMIN_ID);
+  }
+
+  @Test
+  void rejectsEventDeleteForCustomerRole() throws Exception {
+    Event draft = event(EventStatus.DRAFT, List.of());
+    testEvents.reset(List.of(draft), List.of());
+
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/events/{eventId}", EVENT_ID)
+                    .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER"))))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void rejectsEventDeleteForAnonymousViewer() throws Exception {
+    Event draft = event(EventStatus.DRAFT, List.of());
+    testEvents.reset(List.of(draft), List.of());
+
+    mockMvc
+        .perform(withCsrf(delete("/events/{eventId}", EVENT_ID)))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void rejectsEventDeleteForNonOwnerManager() throws Exception {
+    Event draft = event(EventStatus.DRAFT, List.of());
+    testEvents.reset(List.of(draft), List.of());
+
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/events/{eventId}", EVENT_ID)
+                    .session(authenticatedSession(OTHER_MANAGER.email(), "ROLE_MANAGER"))))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void rejectsPublishedEventDelete() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/events/{eventId}", EVENT_ID)
+                    .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))))
+        .andExpect(status().isConflict());
+  }
+
+  @Test
+  void rejectsEventDeleteWhenOrdersExist() throws Exception {
+    Event draft = event(EventStatus.DRAFT, List.of(bookedPlace()));
+    testEvents.reset(List.of(draft), List.of(order()));
+
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/events/{eventId}", EVENT_ID)
+                    .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))))
+        .andExpect(status().isConflict());
+  }
+
   private static Event event(EventStatus status, List<BookedPlace> orders) {
+    return event(EVENT_ID, MANAGER_ID, status, orders);
+  }
+
+  private static Event event(
+      UUID eventId,
+      UUID ownerId,
+      EventStatus status,
+      List<BookedPlace> orders) {
     return Event.builder()
-        .id(EVENT_ID)
-        .ownerId(MANAGER_ID)
+        .id(eventId)
+        .ownerId(ownerId)
         .date(EVENT_TIME)
         .name("Published concert")
         .place("Main hall")
