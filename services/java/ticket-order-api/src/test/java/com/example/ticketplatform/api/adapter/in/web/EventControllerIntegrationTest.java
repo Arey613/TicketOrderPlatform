@@ -422,7 +422,12 @@ class EventControllerIntegrationTest {
 
   @Test
   void deletesOwnedDraftEventForAdminRole() throws Exception {
-    Event draft = event(OTHER_EVENT_ID, ADMIN_ID, EventStatus.DRAFT, List.of());
+    Event draft =
+        event(
+            OTHER_EVENT_ID,
+            ADMIN_ID,
+            EventStatus.DRAFT,
+            List.of());
     testEvents.reset(List.of(draft), List.of());
 
     mockMvc

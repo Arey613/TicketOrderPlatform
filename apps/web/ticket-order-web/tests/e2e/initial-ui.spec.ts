@@ -155,9 +155,6 @@ test('deletes a draft event from my events after confirmation', async ({ page })
 
   await page.goto('/events/mine');
   await setCsrfCookie(page);
-  await page.evaluate(() => {
-    window.confirm = (message) => message.includes('Delete draft event?');
-  });
 
   await expect(page.getByRole('heading', { name: 'My events' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Draft acoustic night' })).toBeVisible();
@@ -170,6 +167,9 @@ test('deletes a draft event from my events after confirmation', async ({ page })
   );
 
   await page.getByRole('button', { name: 'Delete Draft acoustic night' }).click();
+  await expect(page.getByRole('dialog', { name: 'Delete draft event?' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Keep event' })).toBeVisible();
+  await page.getByRole('button', { name: 'Delete event' }).click();
   await expect((await deleteResponse).status()).toBe(204);
 
   await expect(page.getByRole('heading', { name: 'Draft acoustic night' })).toBeHidden();

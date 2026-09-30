@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.dao.DataIntegrityViolationException;
 
 class EventServiceTest {
 
@@ -402,6 +403,19 @@ class EventServiceTest {
   }
 
   @Test
+  void mapsEventDeleteIntegrityFailureToConflict() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.events.add(event(EventStatus.DRAFT));
+    events.failNextDelete = true;
+    EventService service = newService(events, List.of(user(MANAGER_ID, UserRole.MANAGER)));
+
+    assertThatThrownBy(() -> service.deleteEvent(EVENT_ID, MANAGER_ID))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Event cannot be deleted with existing orders")
+        .hasCauseInstanceOf(DataIntegrityViolationException.class);
+  }
+
+  @Test
   void rejectsPublishWhenUserDoesNotOwnEvent() {
     TestEventRepositoryPort events = new TestEventRepositoryPort();
     events.events.add(event(EventStatus.DRAFT));
@@ -513,6 +527,7 @@ class EventServiceTest {
     private final List<Event> savedEvents = new ArrayList<>();
     private final List<EventOrder> savedOrders = new ArrayList<>();
     private final List<UUID> deletedEventIds = new ArrayList<>();
+    private boolean failNextDelete;
 
     @Override
     public Event save(Event event) {
@@ -581,6 +596,10 @@ class EventServiceTest {
 
     @Override
     public void deleteEvent(UUID eventId) {
+      if (failNextDelete) {
+        failNextDelete = false;
+        throw new DataIntegrityViolationException("Simulated foreign-key race");
+      }
       deletedEventIds.add(eventId);
       events.removeIf(event -> event.id().equals(eventId));
     }

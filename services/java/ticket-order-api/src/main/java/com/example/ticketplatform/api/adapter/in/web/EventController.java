@@ -77,9 +77,9 @@ class EventController implements EventsApi, PublicApi {
             eventContractMapper.toCreatedOrdersResponse(
                 eventCommandUseCase.createEventOrders(
                     user.id(),
-                createEventOrdersRequest.getOrders().stream()
-                    .map(eventContractMapper::toCommand)
-                    .toList())));
+                    createEventOrdersRequest.getOrders().stream()
+                        .map(eventContractMapper::toCommand)
+                        .toList())));
   }
 
   @Override

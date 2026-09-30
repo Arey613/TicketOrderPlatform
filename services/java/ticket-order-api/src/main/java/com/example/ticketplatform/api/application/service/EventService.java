@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -113,7 +114,11 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
     if (eventCommandRepositoryPort.existsOrdersByEventId(eventId)) {
       throw new IllegalStateException("Event cannot be deleted with existing orders");
     }
-    eventCommandRepositoryPort.deleteEvent(eventId);
+    try {
+      eventCommandRepositoryPort.deleteEvent(eventId);
+    } catch (DataIntegrityViolationException exception) {
+      throw new IllegalStateException("Event cannot be deleted with existing orders", exception);
+    }
   }
 
   @Override
