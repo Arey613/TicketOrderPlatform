@@ -6,7 +6,12 @@ import {
   mockSuccessfulLogin,
   setCsrfCookie,
 } from './support/authRoutes';
-import { mockEventBookingFlow, mockMyOrders, mockPublishedEvents } from './support/eventRoutes';
+import {
+  mockEventBookingFlow,
+  mockMyEventsManagement,
+  mockMyOrders,
+  mockPublishedEvents,
+} from './support/eventRoutes';
 
 test('shows published events and public booked places', async ({ page }) => {
   await mockPublishedEvents(page);
@@ -140,6 +145,34 @@ test('redirects managers and admins away from the my-orders route', async ({ pag
 
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { name: 'Order tickets without queues' })).toBeVisible();
+});
+
+test('deletes a draft event from my events after confirmation', async ({ page }) => {
+  await mockSuccessfulLogin(page, managerLoginUser);
+  await mockPublishedEvents(page);
+  await mockMyEventsManagement(page);
+  await seedCurrentUser(page, managerLoginUser);
+
+  await page.goto('/events/mine');
+  await setCsrfCookie(page);
+  await page.evaluate(() => {
+    window.confirm = (message) => message.includes('Delete draft event?');
+  });
+
+  await expect(page.getByRole('heading', { name: 'My events' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Draft acoustic night' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Delete The Horizon Live' })).toBeHidden();
+
+  const deleteResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'DELETE' &&
+      response.url().includes('00000000-0000-0000-0000-000000000609'),
+  );
+
+  await page.getByRole('button', { name: 'Delete Draft acoustic night' }).click();
+  await expect((await deleteResponse).status()).toBe(204);
+
+  await expect(page.getByRole('heading', { name: 'Draft acoustic night' })).toBeHidden();
 });
 
 async function seedCurrentUser(

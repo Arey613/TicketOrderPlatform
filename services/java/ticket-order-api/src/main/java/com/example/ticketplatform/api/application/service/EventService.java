@@ -105,6 +105,19 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
 
   @Override
   @Transactional
+  public void deleteEvent(UUID eventId, UUID userId) {
+    Event event = eventAccessGuard.requireOwnedEvent(eventId, userId);
+    if (event.status() != EventStatus.DRAFT) {
+      throw new IllegalStateException("Event cannot be deleted from status " + event.status());
+    }
+    if (eventCommandRepositoryPort.existsOrdersByEventId(eventId)) {
+      throw new IllegalStateException("Event cannot be deleted with existing orders");
+    }
+    eventCommandRepositoryPort.deleteEvent(eventId);
+  }
+
+  @Override
+  @Transactional
   public List<EventOrder> createEventOrders(UUID userId, List<CreateEventOrderCommand> commands) {
     getUser(userId);
     Set<String> positions = new HashSet<>();

@@ -17,6 +17,8 @@ public interface EventCommandUseCase {
 
   Event markEventAsDraft(UUID eventId, UUID userId);
 
+  void deleteEvent(UUID eventId, UUID userId);
+
   List<EventOrder> createEventOrders(UUID userId, List<CreateEventOrderCommand> commands);
 
   int deleteEventOrders(UUID userId, List<UUID> eventOrderIds);

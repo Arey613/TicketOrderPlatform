@@ -9,6 +9,7 @@ type MyOrdersRouteOptions = {
 };
 
 const eventId = '00000000-0000-0000-0000-000000000603';
+const draftEventId = '00000000-0000-0000-0000-000000000609';
 
 export type EventBookingRouteState = {
   bookedAfterCreate: boolean;
@@ -135,6 +136,40 @@ export async function mockEventBookingFlow(page: Page): Promise<EventBookingRout
   return state;
 }
 
+export async function mockMyEventsManagement(page: Page): Promise<void> {
+  let draftDeleted = false;
+
+  await page.route('**/events**', async (route) => {
+    const url = new URL(route.request().url());
+    if (route.request().method() !== 'GET' || url.pathname !== '/events') {
+      await route.fallback();
+      return;
+    }
+
+    await expect(url.searchParams.get('scope')?.toUpperCase()).toBe('MINE');
+
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: [draftDeleted ? [] : [draftEventResponse()], eventResponse()].flat(),
+        page: pageMetadata(10, draftDeleted ? 1 : 2),
+      }),
+    });
+  });
+
+  await page.route(`**/events/${draftEventId}`, async (route) => {
+    if (route.request().method() !== 'DELETE') {
+      await route.fallback();
+      return;
+    }
+
+    await expect(route.request().headers()['x-xsrf-token']).toBe('e2e-token');
+    draftDeleted = true;
+
+    await route.fulfill({ status: 204 });
+  });
+}
+
 function ownedOrderResponse() {
   return {
     eventOrderId: '00000000-0000-0000-0000-000000000701',
@@ -186,5 +221,17 @@ function eventResponse(bookedAfterCreate = false) {
       { row: 1, place: 1 },
       ...(bookedAfterCreate ? [{ row: 1, place: 2, isMine: true }] : []),
     ],
+  };
+}
+
+function draftEventResponse() {
+  return {
+    ...eventResponse(false),
+    eventId: draftEventId,
+    name: 'Draft acoustic night',
+    status: 'DRAFT',
+    ordersTaken: 0,
+    availablePlaces: 4,
+    takenPlaces: [],
   };
 }

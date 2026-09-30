@@ -1,11 +1,15 @@
-import { CalendarDays, Edit3, EyeOff, Plus, RefreshCw, Send, Ticket } from 'lucide-react';
+import { CalendarDays, Edit3, EyeOff, Plus, RefreshCw, Send, Ticket, Trash2 } from 'lucide-react';
 import { Link } from 'react-router';
 import { toEventUserMessage } from '../../api/eventsClient';
 import { PaginationToolbar } from '../../components/PaginationToolbar';
 import { type EventResponse, EventStatus } from '../../generated/api';
 import { usePagination } from '../../hooks/usePagination';
 import { formatDateTime } from '../../utils/formatters';
-import { usePublishEventMutation, useUnpublishEventMutation } from './useEventManagementMutations';
+import {
+  useDeleteEventMutation,
+  usePublishEventMutation,
+  useUnpublishEventMutation,
+} from './useEventManagementMutations';
 import { useMyEventsQuery } from './useMyEventsQuery';
 
 const EVENT_PAGE_SIZES = [5, 10, 20, 50];
@@ -95,15 +99,28 @@ export function MyEventsPage() {
 }
 
 function MyEventRow({ event }: { event: EventResponse }) {
+  const deleteDraft = useDeleteEventMutation();
   const publish = usePublishEventMutation();
   const unpublish = useUnpublishEventMutation();
   const isDraft = event.status === EventStatus.Draft;
   const isPublished = event.status === EventStatus.Published;
+  const isDeletePending = deleteDraft.isPending && deleteDraft.variables === event.eventId;
   const isPublishPending = publish.isPending && publish.variables === event.eventId;
   const isUnpublishPending = unpublish.isPending && unpublish.variables === event.eventId;
   const rowError =
+    (deleteDraft.isError && deleteDraft.variables === event.eventId && deleteDraft.error) ||
     (publish.isError && publish.variables === event.eventId && publish.error) ||
     (unpublish.isError && unpublish.variables === event.eventId && unpublish.error);
+
+  function handleDelete() {
+    const confirmed = window.confirm(
+      'Delete draft event?\n\nThis removes the draft event from your event list. Published events cannot be deleted.',
+    );
+
+    if (confirmed) {
+      deleteDraft.mutate(event.eventId);
+    }
+  }
 
   return (
     <article className="grid gap-4 border-t border-slate-200 p-4 first:border-t-0 md:grid-cols-[96px_1fr_auto] md:items-center">
@@ -142,6 +159,16 @@ function MyEventRow({ event }: { event: EventResponse }) {
               <Edit3 className="h-4 w-4" aria-hidden="true" />
               Edit
             </Link>
+            <button
+              aria-label={`Delete ${event.name}`}
+              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:border-red-700 hover:text-red-700 disabled:cursor-not-allowed disabled:bg-slate-100"
+              disabled={isDeletePending}
+              onClick={handleDelete}
+              type="button"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Delete
+            </button>
             <button
               aria-label={`Publish ${event.name}`}
               className="flex items-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:bg-slate-400"

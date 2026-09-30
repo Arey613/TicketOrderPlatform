@@ -260,6 +260,26 @@ paths:
           "$ref": "#/components/responses/NotFound"
         "409":
           "$ref": "#/components/responses/Conflict"
+    delete:
+      operationId: deleteEvent
+      tags:
+        - Events
+      summary: Delete an owned draft event
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/EventId"
+      responses:
+        "204":
+          description: Event was deleted
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
   "/public/events":
     get:
       operationId: listPublishedEvents

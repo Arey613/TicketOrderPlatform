@@ -21,6 +21,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - BUGFIX#2 - add auth schema and role-aware UI correction spec
 - GLOBAL_CONFIG#8 - add CLAUDE.md and module-scoped rules importing AGENTS.md files
 - TICKET_PLATFORM#13 - add my orders cross-component specification
+- TICKET_PLATFORM#14 - add owned event deletion specification
 
 ### Changed
 
@@ -48,6 +49,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_SERVICE#11 - add event image and video attachment endpoints
 - TICKET_PORTAL#12 - add draft event patching and checksum-aware video replacement
 - TICKET_PLATFORM#13 - add customer my orders endpoint
+- TICKET_PLATFORM#14 - add owned draft event deletion endpoint
 
 ### Changed
 
@@ -70,6 +72,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_CONTRACTS#11 - add event image and video attachment contract
 - TICKET_PORTAL#12 - add my events management patch contract
 - TICKET_PLATFORM#13 - add customer my orders contract
+- TICKET_PLATFORM#14 - add owned draft event deletion contract
 
 ### Changed
 
@@ -107,6 +110,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PORTAL#11 - add event image and video attachment UI
 - TICKET_PORTAL#12 - add my events page for managers and admins
 - TICKET_PLATFORM#13 - add routed customer my orders page
+- TICKET_PLATFORM#14 - add owned draft event deletion from my events
 
 ### Changed
 

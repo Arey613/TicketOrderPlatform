@@ -118,6 +118,12 @@ export async function publishEvent(eventId: string): Promise<EventResponse> {
   return eventsApi.publishEvent({ eventId }, withCsrfHeader);
 }
 
+export async function deleteEvent(eventId: string): Promise<void> {
+  await prepareCsrfToken();
+
+  await eventsApi.deleteEvent({ eventId }, withCsrfHeader);
+}
+
 export async function unpublishEvent(eventId: string): Promise<EventResponse> {
   await prepareCsrfToken();
 

@@ -77,9 +77,16 @@ class EventController implements EventsApi, PublicApi {
             eventContractMapper.toCreatedOrdersResponse(
                 eventCommandUseCase.createEventOrders(
                     user.id(),
-                    createEventOrdersRequest.getOrders().stream()
-                        .map(eventContractMapper::toCommand)
-                        .toList())));
+                createEventOrdersRequest.getOrders().stream()
+                    .map(eventContractMapper::toCommand)
+                    .toList())));
+  }
+
+  @Override
+  @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+  public ResponseEntity<Void> deleteEvent(UUID eventId) {
+    eventCommandUseCase.deleteEvent(eventId, currentUserProvider.currentUser().id());
+    return ResponseEntity.noContent().build();
   }
 
   @Override
