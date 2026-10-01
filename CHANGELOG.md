@@ -60,6 +60,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - BUGFIX#2 - keep operational persistence on the primary transactional datasource
 - TICKET_PORTAL#3 - add customer-owned event-order backend behavior
 - BUGFIX#3 - avoid join-fetching event orders for paged event queries
+- BUGFIX#4 - remove unused DomainUserDetailsService from the security adapter
 
 ## ticket-order-api-contract
 
