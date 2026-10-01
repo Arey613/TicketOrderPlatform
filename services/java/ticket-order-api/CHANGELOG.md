@@ -36,3 +36,4 @@ TICKET_SERVICE#123 - short description
 - BUGFIX#2 - keep operational persistence on the primary transactional datasource
 - TICKET_PORTAL#3 - add customer-owned event-order behavior
 - BUGFIX#3 - avoid join-fetching event orders for paged event queries
+- BUGFIX#4 - remove unused DomainUserDetailsService from the security adapter
