@@ -8,8 +8,38 @@ type MyOrdersRouteOptions = {
   fail?: boolean;
 };
 
+type OwnedOrder = ReturnType<typeof ownedOrderResponse>;
+
+type MyOrdersPageResponse = {
+  items: OwnedOrder[];
+  page: {
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+  };
+};
+
+type MyOrdersCancellationRouteOptions = {
+  fail?: boolean;
+  failStatus?: number;
+  pages?: Record<number, MyOrdersPageResponse>;
+};
+
+export type MyOrdersCancellationRouteState = {
+  deleteRequests: Array<{
+    body: unknown;
+    url: string;
+  }>;
+  deletedOrderIds: string[];
+  getPageNumbers: number[];
+};
+
 const eventId = '00000000-0000-0000-0000-000000000603';
 const draftEventId = '00000000-0000-0000-0000-000000000609';
+export const ownedOrderId = '00000000-0000-0000-0000-000000000701';
 
 export type EventBookingRouteState = {
   bookedAfterCreate: boolean;
@@ -81,6 +111,84 @@ export async function mockMyOrders(
       }),
     });
   });
+}
+
+export async function mockMyOrdersCancellation(
+  page: Page,
+  options: MyOrdersCancellationRouteOptions = {},
+): Promise<MyOrdersCancellationRouteState> {
+  const routeState: MyOrdersCancellationRouteState = {
+    deleteRequests: [],
+    deletedOrderIds: [],
+    getPageNumbers: [],
+  };
+  const pages = options.pages ?? {
+    0: myOrdersPageResponse([ownedOrderResponse()], 0, 20, 1),
+  };
+
+  await page.route('**/orders/mine**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname !== '/orders/mine') {
+      await route.fallback();
+      return;
+    }
+    if (request.headers().accept?.includes('text/html')) {
+      await route.fallback();
+      return;
+    }
+
+    if (request.method() === 'GET') {
+      const pageNumber = Number(url.searchParams.get('page') ?? '0');
+      routeState.getPageNumbers.push(pageNumber);
+      await expect(url.searchParams.get('sort')).toBe('eventDate,asc');
+      const response = pages[pageNumber] ?? myOrdersPageResponse([], pageNumber, 20, 0);
+      const items = response.items.filter(
+        (order) => !routeState.deletedOrderIds.includes(order.eventOrderId),
+      );
+
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ...response,
+          items,
+          page: {
+            ...response.page,
+            totalElements: response.page.totalElements - (response.items.length - items.length),
+            totalPages:
+              response.page.totalElements - (response.items.length - items.length) === 0
+                ? 0
+                : response.page.totalPages,
+          },
+        }),
+      });
+      return;
+    }
+
+    if (request.method() === 'DELETE') {
+      const body = request.postDataJSON();
+      routeState.deleteRequests.push({ body, url: request.url() });
+
+      if (options.fail) {
+        await route.fulfill({
+          status: options.failStatus ?? 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Unable to cancel order.' }),
+        });
+        return;
+      }
+
+      const ids = isEventOrderIdsPayload(body) ? body.eventOrderIds : [];
+      routeState.deletedOrderIds.push(...ids);
+
+      await route.fulfill({ status: 204 });
+      return;
+    }
+
+    await route.fallback();
+  });
+
+  return routeState;
 }
 
 export async function mockCreateOrder(
@@ -172,7 +280,7 @@ export async function mockMyEventsManagement(page: Page): Promise<void> {
 
 function ownedOrderResponse() {
   return {
-    eventOrderId: '00000000-0000-0000-0000-000000000701',
+    eventOrderId: ownedOrderId,
     eventId,
     eventName: 'The Horizon Live',
     eventDate: '2026-09-12T19:30:00Z',
@@ -181,6 +289,34 @@ function ownedOrderResponse() {
     place: 2,
     placeType: 'STANDARD',
     reservationDate: '2026-08-24T10:00:00Z',
+  };
+}
+
+export function ownedOrderResponseFor(overrides: Partial<OwnedOrder> = {}): OwnedOrder {
+  return {
+    ...ownedOrderResponse(),
+    ...overrides,
+  };
+}
+
+export function myOrdersPageResponse(
+  items: OwnedOrder[],
+  number: number,
+  size: number,
+  totalElements: number,
+): MyOrdersPageResponse {
+  const totalPages = totalElements === 0 ? 0 : Math.ceil(totalElements / size);
+
+  return {
+    items,
+    page: {
+      number,
+      size,
+      totalElements,
+      totalPages,
+      first: number === 0,
+      last: totalPages === 0 || number + 1 >= totalPages,
+    },
   };
 }
 
@@ -234,4 +370,13 @@ function draftEventResponse() {
     availablePlaces: 4,
     takenPlaces: [],
   };
+}
+
+function isEventOrderIdsPayload(body: unknown): body is { eventOrderIds: string[] } {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    'eventOrderIds' in body &&
+    Array.isArray((body as { eventOrderIds: unknown }).eventOrderIds)
+  );
 }

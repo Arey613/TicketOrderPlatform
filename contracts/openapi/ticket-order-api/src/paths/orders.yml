@@ -30,3 +30,29 @@
         "$ref": "#/components/responses/Unauthorized"
       "403":
         "$ref": "#/components/responses/Forbidden"
+  delete:
+    operationId: cancelMyOrder
+    tags:
+      - Orders
+    summary: Cancel an order for the current customer
+    security:
+      - sessionAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/DeleteEventOrdersRequest"
+    responses:
+      "204":
+        description: Customer order was cancelled
+      "400":
+        "$ref": "#/components/responses/BadRequest"
+      "401":
+        "$ref": "#/components/responses/Unauthorized"
+      "403":
+        "$ref": "#/components/responses/Forbidden"
+      "404":
+        "$ref": "#/components/responses/NotFound"
+      "409":
+        "$ref": "#/components/responses/Conflict"

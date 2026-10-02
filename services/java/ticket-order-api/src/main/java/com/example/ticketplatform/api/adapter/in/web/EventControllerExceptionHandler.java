@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-@RestControllerAdvice(assignableTypes = EventController.class)
+@RestControllerAdvice(assignableTypes = {EventController.class, OrdersController.class})
 @Slf4j
 class EventControllerExceptionHandler {
 

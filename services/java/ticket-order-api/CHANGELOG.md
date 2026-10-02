@@ -26,6 +26,7 @@ TICKET_SERVICE#123 - short description
 - TICKET_PORTAL#12 - add draft event patching and checksum-aware video replacement
 - TICKET_PLATFORM#13 - add customer my orders endpoint
 - TICKET_PLATFORM#14 - add owned draft event deletion endpoint
+- TICKET_PLATFORM#15 - add customer order cancellation endpoint
 
 ### Changed
 

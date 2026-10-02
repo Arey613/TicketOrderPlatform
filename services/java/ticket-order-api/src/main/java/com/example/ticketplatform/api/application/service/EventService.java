@@ -159,6 +159,10 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
         != eventOrderIds.size()) {
       throw new SecurityException("User cannot delete at least one event order");
     }
+    Instant now = currentTimeSupplier.get();
+    if (orders.stream().anyMatch(order -> !order.eventDate().isAfter(now))) {
+      throw new IllegalStateException("Event order can no longer be cancelled");
+    }
     return Math.toIntExact(eventCommandRepositoryPort.deleteOrders(eventOrderIds));
   }
 

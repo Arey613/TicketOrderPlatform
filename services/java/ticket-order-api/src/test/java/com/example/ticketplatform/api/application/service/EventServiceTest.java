@@ -149,8 +149,8 @@ class EventServiceTest {
   @Test
   void deletesOrdersOwnedByCurrentUserAndReturnsDeletedCount() {
     TestEventRepositoryPort events = new TestEventRepositoryPort();
-    events.savedOrders.add(eventOrder(EVENT_ORDER_ID, CUSTOMER_ID, 1, 1));
-    events.savedOrders.add(eventOrder(OTHER_EVENT_ORDER_ID, CUSTOMER_ID, 1, 2));
+    events.savedOrders.add(futureEventOrder(EVENT_ORDER_ID, CUSTOMER_ID, 1, 1));
+    events.savedOrders.add(futureEventOrder(OTHER_EVENT_ORDER_ID, CUSTOMER_ID, 1, 2));
     EventService service = newService(events, List.of(user(CUSTOMER_ID, UserRole.CUSTOMER)));
 
     int deleted =
@@ -163,8 +163,8 @@ class EventServiceTest {
   @Test
   void rejectsOrderDeleteWhenOneOrderBelongsToAnotherUser() {
     TestEventRepositoryPort events = new TestEventRepositoryPort();
-    events.savedOrders.add(eventOrder(EVENT_ORDER_ID, CUSTOMER_ID, 1, 1));
-    events.savedOrders.add(eventOrder(OTHER_EVENT_ORDER_ID, OTHER_MANAGER_ID, 1, 2));
+    events.savedOrders.add(futureEventOrder(EVENT_ORDER_ID, CUSTOMER_ID, 1, 1));
+    events.savedOrders.add(futureEventOrder(OTHER_EVENT_ORDER_ID, OTHER_MANAGER_ID, 1, 2));
     EventService service = newService(events, List.of(user(CUSTOMER_ID, UserRole.CUSTOMER)));
 
     assertThatThrownBy(
@@ -179,7 +179,7 @@ class EventServiceTest {
   @Test
   void rejectsOrderDeleteWhenAnyOrderDoesNotExist() {
     TestEventRepositoryPort events = new TestEventRepositoryPort();
-    events.savedOrders.add(eventOrder(EVENT_ORDER_ID, CUSTOMER_ID, 1, 1));
+    events.savedOrders.add(futureEventOrder(EVENT_ORDER_ID, CUSTOMER_ID, 1, 1));
     EventService service = newService(events, List.of(user(CUSTOMER_ID, UserRole.CUSTOMER)));
 
     assertThatThrownBy(
@@ -187,6 +187,18 @@ class EventServiceTest {
                 service.deleteEventOrders(
                     CUSTOMER_ID, List.of(EVENT_ORDER_ID, OTHER_EVENT_ORDER_ID)))
         .isInstanceOf(NoSuchElementException.class);
+
+    assertThat(events.savedOrders).hasSize(1);
+  }
+
+  @Test
+  void rejectsOrderDeleteWhenEventHasAlreadyStarted() {
+    TestEventRepositoryPort events = new TestEventRepositoryPort();
+    events.savedOrders.add(eventOrder(EVENT_ORDER_ID, CUSTOMER_ID, 1, 1, TEST_TIME));
+    EventService service = newService(events, List.of(user(CUSTOMER_ID, UserRole.CUSTOMER)));
+
+    assertThatThrownBy(() -> service.deleteEventOrders(CUSTOMER_ID, List.of(EVENT_ORDER_ID)))
+        .isInstanceOf(IllegalStateException.class);
 
     assertThat(events.savedOrders).hasSize(1);
   }
@@ -489,6 +501,20 @@ class EventServiceTest {
 
   private static EventOrder eventOrder(
       UUID id, UUID customerId, Integer rowNumber, Integer placeNumber) {
+    return eventOrder(id, customerId, rowNumber, placeNumber, null);
+  }
+
+  private static EventOrder futureEventOrder(
+      UUID id, UUID customerId, Integer rowNumber, Integer placeNumber) {
+    return eventOrder(id, customerId, rowNumber, placeNumber, TEST_TIME.plusSeconds(3600));
+  }
+
+  private static EventOrder eventOrder(
+      UUID id,
+      UUID customerId,
+      Integer rowNumber,
+      Integer placeNumber,
+      Instant eventDate) {
     return EventOrder.builder()
         .id(id)
         .eventId(EVENT_ID)
@@ -497,6 +523,7 @@ class EventServiceTest {
         .placeNumber(placeNumber)
         .placeType("STANDARD")
         .reservationDate(TEST_TIME)
+        .eventDate(eventDate)
         .build();
   }
 

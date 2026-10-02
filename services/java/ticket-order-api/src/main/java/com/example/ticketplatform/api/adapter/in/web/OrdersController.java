@@ -1,7 +1,9 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
+import com.example.ticketplatform.api.application.port.in.EventCommandUseCase;
 import com.example.ticketplatform.api.application.port.in.EventQueryUseCase;
 import com.example.ticketplatform.api.generated.contract.api.OrdersApi;
+import com.example.ticketplatform.api.generated.contract.model.DeleteEventOrdersRequest;
 import com.example.ticketplatform.api.generated.contract.model.MyOrdersResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +14,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 class OrdersController implements OrdersApi {
 
+  private final EventCommandUseCase eventCommandUseCase;
   private final EventQueryUseCase eventQueryUseCase;
   private final CurrentUserProvider currentUserProvider;
   private final EventContractMapper eventContractMapper;
   private final PaginationRequestFactory paginationRequestFactory;
+
+  @Override
+  @PreAuthorize("hasRole('CUSTOMER')")
+  public ResponseEntity<Void> cancelMyOrder(DeleteEventOrdersRequest deleteEventOrdersRequest) {
+    eventCommandUseCase.deleteEventOrders(
+        currentUserProvider.currentUser().id(), deleteEventOrdersRequest.getEventOrderIds());
+    return ResponseEntity.noContent().build();
+  }
 
   @Override
   @PreAuthorize("hasRole('CUSTOMER')")

@@ -29,3 +29,11 @@ export async function listMyOrders(
     sort: query.sort ?? DEFAULT_ORDERS_SORT,
   });
 }
+
+export async function cancelMyOrder(eventOrderId: string): Promise<void> {
+  return ordersApi.cancelMyOrder({
+    deleteEventOrdersRequest: {
+      eventOrderIds: [eventOrderId],
+    },
+  });
+}

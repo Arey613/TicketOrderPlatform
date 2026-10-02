@@ -22,6 +22,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - GLOBAL_CONFIG#8 - add CLAUDE.md and module-scoped rules importing AGENTS.md files
 - TICKET_PLATFORM#13 - add my orders cross-component specification
 - TICKET_PLATFORM#14 - add owned event deletion specification
+- TICKET_PLATFORM#15 - add customer order cancellation specification
 
 ### Changed
 
@@ -50,6 +51,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PORTAL#12 - add draft event patching and checksum-aware video replacement
 - TICKET_PLATFORM#13 - add customer my orders endpoint
 - TICKET_PLATFORM#14 - add owned draft event deletion endpoint
+- TICKET_PLATFORM#15 - add customer order cancellation endpoint
 
 ### Changed
 
@@ -74,6 +76,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PORTAL#12 - add my events management patch contract
 - TICKET_PLATFORM#13 - add customer my orders contract
 - TICKET_PLATFORM#14 - add owned draft event deletion contract
+- TICKET_PLATFORM#15 - add customer order cancellation contract
 
 ### Changed
 
@@ -112,6 +115,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PORTAL#12 - add my events page for managers and admins
 - TICKET_PLATFORM#13 - add routed customer my orders page
 - TICKET_PLATFORM#14 - add owned draft event deletion from my events
+- TICKET_PLATFORM#15 - add customer order cancellation from my orders
 
 ### Changed
 

@@ -19,6 +19,7 @@ TICKET_CONTRACTS#123 - short description
 - TICKET_PORTAL#12 - add my events management patch contract
 - TICKET_PLATFORM#13 - add customer my orders contract
 - TICKET_PLATFORM#14 - add owned draft event deletion contract
+- TICKET_PLATFORM#15 - add customer order cancellation contract
 
 ### Changed
 
