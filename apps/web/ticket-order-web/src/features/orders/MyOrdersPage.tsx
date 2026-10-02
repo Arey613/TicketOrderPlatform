@@ -144,23 +144,19 @@ export function MyOrdersPage() {
                   </div>
                 </dl>
                 <div className="flex justify-start md:justify-end">
-                  <div className="col-span-2">
-                    <button
-                      aria-label={`Cancel order for ${order.eventName}`}
-                      className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-bold text-red-800 transition hover:border-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-                      disabled={cancelOrder.isPending}
-                      onClick={() => {
-                        setSuccessMessage(null);
-                        setCancelErrorMessage(null);
-                        setOrderToCancel(order);
-                      }}
-                      type="button"
-                    >
-                      {cancellingOrderId === order.eventOrderId
-                        ? 'Cancelling order'
-                        : 'Cancel order'}
-                    </button>
-                  </div>
+                  <button
+                    aria-label={`Cancel order for ${order.eventName}`}
+                    className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-bold text-red-800 transition hover:border-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={cancelOrder.isPending}
+                    onClick={() => {
+                      setSuccessMessage(null);
+                      setCancelErrorMessage(null);
+                      setOrderToCancel(order);
+                    }}
+                    type="button"
+                  >
+                    {cancellingOrderId === order.eventOrderId ? 'Cancelling order' : 'Cancel order'}
+                  </button>
                 </div>
               </article>
             ))}

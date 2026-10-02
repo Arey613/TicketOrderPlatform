@@ -38,7 +38,12 @@ export function ConfirmDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const isPendingRef = useRef(isPending);
   const onCancelRef = useRef(onCancel);
+
+  useEffect(() => {
+    isPendingRef.current = isPending;
+  }, [isPending]);
 
   useEffect(() => {
     onCancelRef.current = onCancel;
@@ -53,7 +58,7 @@ export function ConfirmDialog({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        if (!isPending) {
+        if (!isPendingRef.current) {
           onCancelRef.current();
         }
         return;
@@ -91,16 +96,19 @@ export function ConfirmDialog({
       document.body.style.overflow = previousBodyOverflow;
       previouslyFocusedRef.current?.focus();
     };
-  }, [isPending]);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <button
-        aria-label="Close dialog"
+      <div
+        aria-hidden="true"
         className="absolute inset-0 bg-slate-950/40"
-        disabled={isPending}
-        onClick={onCancel}
-        type="button"
+        onMouseDown={() => {
+          if (!isPending) {
+            onCancel();
+          }
+        }}
+        role="presentation"
       />
       <div
         aria-describedby={descriptionId}
