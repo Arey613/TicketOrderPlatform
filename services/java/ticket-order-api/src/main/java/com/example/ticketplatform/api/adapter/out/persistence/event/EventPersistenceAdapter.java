@@ -1,6 +1,7 @@
 package com.example.ticketplatform.api.adapter.out.persistence.event;
 
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.EventDeletionConflictException;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import java.util.Collection;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -44,7 +46,13 @@ class EventPersistenceAdapter implements EventCommandRepositoryPort {
 
   @Override
   public void deleteEvent(UUID eventId) {
-    eventRepository.deleteById(eventId);
+    try {
+      eventRepository.deleteById(eventId);
+      eventRepository.flush();
+    } catch (DataIntegrityViolationException exception) {
+      throw new EventDeletionConflictException(
+          "Event cannot be deleted because dependent rows exist: " + eventId, exception);
+    }
   }
 
   @Override

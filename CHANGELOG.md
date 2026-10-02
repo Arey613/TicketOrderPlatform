@@ -63,6 +63,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PORTAL#3 - add customer-owned event-order backend behavior
 - BUGFIX#3 - avoid join-fetching event orders for paged event queries
 - BUGFIX#4 - remove unused DomainUserDetailsService from the security adapter
+- BUGFIX#5 - enforce hexagonal layer boundaries with ArchUnit and remove framework leaks from the application layer
 
 ## ticket-order-api-contract
 

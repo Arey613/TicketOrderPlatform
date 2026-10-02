@@ -10,6 +10,7 @@ import com.example.ticketplatform.api.application.port.in.PatchEventCommand;
 import com.example.ticketplatform.api.application.port.in.PatchEventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.EventDeletionConflictException;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
@@ -25,7 +26,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -116,7 +116,7 @@ class EventService implements EventCommandUseCase, EventQueryUseCase {
     }
     try {
       eventCommandRepositoryPort.deleteEvent(eventId);
-    } catch (DataIntegrityViolationException exception) {
+    } catch (EventDeletionConflictException exception) {
       throw new IllegalStateException("Event cannot be deleted with existing orders", exception);
     }
   }

@@ -3,7 +3,6 @@ package com.example.ticketplatform.api.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.example.ticketplatform.api.infrastructure.config.media.MediaProperties;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,7 +14,7 @@ import org.junit.jupiter.api.Test;
 class ImageSignatureValidatorTest {
 
   private final ImageSignatureValidator validator =
-      new ImageSignatureValidator(defaultMediaProperties());
+      new ImageSignatureValidator(EventMediaServiceTest.defaultMediaPolicy());
 
   @Test
   void acceptsValidJpegAndSniffsContentType() {
@@ -87,10 +86,6 @@ class ImageSignatureValidatorTest {
     ImageSignatureValidator.ValidationResult result = validator.validate(png);
 
     assertThat(result.contentType()).isEqualTo("image/png");
-  }
-
-  private static MediaProperties defaultMediaProperties() {
-    return new MediaProperties(null, null);
   }
 
   private static byte[] validJpegBytes() {

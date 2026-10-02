@@ -11,13 +11,13 @@ import com.example.ticketplatform.api.application.port.out.EventCommandRepositor
 import com.example.ticketplatform.api.application.port.out.ObjectMetadata;
 import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
 import com.example.ticketplatform.api.application.port.out.PresignedUpload;
+import com.example.ticketplatform.api.application.port.out.TransactionExecutorPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
 import com.example.ticketplatform.api.domain.model.event.EventStatus;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
-import com.example.ticketplatform.api.infrastructure.config.media.MediaProperties;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,11 +32,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 class EventMediaServiceTest {
 
@@ -285,19 +284,32 @@ class EventMediaServiceTest {
   }
 
   private EventMediaService newService(TestEventRepository events, ObjectStoragePort storage) {
-    MediaProperties mediaProperties = new MediaProperties(null, null);
+    MediaPolicy mediaPolicy = defaultMediaPolicy();
     TestUserRepository users = new TestUserRepository(OWNER_ID, OTHER_OWNER_ID);
-    SingleConnectionDataSource dataSource =
-        new SingleConnectionDataSource("jdbc:h2:mem:event-media-service-test", true);
     return new EventMediaService(
         events,
         new EventAccessGuard(events, users),
-        new ImageSignatureValidator(mediaProperties),
+        new ImageSignatureValidator(mediaPolicy),
         storage,
         Mappers.getMapper(EventApplicationMapper.class),
         Clock.fixed(TEST_TIME, ZoneOffset.UTC)::instant,
-        mediaProperties,
-        new DataSourceTransactionManager(dataSource));
+        mediaPolicy,
+        new TransactionExecutorPort() {
+          @Override
+          public <T> T executeInPrimaryTransaction(Supplier<T> action) {
+            return action.get();
+          }
+        });
+  }
+
+  static MediaPolicy defaultMediaPolicy() {
+    return new MediaPolicy(
+        new MediaPolicy.Image(
+            5_242_880L, List.of("image/jpeg", "image/png", "image/webp"), "public, max-age=3600"),
+        new MediaPolicy.Video(
+            104_857_600L,
+            List.of("video/mp4", "video/webm", "video/quicktime"),
+            "public, max-age=3600"));
   }
 
   private static byte[] validPngBytes() {

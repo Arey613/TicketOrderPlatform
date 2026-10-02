@@ -10,8 +10,8 @@ import com.example.ticketplatform.api.application.port.out.EventCommandRepositor
 import com.example.ticketplatform.api.application.port.out.ObjectMetadata;
 import com.example.ticketplatform.api.application.port.out.ObjectStoragePort;
 import com.example.ticketplatform.api.application.port.out.PresignedUpload;
+import com.example.ticketplatform.api.application.port.out.TransactionExecutorPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
-import com.example.ticketplatform.api.infrastructure.config.media.MediaProperties;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,9 +24,6 @@ import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -57,12 +54,8 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
   private final ObjectStoragePort objectStoragePort;
   private final EventApplicationMapper eventApplicationMapper;
   private final Supplier<Instant> currentTimeSupplier;
-  private final MediaProperties mediaProperties;
-  private final PlatformTransactionManager primaryTransactionManager;
-
-  private <T> T inPrimaryTransaction(TransactionCallback<T> action) {
-    return new TransactionTemplate(primaryTransactionManager).execute(action);
-  }
+  private final MediaPolicy mediaPolicy;
+  private final TransactionExecutorPort transactionExecutorPort;
 
   @Override
   public Event attachEventImage(UUID eventId, UUID userId, AttachEventImageCommand command) {
@@ -80,14 +73,14 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
             key,
             command.imageData(),
             validation.contentType(),
-            mediaProperties.image().cacheControl(),
+            mediaPolicy.image().cacheControl(),
             Map.of(SHA256_METADATA_KEY, sha256(command.imageData())));
 
     Instant now = currentTimeSupplier.get();
     try {
       Event updated =
-          inPrimaryTransaction(
-              status ->
+          transactionExecutorPort.executeInPrimaryTransaction(
+              () ->
                   eventCommandRepositoryPort.save(
                       eventApplicationMapper.toEventWithImage(event, imageUrl, now)));
 
@@ -109,17 +102,17 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
       UUID eventId, UUID userId, IssueVideoUploadUrlCommand command) {
     Event event = eventAccessGuard.requireOwnedDraftEvent(eventId, userId);
 
-    if (!mediaProperties.video().allowedContentTypes().contains(command.contentType())) {
+    if (!mediaPolicy.video().allowedContentTypes().contains(command.contentType())) {
       throw new IllegalArgumentException(
           "Unsupported video content type: " + command.contentType());
     }
     if (command.fileSizeBytes() == null || command.fileSizeBytes() <= 0) {
       throw new IllegalArgumentException("fileSizeBytes must be a positive number");
     }
-    if (command.fileSizeBytes() > mediaProperties.video().maxSizeBytes()) {
+    if (command.fileSizeBytes() > mediaPolicy.video().maxSizeBytes()) {
       throw new IllegalArgumentException(
           "Video exceeds the maximum allowed size of "
-              + mediaProperties.video().maxSizeBytes()
+              + mediaPolicy.video().maxSizeBytes()
               + " bytes");
     }
 
@@ -130,7 +123,7 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
         objectStoragePort.issuePresignedUploadUrl(
             key,
             command.contentType(),
-            mediaProperties.video().cacheControl(),
+            mediaPolicy.video().cacheControl(),
             command.fileSizeBytes(),
             Map.of(SHA256_METADATA_KEY, command.sha256()));
 
@@ -165,8 +158,8 @@ class EventMediaService implements EventImageUseCase, EventVideoUseCase {
     Instant now = currentTimeSupplier.get();
     try {
       Event updated =
-          inPrimaryTransaction(
-              status ->
+          transactionExecutorPort.executeInPrimaryTransaction(
+              () ->
                   eventCommandRepositoryPort.save(
                       eventApplicationMapper.toEventWithVideo(
                           event, command.videoUrl().toString(), now)));
