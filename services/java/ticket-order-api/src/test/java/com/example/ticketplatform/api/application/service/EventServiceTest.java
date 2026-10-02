@@ -13,6 +13,7 @@ import com.example.ticketplatform.api.application.port.in.PatchEventCommand;
 import com.example.ticketplatform.api.application.port.in.PatchEventDetailsCommand;
 import com.example.ticketplatform.api.application.port.in.UpdateEventCommand;
 import com.example.ticketplatform.api.application.port.out.EventCommandRepositoryPort;
+import com.example.ticketplatform.api.application.port.out.EventDeletionConflictException;
 import com.example.ticketplatform.api.application.port.out.EventQueryRepositoryPort;
 import com.example.ticketplatform.api.application.port.out.UserCommandRepositoryPort;
 import com.example.ticketplatform.api.domain.model.event.Event;
@@ -32,7 +33,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
-import org.springframework.dao.DataIntegrityViolationException;
 
 class EventServiceTest {
 
@@ -424,7 +424,7 @@ class EventServiceTest {
     assertThatThrownBy(() -> service.deleteEvent(EVENT_ID, MANAGER_ID))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Event cannot be deleted with existing orders")
-        .hasCauseInstanceOf(DataIntegrityViolationException.class);
+        .hasCauseInstanceOf(EventDeletionConflictException.class);
   }
 
   @Test
@@ -625,7 +625,8 @@ class EventServiceTest {
     public void deleteEvent(UUID eventId) {
       if (failNextDelete) {
         failNextDelete = false;
-        throw new DataIntegrityViolationException("Simulated foreign-key race");
+        throw new EventDeletionConflictException(
+            "Simulated foreign-key race", new IllegalStateException());
       }
       deletedEventIds.add(eventId);
       events.removeIf(event -> event.id().equals(eventId));

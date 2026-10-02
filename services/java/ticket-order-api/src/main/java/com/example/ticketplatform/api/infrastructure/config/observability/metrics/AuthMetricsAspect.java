@@ -1,10 +1,11 @@
 package com.example.ticketplatform.api.infrastructure.config.observability.metrics;
 
+import com.example.ticketplatform.api.application.port.in.InvalidCredentialsException;
+
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -21,7 +22,7 @@ class AuthMetricsAspect {
       Object result = joinPoint.proceed();
       ticketOrderMetrics.recordLoginSuccess();
       return result;
-    } catch (BadCredentialsException exception) {
+    } catch (InvalidCredentialsException exception) {
       ticketOrderMetrics.recordLoginFailure("invalid_credentials");
       throw exception;
     }

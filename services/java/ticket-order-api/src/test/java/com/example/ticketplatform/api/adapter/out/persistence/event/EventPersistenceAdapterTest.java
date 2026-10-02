@@ -1,7 +1,9 @@
 package com.example.ticketplatform.api.adapter.out.persistence.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.ticketplatform.api.application.port.out.EventDeletionConflictException;
 import com.example.ticketplatform.api.domain.model.event.Event;
 import com.example.ticketplatform.api.domain.model.event.EventDetails;
 import com.example.ticketplatform.api.domain.model.event.EventOrder;
@@ -103,6 +105,17 @@ class EventPersistenceAdapterTest {
     entityManager.clear();
 
     assertThat(adapter.deleteOrders(List.of(EVENT_ORDER_ID))).isEqualTo(1);
+  }
+
+  @Test
+  void translatesForeignKeyFailureWhenDeletingEventWithOrders() {
+    adapter.save(event(EVENT_ID, OWNER_ID, EventStatus.DRAFT));
+    adapter.saveOrders(CUSTOMER_ID, List.of(eventOrder(EVENT_ORDER_ID, EVENT_ID, 3, 7)));
+    entityManager.flush();
+    entityManager.clear();
+
+    assertThatThrownBy(() -> adapter.deleteEvent(EVENT_ID))
+        .isInstanceOf(EventDeletionConflictException.class);
   }
 
   private void insertUser(UUID id, String email, String role) {

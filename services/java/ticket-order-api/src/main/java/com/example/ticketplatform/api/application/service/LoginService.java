@@ -1,12 +1,12 @@
 package com.example.ticketplatform.api.application.service;
 
+import com.example.ticketplatform.api.application.port.in.InvalidCredentialsException;
 import com.example.ticketplatform.api.application.port.in.LoginUseCase;
 import com.example.ticketplatform.api.application.port.in.LoginCommand;
 import com.example.ticketplatform.api.application.port.out.PasswordMatcherPort;
 import com.example.ticketplatform.api.application.port.out.UserAuthRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import static java.lang.Boolean.TRUE;
@@ -23,11 +23,11 @@ class LoginService implements LoginUseCase {
     User user =
         userAuthRepositoryPort
             .findByEmail(command.login())
-            .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+            .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
     if (!TRUE.equals(user.enabled())
         || !passwordMatcherPort.matches(command.rawPassword(), user.passwordHash())) {
-      throw new BadCredentialsException("Invalid credentials");
+      throw new InvalidCredentialsException("Invalid credentials");
     }
 
     return user;

@@ -1,6 +1,5 @@
 package com.example.ticketplatform.api.application.service;
 
-import com.example.ticketplatform.api.infrastructure.config.media.MediaProperties;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,13 +21,13 @@ public class ImageSignatureValidator {
   private static final int WEBP_HEADER_LENGTH = 12;
   private static final int WEBP_FORMAT_OFFSET = 8;
 
-  private final MediaProperties mediaProperties;
+  private final MediaPolicy mediaPolicy;
 
   public ValidationResult validate(byte[] imageData) {
     if (imageData == null || imageData.length == 0) {
       throw new IllegalArgumentException("Image data must not be empty");
     }
-    long maxSizeBytes = mediaProperties.image().maxSizeBytes();
+    long maxSizeBytes = mediaPolicy.image().maxSizeBytes();
     if (imageData.length > maxSizeBytes) {
       throw new IllegalArgumentException(
           "Image exceeds the maximum allowed size of " + maxSizeBytes + " bytes");

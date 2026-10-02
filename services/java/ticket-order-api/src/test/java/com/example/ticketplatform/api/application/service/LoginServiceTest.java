@@ -3,6 +3,7 @@ package com.example.ticketplatform.api.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.ticketplatform.api.application.port.in.InvalidCredentialsException;
 import com.example.ticketplatform.api.application.port.in.LoginCommand;
 import com.example.ticketplatform.api.application.port.out.PasswordMatcherPort;
 import com.example.ticketplatform.api.application.port.out.UserAuthRepositoryPort;
@@ -15,7 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.authentication.BadCredentialsException;
 
 class LoginServiceTest {
 
@@ -43,7 +43,7 @@ class LoginServiceTest {
     LoginService service = new LoginService(TestUserRepositoryPort.empty(), passwords);
 
     assertThatThrownBy(() -> service.login(new LoginCommand("missing@example.com", "secret")))
-        .isInstanceOf(BadCredentialsException.class);
+        .isInstanceOf(InvalidCredentialsException.class);
     assertThat(passwords.lastRawPassword).isNull();
     assertThat(passwords.lastEncodedPassword).isNull();
   }
@@ -54,7 +54,7 @@ class LoginServiceTest {
         new LoginService(TestUserRepositoryPort.withUser(ENABLED_USER), new TestPasswordMatcherPort(false));
 
     assertThatThrownBy(() -> service.login(new LoginCommand("customer@example.com", "wrong")))
-        .isInstanceOf(BadCredentialsException.class);
+        .isInstanceOf(InvalidCredentialsException.class);
   }
 
   @Test
@@ -63,7 +63,7 @@ class LoginServiceTest {
     LoginService service = new LoginService(TestUserRepositoryPort.withUser(DISABLED_USER), passwords);
 
     assertThatThrownBy(() -> service.login(new LoginCommand("disabled@example.com", "secret")))
-        .isInstanceOf(BadCredentialsException.class);
+        .isInstanceOf(InvalidCredentialsException.class);
     assertThat(passwords.lastRawPassword).isNull();
     assertThat(passwords.lastEncodedPassword).isNull();
   }

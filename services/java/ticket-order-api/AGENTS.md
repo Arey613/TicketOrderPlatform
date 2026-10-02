@@ -38,6 +38,11 @@ This file applies to `services/java/ticket-order-api`.
   - unknown or unclear datasource intent uses the primary datasource
   - application services must call intent-specific ports and must not choose datasources or repositories directly
   - API runtime code must use read-replica terminology, not analytical datasource terminology
+- Application code must not import Spring DAO, JDBC, security, or transaction API types, or
+  infrastructure classes. Translate framework failures into port-level or application exceptions in
+  the adapter that owns them. Spring stereotype and `@Transactional` annotations are allowed.
+- `ArchitectureTest` enforces the hexagonal layer boundaries. Update its rules when package ownership
+  changes, and do not add exceptions without a TODO naming the cleanup.
 - Do not use Java primitives for fields in domain records, application command/query records, or
   JPA entity classes. Use boxed types such as `Integer`, `Long`, and `Boolean` so nullability is
   explicit at model boundaries. Primitive method return values and local variables are acceptable

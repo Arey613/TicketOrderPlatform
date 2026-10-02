@@ -1,5 +1,6 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
+import com.example.ticketplatform.api.application.port.in.InvalidCredentialsException;
 import com.example.ticketplatform.api.application.port.in.LoginUseCase;
 import com.example.ticketplatform.api.application.port.in.UserCommandUseCase;
 import com.example.ticketplatform.api.application.port.out.PasswordHasherPort;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -40,7 +40,7 @@ class AuthController implements AuthApi {
       authenticationSessionManager.authenticate(user);
 
       return ResponseEntity.ok(authContractMapper.toLoginResponse(user));
-    } catch (BadCredentialsException exception) {
+    } catch (InvalidCredentialsException exception) {
       log.warn("auth.login.failed reason=invalid_credentials");
       return ResponseEntity.status(401).build();
     }

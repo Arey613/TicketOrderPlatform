@@ -3,6 +3,7 @@ package com.example.ticketplatform.api.infrastructure.config.observability.metri
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.ticketplatform.api.application.port.in.InvalidCredentialsException;
 import com.example.ticketplatform.api.infrastructure.config.observability.ObservabilityProperties;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.aspectj.lang.JoinPoint;
@@ -11,7 +12,6 @@ import org.aspectj.lang.Signature;
 import org.aspectj.lang.reflect.SourceLocation;
 import org.aspectj.runtime.internal.AroundClosure;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.authentication.BadCredentialsException;
 
 class AuthMetricsAspectTest {
 
@@ -37,7 +37,7 @@ class AuthMetricsAspectTest {
     AuthMetricsAspect aspect =
         new AuthMetricsAspect(
             new TicketOrderMetrics(meterRegistry, new ObservabilityProperties(null, null, null)));
-    BadCredentialsException exception = new BadCredentialsException("invalid");
+    InvalidCredentialsException exception = new InvalidCredentialsException("invalid");
 
     assertThatThrownBy(() -> aspect.recordLoginMetrics(new TestProceedingJoinPoint(null, exception)))
         .isSameAs(exception);
