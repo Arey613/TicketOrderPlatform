@@ -24,6 +24,7 @@ type MyOrdersPageResponse = {
 
 type MyOrdersCancellationRouteOptions = {
   fail?: boolean;
+  failStatus?: number;
   pages?: Record<number, MyOrdersPageResponse>;
 };
 
@@ -170,7 +171,7 @@ export async function mockMyOrdersCancellation(
 
       if (options.fail) {
         await route.fulfill({
-          status: 500,
+          status: options.failStatus ?? 500,
           contentType: 'application/json',
           body: JSON.stringify({ message: 'Unable to cancel order.' }),
         });

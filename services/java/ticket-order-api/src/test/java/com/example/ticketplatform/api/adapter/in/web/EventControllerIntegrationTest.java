@@ -360,6 +360,23 @@ class EventControllerIntegrationTest {
   }
 
   @Test
+  void rejectsMyOrderCancellationWhenUseCaseReportsConflict() throws Exception {
+    testEvents.failNextOrderDeletionWithConflict();
+
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/orders/mine")
+                    .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(deleteEventOrdersJson(EVENT_ORDER_ID))))
+        .andExpect(status().isConflict());
+
+    assertThat(testEvents.lastCommandUserId()).isEqualTo(CUSTOMER_ID);
+    assertThat(testEvents.deletedOrderCount()).isZero();
+  }
+
+  @Test
   void ignoresClientCustomerIdentityWhenCancellingCurrentCustomerOrder() throws Exception {
     mockMvc
         .perform(

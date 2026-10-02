@@ -47,6 +47,7 @@ describe('my orders OpenAPI contract', () => {
     expect(ordersPath).toContain('"401":');
     expect(ordersPath).toContain('"403":');
     expect(ordersPath).toContain('"404":');
+    expect(ordersPath).toContain('"409":');
 
     expect(ordersPath).not.toMatch(/\bcustomerId\b/i);
     expect(ordersPath).not.toMatch(/\buserId\b/i);

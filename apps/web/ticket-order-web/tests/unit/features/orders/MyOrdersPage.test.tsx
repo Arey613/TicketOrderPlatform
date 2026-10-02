@@ -94,14 +94,37 @@ describe('MyOrdersPage', () => {
 
     renderWithQueryClient(<MyOrdersPage />);
 
-    await user.click(await screen.findByRole('button', { name: 'Cancel order' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Cancel order for The Horizon Live' }),
+    );
 
     const dialog = screen.getByRole('dialog', { name: 'Cancel order?' });
     expect(dialog).toBeVisible();
+    expect(within(dialog).getByText('The Horizon Live, row 1, place 2')).toBeVisible();
+    expect(within(dialog).getByRole('button', { name: 'Keep order' })).toHaveFocus();
     await user.click(within(dialog).getByRole('button', { name: 'Keep order' }));
 
     expect(screen.queryByRole('dialog', { name: 'Cancel order?' })).not.toBeInTheDocument();
     expect(mockedCancelMyOrder).not.toHaveBeenCalled();
+  });
+
+  it('closes the cancel confirmation from the keyboard and returns focus', async () => {
+    mockedListMyOrders.mockResolvedValue({
+      items: [myEventOrder],
+      page: pageMetadata(20, 1),
+    });
+    const user = userEvent.setup();
+
+    renderWithQueryClient(<MyOrdersPage />);
+
+    const cancelButton = await screen.findByRole('button', {
+      name: 'Cancel order for The Horizon Live',
+    });
+    await user.click(cancelButton);
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog', { name: 'Cancel order?' })).not.toBeInTheDocument();
+    expect(cancelButton).toHaveFocus();
   });
 
   it('cancels an order and refreshes the current orders page', async () => {
@@ -116,7 +139,9 @@ describe('MyOrdersPage', () => {
 
     renderWithQueryClient(<MyOrdersPage />);
 
-    await user.click(await screen.findByRole('button', { name: 'Cancel order' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Cancel order for The Horizon Live' }),
+    );
     await user.click(
       within(screen.getByRole('dialog', { name: 'Cancel order?' })).getByRole('button', {
         name: 'Cancel order',
@@ -144,17 +169,44 @@ describe('MyOrdersPage', () => {
 
     renderWithQueryClient(<MyOrdersPage />);
 
-    await user.click(await screen.findByRole('button', { name: 'Cancel order' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Cancel order for The Horizon Live' }),
+    );
     await user.click(
       within(screen.getByRole('dialog', { name: 'Cancel order?' })).getByRole('button', {
         name: 'Cancel order',
       }),
     );
 
+    const dialog = screen.getByRole('dialog', { name: 'Cancel order?' });
     expect(
-      await screen.findByText('Order could not be cancelled. Try again in a moment.'),
+      within(dialog).getByText('Order could not be cancelled. Try again in a moment.'),
     ).toBeVisible();
     expect(screen.getByText('The Horizon Live')).toBeVisible();
+  });
+
+  it('shows a specific cancellation message when the event can no longer be cancelled', async () => {
+    mockedCancelMyOrder.mockRejectedValue({ response: { status: 409 } });
+    mockedListMyOrders.mockResolvedValue({
+      items: [myEventOrder],
+      page: pageMetadata(20, 1),
+    });
+    const user = userEvent.setup();
+
+    renderWithQueryClient(<MyOrdersPage />);
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Cancel order for The Horizon Live' }),
+    );
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Cancel order?' })).getByRole('button', {
+        name: 'Cancel order',
+      }),
+    );
+
+    const dialog = screen.getByRole('dialog', { name: 'Cancel order?' });
+    expect(within(dialog).getByText('This order can no longer be cancelled.')).toBeVisible();
+    expect(dialog).toBeVisible();
   });
 
   it('disables the selected order action while cancellation is pending', async () => {
@@ -167,7 +219,9 @@ describe('MyOrdersPage', () => {
 
     renderWithQueryClient(<MyOrdersPage />);
 
-    await user.click(await screen.findByRole('button', { name: 'Cancel order' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Cancel order for The Horizon Live' }),
+    );
     await user.click(
       within(screen.getByRole('dialog', { name: 'Cancel order?' })).getByRole('button', {
         name: 'Cancel order',
@@ -269,7 +323,7 @@ describe('MyOrdersPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Next' }));
     await screen.findByText('Page 2 of 2');
-    await user.click(screen.getByRole('button', { name: 'Cancel order' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel order for The Horizon Live' }));
     await user.click(
       within(screen.getByRole('dialog', { name: 'Cancel order?' })).getByRole('button', {
         name: 'Cancel order',
@@ -297,7 +351,9 @@ describe('MyOrdersPage', () => {
 
     renderWithQueryClient(<MyOrdersPage />);
 
-    await user.click(await screen.findByRole('button', { name: 'Cancel order' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Cancel order for The Horizon Live' }),
+    );
     await user.click(
       within(screen.getByRole('dialog', { name: 'Cancel order?' })).getByRole('button', {
         name: 'Cancel order',
