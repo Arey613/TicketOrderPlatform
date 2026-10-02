@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { listMyOrders } from '../../../src/api/ordersClient';
+import { cancelMyOrder, listMyOrders } from '../../../src/api/ordersClient';
 
 describe('ordersClient', () => {
   beforeEach(() => {
@@ -56,6 +56,22 @@ describe('ordersClient', () => {
       expect.objectContaining({
         credentials: 'include',
         method: 'GET',
+      }),
+    );
+  });
+
+  it('cancels one order with a singleton event order id payload', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await cancelMyOrder('order-1');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8080/orders/mine',
+      expect.objectContaining({
+        body: JSON.stringify({ eventOrderIds: ['order-1'] }),
+        credentials: 'include',
+        method: 'DELETE',
       }),
     );
   });

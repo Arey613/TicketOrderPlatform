@@ -33,6 +33,28 @@ describe('my orders OpenAPI contract', () => {
     expect(ordersPath).not.toMatch(/\bowner\b/i);
   });
 
+  it('exposes customer order cancellation without customer identity input', () => {
+    expect(openApi).toContain('"/orders/mine":');
+    expect(openApi).toContain('"$ref": "./paths/orders.yml#/~1orders~1mine"');
+    expect(ordersPath).toContain('delete:');
+    expect(ordersPath).toContain('operationId: cancelMyOrder');
+    expect(ordersPath).toContain('tags:');
+    expect(ordersPath).toContain('- Orders');
+    expect(ordersPath).toContain('sessionAuth');
+    expect(ordersPath).toContain('DeleteEventOrdersRequest');
+    expect(ordersPath).toContain('"204":');
+    expect(ordersPath).toContain('"400":');
+    expect(ordersPath).toContain('"401":');
+    expect(ordersPath).toContain('"403":');
+    expect(ordersPath).toContain('"404":');
+
+    expect(ordersPath).not.toMatch(/\bcustomerId\b/i);
+    expect(ordersPath).not.toMatch(/\buserId\b/i);
+    expect(ordersPath).not.toMatch(/\bemail\b/i);
+    expect(ordersPath).not.toMatch(/\bowner\b/i);
+    expect(eventOrdersPath).toContain('operationId: deleteEventOrders');
+  });
+
   it('uses dedicated order schemas without customer identity fields', () => {
     expect(openApi).toContain('MyOrderResponse:');
     expect(openApi).toContain('MyOrdersResponse:');

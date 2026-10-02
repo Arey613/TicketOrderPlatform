@@ -90,6 +90,7 @@ class WebControllerIntegrationTestConfiguration {
     private UUID lastCommandUserId;
     private int createdOrderCount;
     private int deletedOrderCount;
+    private List<UUID> lastDeletedOrderIds = List.of();
     private UUID lastQueryUserId;
     private PageRequest lastOrderPageRequest;
 
@@ -222,6 +223,7 @@ class WebControllerIntegrationTestConfiguration {
     public int deleteEventOrders(UUID userId, List<UUID> eventOrderIds) {
       lastCommandUserId = userId;
       deletedOrderCount = eventOrderIds.size();
+      lastDeletedOrderIds = List.copyOf(eventOrderIds);
       return deletedOrderCount;
     }
 
@@ -261,6 +263,7 @@ class WebControllerIntegrationTestConfiguration {
       lastCommandUserId = null;
       createdOrderCount = 0;
       deletedOrderCount = 0;
+      lastDeletedOrderIds = List.of();
       lastQueryUserId = null;
       lastOrderPageRequest = null;
     }
@@ -275,6 +278,10 @@ class WebControllerIntegrationTestConfiguration {
 
     int deletedOrderCount() {
       return deletedOrderCount;
+    }
+
+    List<UUID> lastDeletedOrderIds() {
+      return lastDeletedOrderIds;
     }
 
     UUID lastQueryUserId() {

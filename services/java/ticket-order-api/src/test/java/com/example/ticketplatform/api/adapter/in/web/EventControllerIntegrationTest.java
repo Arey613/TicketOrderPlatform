@@ -318,6 +318,71 @@ class EventControllerIntegrationTest {
   }
 
   @Test
+  void rejectsMyOrderCancellationForAnonymousViewer() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/orders/mine")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(deleteEventOrdersJson(EVENT_ORDER_ID))))
+        .andExpect(status().isUnauthorized());
+
+    assertThat(testEvents.deletedOrderCount()).isZero();
+  }
+
+  @Test
+  void rejectsMyOrderCancellationForManagerRole() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/orders/mine")
+                    .session(authenticatedSession(MANAGER.email(), "ROLE_MANAGER"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(deleteEventOrdersJson(EVENT_ORDER_ID))))
+        .andExpect(status().isForbidden());
+
+    assertThat(testEvents.deletedOrderCount()).isZero();
+  }
+
+  @Test
+  void cancelsCurrentCustomerOrderUsingAuthenticatedUser() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/orders/mine")
+                    .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(deleteEventOrdersJson(EVENT_ORDER_ID))))
+        .andExpect(status().isNoContent());
+
+    assertThat(testEvents.lastCommandUserId()).isEqualTo(CUSTOMER_ID);
+    assertThat(testEvents.lastDeletedOrderIds()).containsExactly(EVENT_ORDER_ID);
+  }
+
+  @Test
+  void ignoresClientCustomerIdentityWhenCancellingCurrentCustomerOrder() throws Exception {
+    mockMvc
+        .perform(
+            withCsrf(
+                delete("/orders/mine")
+                    .session(authenticatedSession(CUSTOMER.email(), "ROLE_CUSTOMER"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "customerId": "00000000-0000-0000-0000-000000000601",
+                          "eventOrderIds": [
+                            "00000000-0000-0000-0000-000000000604"
+                          ]
+                        }
+                        """)))
+        .andExpect(status().isNoContent());
+
+    assertThat(testEvents.lastCommandUserId()).isEqualTo(CUSTOMER_ID);
+    assertThat(testEvents.lastDeletedOrderIds()).containsExactly(EVENT_ORDER_ID);
+  }
+
+  @Test
   void removesOldMyEventOrdersRoute() throws Exception {
     mockMvc
         .perform(
@@ -616,5 +681,16 @@ class EventControllerIntegrationTest {
         }
         """
         .formatted(row, place);
+  }
+
+  private static String deleteEventOrdersJson(UUID eventOrderId) {
+    return """
+        {
+          "eventOrderIds": [
+            "%s"
+          ]
+        }
+        """
+        .formatted(eventOrderId);
   }
 }

@@ -21,6 +21,7 @@ TICKET_PORTAL#123 - short description
 - TICKET_PORTAL#12 - add my events page for managers and admins
 - TICKET_PLATFORM#13 - add routed customer my orders page
 - TICKET_PLATFORM#14 - add owned draft event deletion from my events
+- TICKET_PLATFORM#15 - add customer order cancellation from my orders
 
 ### Changed
 

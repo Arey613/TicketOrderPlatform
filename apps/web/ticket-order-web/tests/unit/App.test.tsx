@@ -15,7 +15,7 @@ import {
   toEventUserMessage,
   unpublishEvent,
 } from '../../src/api/eventsClient';
-import { listMyOrders } from '../../src/api/ordersClient';
+import { cancelMyOrder, listMyOrders } from '../../src/api/ordersClient';
 import { notifySessionExpired } from '../../src/api/sessionEvents';
 import { submitLoginForm, submitRegistrationForm } from '../support/appTestActions';
 import {
@@ -56,6 +56,7 @@ vi.mock('../../src/api/eventsClient', () => ({
 }));
 
 vi.mock('../../src/api/ordersClient', () => ({
+  cancelMyOrder: vi.fn(),
   listMyOrders: vi.fn(),
 }));
 
@@ -70,6 +71,7 @@ const mockedGetAuthenticatedEvent = vi.mocked(getAuthenticatedEvent);
 const mockedGetPublishedEvent = vi.mocked(getPublishedEvent);
 const mockedListMyEvents = vi.mocked(listMyEvents);
 const mockedListPublishedEvents = vi.mocked(listPublishedEvents);
+const mockedCancelMyOrder = vi.mocked(cancelMyOrder);
 const mockedListMyOrders = vi.mocked(listMyOrders);
 const mockedPatchEvent = vi.mocked(patchEvent);
 const mockedPublishEvent = vi.mocked(publishEvent);
@@ -105,6 +107,8 @@ describe('App', () => {
       items: [publishedEvent],
       page: pageMetadata(10, 1),
     });
+    mockedCancelMyOrder.mockReset();
+    mockedCancelMyOrder.mockResolvedValue();
     mockedListMyOrders.mockReset();
     mockedListMyOrders.mockResolvedValue({
       items: [],
