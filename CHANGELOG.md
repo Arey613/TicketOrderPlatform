@@ -52,6 +52,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PLATFORM#13 - add customer my orders endpoint
 - TICKET_PLATFORM#14 - add owned draft event deletion endpoint
 - TICKET_PLATFORM#15 - add customer order cancellation endpoint
+- TICKET_SERVICE#12 - add admin user management endpoints
 
 ### Changed
 
@@ -78,6 +79,7 @@ Entries are grouped by module, then by change type. Within each change type, ent
 - TICKET_PLATFORM#13 - add customer my orders contract
 - TICKET_PLATFORM#14 - add owned draft event deletion contract
 - TICKET_PLATFORM#15 - add customer order cancellation contract
+- TICKET_SERVICE#12 - add admin user management contract
 
 ### Changed
 
