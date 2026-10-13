@@ -29,6 +29,8 @@ ticket-order-platform:
         - eventName,asc
         - eventName,desc
     users:
+      # TODO(TICKET_SERVICE#12): Review duplicating production pagination config in tests.
+      # This mirrors runtime values for now, but a focused test fixture would be clearer.
       default-size: 10
       default-sort: createdAt,desc
       allowed-sorts:

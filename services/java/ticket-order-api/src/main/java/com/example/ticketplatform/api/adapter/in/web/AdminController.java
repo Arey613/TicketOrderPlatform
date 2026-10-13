@@ -12,6 +12,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,6 +23,7 @@ class AdminController implements AdminApi {
   private final CurrentUserProvider currentUserProvider;
   private final PaginationRequestFactory paginationRequestFactory;
   private final UserContractMapper userContractMapper;
+  private final UserManagementContractMapper userManagementContractMapper;
 
   @Override
   @PreAuthorize("hasRole('ADMIN')")
@@ -44,7 +46,7 @@ class AdminController implements AdminApi {
             enabled,
             normalizeSearch(search),
             paginationRequestFactory.userPage(page, size, sort));
-    return ResponseEntity.ok(userContractMapper.toListResponse(userManagementUseCase.listUsers(query)));
+    return ResponseEntity.ok(userManagementContractMapper.toListResponse(userManagementUseCase.listUsers(query)));
   }
 
   @Override
@@ -56,10 +58,10 @@ class AdminController implements AdminApi {
     return ResponseEntity.ok(
         userContractMapper.toContract(
             userManagementUseCase.updateUser(
-                actor.id(), userId, userContractMapper.toCommand(updateUserRequest))));
+                actor.id(), userId, userManagementContractMapper.toCommand(updateUserRequest))));
   }
 
   private String normalizeSearch(String search) {
-    return search == null || search.isBlank() ? null : search.trim();
+    return StringUtils.hasText(search) ? search.trim() : null;
   }
 }

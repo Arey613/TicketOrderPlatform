@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -20,10 +21,11 @@ import tools.jackson.databind.ObjectMapper;
 
 @ControllerAdvice(assignableTypes = AdminController.class)
 @RequiredArgsConstructor
-class UserUpdateRequestBodyAdvice extends RequestBodyAdviceAdapter {
+class UserUpdateRequestFieldValidator extends RequestBodyAdviceAdapter {
+
+  private static final Set<String> ALLOWED_FIELDS = Set.of("role", "enabled");
 
   private final ObjectMapper objectMapper;
-  private final UserUpdateValidationProperties properties;
 
   @Override
   public boolean supports(
@@ -51,13 +53,11 @@ class UserUpdateRequestBodyAdvice extends RequestBodyAdviceAdapter {
       throw new IllegalArgumentException("User update payload must be a JSON object");
     }
 
-    Set<String> allowedFields = Set.copyOf(properties.getAllowedFields());
     Set<String> unsupportedFields =
         StreamSupport.stream(root.properties().spliterator(), false)
-            .map(entry -> entry.getKey())
-            .filter(field -> !allowedFields.contains(field))
+            .map(Map.Entry::getKey)
+            .filter(field -> !ALLOWED_FIELDS.contains(field))
             .collect(Collectors.toUnmodifiableSet());
-
     if (!unsupportedFields.isEmpty()) {
       throw new IllegalArgumentException("Unsupported user update fields: " + unsupportedFields);
     }

@@ -1,12 +1,12 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
-import com.example.ticketplatform.api.application.port.out.UserSessionTrackingPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.infrastructure.config.security.AuthenticatedUserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,7 +21,7 @@ class AuthenticationSessionManager {
 
   private final HttpServletRequest request;
   private final HttpServletResponse response;
-  private final UserSessionTrackingPort userSessionTrackingPort;
+  private final UserSessionRegistry userSessionRegistry;
 
   void authenticate(User user) {
     UsernamePasswordAuthenticationToken authentication =
@@ -39,24 +39,28 @@ class AuthenticationSessionManager {
     new HttpSessionSecurityContextRepository().saveContext(context, request, response);
     HttpSession session = request.getSession(false);
     if (session != null) {
-      userSessionTrackingPort.register(user.id(), session);
+      userSessionRegistry.register(user.id(), session);
     }
   }
 
   void clear() {
     HttpSession session = request.getSession(false);
     if (session != null) {
-      Object principal =
-          SecurityContextHolder.getContext().getAuthentication() == null
-              ? null
-              : SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      if (principal instanceof AuthenticatedUserPrincipal authenticatedUserPrincipal) {
-        userSessionTrackingPort.unregister(authenticatedUserPrincipal.userId(), session);
-      }
+      currentPrincipal()
+          .ifPresent(
+                  authenticatedUserPrincipal ->
+                  userSessionRegistry.unregister(authenticatedUserPrincipal.userId(), session));
     }
     SecurityContextHolder.clearContext();
     if (session != null) {
       session.invalidate();
     }
+  }
+
+  private Optional<AuthenticatedUserPrincipal> currentPrincipal() {
+    return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+        .map(authentication -> authentication.getPrincipal())
+        .filter(AuthenticatedUserPrincipal.class::isInstance)
+        .map(AuthenticatedUserPrincipal.class::cast);
   }
 }

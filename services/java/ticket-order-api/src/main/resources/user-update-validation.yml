@@ -1,5 +1,0 @@
-ticket-order-platform:
-  user-update:
-    allowed-fields:
-      - role
-      - enabled

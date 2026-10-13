@@ -1,7 +1,6 @@
-package com.example.ticketplatform.api.adapter.out.security;
+package com.example.ticketplatform.api.adapter.in.web;
 
 import com.example.ticketplatform.api.application.port.out.UserSessionRevocationPort;
-import com.example.ticketplatform.api.application.port.out.UserSessionTrackingPort;
 import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import java.util.Set;
@@ -10,17 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserSessionRegistry implements UserSessionRevocationPort, UserSessionTrackingPort {
+class UserSessionRegistry implements UserSessionRevocationPort {
 
   private final Map<UUID, Set<HttpSession>> sessionsByUser = new ConcurrentHashMap<>();
 
-  @Override
-  public void register(UUID userId, HttpSession session) {
+  void register(UUID userId, HttpSession session) {
     sessionsByUser.computeIfAbsent(userId, ignored -> ConcurrentHashMap.newKeySet()).add(session);
   }
 
-  @Override
-  public void unregister(UUID userId, HttpSession session) {
+  void unregister(UUID userId, HttpSession session) {
     Set<HttpSession> sessions = sessionsByUser.get(userId);
     if (sessions == null) {
       return;
