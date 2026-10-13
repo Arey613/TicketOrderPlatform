@@ -21,6 +21,10 @@ class PaginationRequestFactory {
     return toPageRequest(page, size, sort, orderDefaults(), new HashSet<>(orderDefaults().getAllowedSorts()));
   }
 
+  PageRequest userPage(Integer page, Integer size, String sort) {
+    return toPageRequest(page, size, sort, userDefaults(), new HashSet<>(userDefaults().getAllowedSorts()));
+  }
+
   Set<String> authenticatedEventSorts() {
     return new HashSet<>(eventDefaults().getAllowedSorts());
   }
@@ -62,5 +66,9 @@ class PaginationRequestFactory {
 
   private PaginationProperties.EndpointPaginationSettings publicEventDefaults() {
     return properties.getPublicEvents();
+  }
+
+  private PaginationProperties.EndpointPaginationSettings userDefaults() {
+    return properties.getUsers();
   }
 }

@@ -9,4 +9,6 @@ public interface UserCommandRepositoryPort {
   User save(User user);
 
   Optional<User> findById(UUID id);
+
+  User update(User user);
 }

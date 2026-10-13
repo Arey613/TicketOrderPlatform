@@ -27,6 +27,10 @@ paths:
     "$ref": "./paths/auth.yml#/~1auth~1logout"
   "/users/{userId}":
     "$ref": "./paths/users.yml#/~1users~1{userId}"
+  "/admin/manage/users":
+    "$ref": "./paths/users.yml#/~1admin~1manage~1users"
+  "/admin/manage/users/{userId}":
+    "$ref": "./paths/users.yml#/~1admin~1manage~1users~1{userId}"
   "/events":
     "$ref": "./paths/events.yml#/~1events"
   "/events/{eventId}":
@@ -163,3 +167,7 @@ components:
       "$ref": "./schemas/order.yml#/MyOrdersResponse"
     UserResponse:
       "$ref": "./schemas/user.yml#/UserResponse"
+    UserListResponse:
+      "$ref": "./schemas/user.yml#/UserListResponse"
+    UpdateUserRequest:
+      "$ref": "./schemas/user.yml#/UpdateUserRequest"

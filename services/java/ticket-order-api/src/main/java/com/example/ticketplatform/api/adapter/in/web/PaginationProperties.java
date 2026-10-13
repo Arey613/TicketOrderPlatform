@@ -13,6 +13,7 @@ public class PaginationProperties {
   private EndpointPaginationSettings events = new EndpointPaginationSettings();
   private EndpointPaginationSettings publicEvents = new EndpointPaginationSettings();
   private EndpointPaginationSettings orders = new EndpointPaginationSettings();
+  private EndpointPaginationSettings users = new EndpointPaginationSettings();
 
   @Getter
   @Setter

@@ -21,6 +21,18 @@ class UserPersistenceAdapter implements UserCommandRepositoryPort, UserAuthRepos
   }
 
   @Override
+  public User update(User user) {
+    UserEntity entity =
+        repository
+            .findById(user.id())
+            .orElseThrow(() -> new java.util.NoSuchElementException("User not found: " + user.id()));
+    entity.setRole(mapper.toEntityRole(user.role()));
+    entity.setEnabled(user.enabled());
+    entity.setUpdatedAt(user.updatedAt());
+    return mapper.toDomain(repository.save(entity));
+  }
+
+  @Override
   public Optional<User> findById(UUID id) {
     return repository.findById(id).map(mapper::toDomain);
   }

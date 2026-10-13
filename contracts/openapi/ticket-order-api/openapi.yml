@@ -107,6 +107,130 @@ paths:
           "$ref": "#/components/responses/Unauthorized"
         "404":
           "$ref": "#/components/responses/NotFound"
+  "/admin/manage/users":
+    get:
+      operationId: listManagedUsers
+      tags:
+        - Users
+      summary: List users for admin management
+      description: >-
+        Returns a pageable, sortable list of password-free user summaries for
+        admin inspection. Read results may include ADMIN accounts, but ADMIN
+        accounts are not editable through the admin-management update endpoint.
+      security:
+        - sessionAuth: []
+      parameters:
+        - "$ref": "#/components/parameters/PageParameter"
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: role
+          in: query
+          required: false
+          schema:
+            "$ref": "#/components/schemas/UserRole"
+        - name: enabled
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 320
+        - "$ref": "#/components/parameters/SortParameter"
+      responses:
+        "200":
+          description: Users response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/UserListResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+  "/admin/manage/users/{userId}":
+    get:
+      operationId: getManagedUser
+      tags:
+        - Users
+      summary: Return a user for admin management
+      description: Returns a password-free user summary for admin inspection.
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/UserResponse"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+    put:
+      operationId: updateManagedUser
+      tags:
+        - Users
+      summary: Replace a user's admin-manageable state
+      description: >-
+        Replaces the complete admin-manageable state for a non-admin user. This
+        operation updates only role and enabled status; it does not replace the
+        whole user entity and never accepts credential or session fields.
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: User admin-manageable state was updated
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/UserResponse"
+        "400":
+          "$ref": "#/components/responses/BadRequest"
+        "401":
+          "$ref": "#/components/responses/Unauthorized"
+        "403":
+          "$ref": "#/components/responses/Forbidden"
+        "404":
+          "$ref": "#/components/responses/NotFound"
+        "409":
+          "$ref": "#/components/responses/Conflict"
   "/events":
     post:
       operationId: createEvent
@@ -1291,3 +1415,26 @@ components:
         updatedAt:
           type: string
           format: date-time
+    UserListResponse:
+      type: object
+      required:
+      - items
+      - page
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/UserResponse"
+        page:
+          "$ref": "#/components/schemas/PageMetadata"
+    UpdateUserRequest:
+      type: object
+      required:
+      - role
+      - enabled
+      properties:
+        role:
+          "$ref": "#/components/schemas/UserRole"
+        enabled:
+          type: boolean
+      additionalProperties: false

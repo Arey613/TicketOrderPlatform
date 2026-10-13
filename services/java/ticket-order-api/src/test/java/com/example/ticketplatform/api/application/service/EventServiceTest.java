@@ -541,6 +541,11 @@ class EventServiceTest {
     }
 
     @Override
+    public User update(User user) {
+      return user;
+    }
+
+    @Override
     public Optional<User> findById(UUID id) {
       return users.stream().filter(user -> user.id().equals(id)).findFirst();
     }
