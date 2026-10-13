@@ -27,6 +27,7 @@ TICKET_SERVICE#123 - short description
 - TICKET_PLATFORM#13 - add customer my orders endpoint
 - TICKET_PLATFORM#14 - add owned draft event deletion endpoint
 - TICKET_PLATFORM#15 - add customer order cancellation endpoint
+- TICKET_SERVICE#12 - add admin user management endpoints
 
 ### Changed
 

@@ -1,5 +1,6 @@
 package com.example.ticketplatform.api.adapter.in.web;
 
+import com.example.ticketplatform.api.domain.model.user.UserRole;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.generated.contract.model.UserResponse;
 import java.time.Instant;
@@ -17,5 +18,9 @@ interface UserContractMapper {
 
   default OffsetDateTime map(Instant instant) {
     return instant == null ? null : instant.atOffset(ZoneOffset.UTC);
+  }
+
+  default UserRole toDomainRole(com.example.ticketplatform.api.generated.contract.model.UserRole role) {
+    return role == null ? null : UserRole.valueOf(role.name());
   }
 }

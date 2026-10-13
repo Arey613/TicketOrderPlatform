@@ -3,6 +3,8 @@ package com.example.ticketplatform.api.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.ticketplatform.api.application.port.in.PageRequest;
+import com.example.ticketplatform.api.application.port.in.PageResult;
 import com.example.ticketplatform.api.application.port.out.UserQueryRepositoryPort;
 import com.example.ticketplatform.api.domain.model.user.User;
 import com.example.ticketplatform.api.domain.model.user.UserRole;
@@ -71,6 +73,15 @@ class UserQueryServiceTest {
     @Override
     public Optional<User> findByEmail(String email) {
       return usersById.values().stream().filter(user -> user.email().equals(email)).findFirst();
+    }
+
+    @Override
+    public PageResult<User> findUsers(
+        UserRole role,
+        Boolean enabled,
+        String search,
+        PageRequest pageRequest) {
+      throw new UnsupportedOperationException("Not used by this test");
     }
 
   }

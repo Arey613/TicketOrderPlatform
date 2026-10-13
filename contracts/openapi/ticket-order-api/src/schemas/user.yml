@@ -32,3 +32,26 @@ UserResponse:
     updatedAt:
       type: string
       format: date-time
+UserListResponse:
+  type: object
+  required:
+  - items
+  - page
+  properties:
+    items:
+      type: array
+      items:
+        "$ref": "#/components/schemas/UserResponse"
+    page:
+      "$ref": "#/components/schemas/PageMetadata"
+UpdateUserRequest:
+  type: object
+  required:
+  - role
+  - enabled
+  properties:
+    role:
+      "$ref": "#/components/schemas/UserRole"
+    enabled:
+      type: boolean
+  additionalProperties: false

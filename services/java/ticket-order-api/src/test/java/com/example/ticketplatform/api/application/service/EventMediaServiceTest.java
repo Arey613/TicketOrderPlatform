@@ -411,6 +411,11 @@ class EventMediaServiceTest {
     public User save(User user) {
       return user;
     }
+
+    @Override
+    public User update(User user) {
+      return user;
+    }
   }
 
   private static class TestObjectStoragePort implements ObjectStoragePort {

@@ -21,6 +21,11 @@ class UserPersistenceAdapter implements UserCommandRepositoryPort, UserAuthRepos
   }
 
   @Override
+  public User update(User user) {
+    return save(user);
+  }
+
+  @Override
   public Optional<User> findById(UUID id) {
     return repository.findById(id).map(mapper::toDomain);
   }

@@ -74,12 +74,42 @@ class WebControllerIntegrationTestConfiguration {
       return Optional.ofNullable(usersByEmail.get(email));
     }
 
+    @Override
+    public PageResult<User> findUsers(
+        UserRole role,
+        Boolean enabled,
+        String search,
+        PageRequest pageRequest) {
+      List<User> filtered =
+          usersById.values().stream()
+              .filter(user -> role == null || user.role() == role)
+              .filter(user -> enabled == null || user.enabled().equals(enabled))
+              .filter(user -> search == null || user.email().contains(search))
+              .sorted(java.util.Comparator.comparing(User::email))
+              .toList();
+      return page(filtered, pageRequest);
+    }
+
+    @Override
+    public User update(User user) {
+      save(user);
+      return user;
+    }
+
     void reset(List<User> users) {
       usersById.clear();
       usersByEmail.clear();
       for (User user : users) {
         save(user);
       }
+    }
+
+    private static <T> PageResult<T> page(List<T> items, PageRequest pageRequest) {
+      int fromIndex = Math.min(pageRequest.page() * pageRequest.size(), items.size());
+      int toIndex = Math.min(fromIndex + pageRequest.size(), items.size());
+      return new PageResult<>(
+          items.subList(fromIndex, toIndex),
+          PageMetadata.of(pageRequest.page(), pageRequest.size(), items.size()));
     }
   }
 
